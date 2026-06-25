@@ -953,7 +953,15 @@
     sh.style.display = (navigator.canShare && navigator.canShare({files:[lastFile]})) ? '' : 'none';
     document.getElementById('recov').classList.remove('hidden');
   }
-  document.getElementById('recShare').addEventListener('click',()=>{ if(lastFile && navigator.share) navigator.share({files:[lastFile], title:'Мой джем'}).catch(()=>{}); });
+  document.getElementById('recShare').addEventListener('click',async()=>{
+    if(!lastFile) return;
+    const info=document.getElementById('recInfo');
+    try{
+      if(navigator.canShare && navigator.canShare({files:[lastFile]})) await navigator.share({files:[lastFile]});
+      else if(navigator.share) await navigator.share({title:'Мой джем'});
+      else throw new Error('Web Share не поддерживается');
+    }catch(e){ if(e && e.name!=='AbortError') info.textContent='Шеринг не сработал: '+(e&&(e.name+': '+e.message)||e); }
+  });
   document.getElementById('recSave').addEventListener('click',()=>{ if(!lastBlob) return; const a=document.createElement('a'); a.href=lastUrl; a.download=lastFile.name; document.body.appendChild(a); a.click(); a.remove(); });
   document.getElementById('recClose').addEventListener('click',()=>{ const v=document.getElementById('recVid'); v.pause(); document.getElementById('recov').classList.add('hidden'); });
   recBtn.addEventListener('click',()=>{ if(mediaRec && mediaRec.state==='recording') stopRecording(); else startRecording(); });
