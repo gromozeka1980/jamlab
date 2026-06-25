@@ -92,7 +92,7 @@
   .hint{color:var(--muted); font-size:11px; text-align:center; padding:0 12px 8px;}
   #viz{position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:3;}
 
-  #overlay,#settings{position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:22px; z-index:10;}
+  #overlay,#settings,#latov{position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:22px; z-index:10;}
   #overlay{background:rgba(7,8,16,.95); gap:14px; text-align:center;}
   #overlay h2{font-size:22px; margin:0 0 6px;}
   #overlay p{color:var(--muted); max-width:460px; line-height:1.5; margin:0; font-size:14px;}
@@ -100,8 +100,9 @@
   .pick{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 18px; text-align:left; cursor:pointer;}
   .pick b{font-size:17px;} .pick span{display:block; color:var(--muted); font-size:12px; margin-top:2px;}
   .pick:active{transform:translateY(1px);}
-  #settings{background:rgba(7,8,16,.82); z-index:9;}
-  #settings.hidden{display:none;}
+  #settings,#latov{background:rgba(7,8,16,.82); z-index:9;}
+  #latov{z-index:11;}
+  #settings.hidden,#latov.hidden{display:none;}
   .sheet{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px 20px; width:min(440px,100%); display:flex; flex-direction:column; gap:14px;}
   .sheet h3{margin:0 0 4px; font-size:18px;}
   .srow{display:flex; align-items:center; justify-content:space-between; gap:14px; font-size:13px;}
@@ -137,7 +138,18 @@
     <div class="srow"><label>Громкость фона</label><input id="volAcc" type="range" min="0" max="100" value="55"></div>
     <div class="srow"><label>Визуализатор</label><select id="vizSel"><option value="on">Вкл</option><option value="off">Выкл</option></select></div>
     <div class="srow"><label>Гироскоп (телефон)</label><select id="gyroSel"><option value="off">Выкл</option><option value="vibrato">Вибрато</option><option value="volume">Громкость</option><option value="tone">Яркость</option></select></div>
+    <div class="srow"><label>Задержка звука</label><button id="latBtn">🔬 Измерить</button></div>
     <button id="closeSettings">Готово</button>
+  </div>
+</div>
+
+<div id="latov" class="hidden">
+  <div class="sheet">
+    <h3>🔬 Задержка звука</h3>
+    <div id="latInfo" style="font-size:13px; line-height:1.5;">…</div>
+    <button id="latMic">Акустический тест (микрофон)</button>
+    <div id="latResult" style="color:var(--muted); font-size:13px; line-height:1.4;"></div>
+    <button id="latClose">Закрыть</button>
   </div>
 </div>
 
@@ -849,6 +861,36 @@
   document.getElementById("settingsBtn").addEventListener("click",()=>settingsEl.classList.remove("hidden"));
   document.getElementById("closeSettings").addEventListener("click",()=>settingsEl.classList.add("hidden"));
   accBtn.addEventListener("click",()=> accOn?stopBacking():startBacking());
+
+  /* ============ Замер задержки ============ */
+  const latov=document.getElementById("latov");
+  function showLatInfo(){
+    const sr=actx.sampleRate, bl=(actx.baseLatency||0)*1000, ol=(actx.outputLatency!=null?actx.outputLatency*1000:NaN);
+    document.getElementById("latInfo").innerHTML =
+      "Частота: <b>"+sr+"</b> Гц<br>baseLatency: <b>"+bl.toFixed(1)+"</b> мс<br>outputLatency: <b>"+(isNaN(ol)?"н/д":ol.toFixed(1)+" мс")+"</b>"+
+      "<br><span style='color:var(--muted);font-size:12px'>outputLatency ≈ задержка «тап → звук» для запланированного аудио (отчёт браузера)</span>";
+  }
+  document.getElementById("latBtn").addEventListener("click",()=>{ initAudio(); resumeAudio(); showLatInfo(); document.getElementById("latResult").textContent=""; latov.classList.remove("hidden"); });
+  document.getElementById("latClose").addEventListener("click",()=>latov.classList.add("hidden"));
+  document.getElementById("latMic").addEventListener("click",async()=>{
+    const res=document.getElementById("latResult"); res.textContent="Измеряю… выкрути громкость, тихо вокруг (10 щелчков)…";
+    try{
+      const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+      const src=actx.createMediaStreamSource(stream), bs=256, sp=actx.createScriptProcessor(bs,1,1), sink=actx.createGain();
+      sink.gain.value=0; src.connect(sp); sp.connect(sink); sink.connect(actx.destination);
+      let clickAt=null, armed=false; const results=[];
+      sp.onaudioprocess=(e)=>{ const inp=e.inputBuffer.getChannelData(0), bufStart=actx.currentTime - bs/actx.sampleRate;
+        if(armed && clickAt!=null){ for(let i=0;i<inp.length;i++){ if(Math.abs(inp[i])>0.15){ const lat=(bufStart+i/actx.sampleRate-clickAt)*1000; if(lat>2&&lat<400) results.push(lat); armed=false; break; } } } };
+      for(let k=0;k<10;k++){ clickAt=actx.currentTime+0.06; const o=actx.createOscillator(),g=actx.createGain();
+        o.type="square"; o.frequency.value=2000; g.gain.setValueAtTime(0,clickAt); g.gain.linearRampToValueAtTime(0.9,clickAt+0.001); g.gain.exponentialRampToValueAtTime(0.001,clickAt+0.02);
+        o.connect(g); g.connect(actx.destination); o.start(clickAt); o.stop(clickAt+0.03); armed=true; await new Promise(r=>setTimeout(r,380)); }
+      src.disconnect(); sp.disconnect(); stream.getTracks().forEach(t=>t.stop());
+      results.sort((a,b)=>a-b); const med=results.length?results[Math.floor(results.length/2)]:null;
+      res.innerHTML = med!=null
+        ? "Round-trip: медиана <b>"+med.toFixed(0)+" мс</b> (попыток "+results.length+", вкл. путь динамик→микрофон)<br><span style='color:var(--muted);font-size:12px'>«на ощупь» обычно меньше — за вычетом задержки микрофона</span>"
+        : "Не поймал щелчок. Попробуй громче и в тишине.";
+    }catch(err){ res.textContent="Микрофон недоступен: "+(err&&err.message||err); }
+  });
 
   /* ============ Выбор инструмента и старт ============ */
   const overlay=document.getElementById("overlay");
