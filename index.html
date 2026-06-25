@@ -29,6 +29,7 @@
   select,button{background:var(--panel); color:var(--text); border:1px solid var(--line);
     border-radius:8px; padding:6px 10px; font-size:13px; cursor:pointer;}
   button.toggle.on{background:var(--zero); border-color:var(--zero); color:#04140a; font-weight:600;}
+  button#recBtn.rec{background:#e03131; border-color:#e03131; color:#fff; font-weight:600;}
   input[type=range]{width:150px; accent-color:var(--accent);}
 
   .ladrow{display:flex; justify-content:space-between; align-items:stretch; gap:6px; min-height:0;}
@@ -176,6 +177,7 @@
   <div class="ctl" id="ctlLand"><label>Заход</label><select id="landSel"><option value="line">Веди линию</option><option value="root">К тонике</option></select></div>
   <div class="ctl"><label>&nbsp;</label><button id="accBtn" class="toggle">▶ Фон</button></div>
   <div class="ctl"><label>&nbsp;</label><button id="settingsBtn">⚙ Настройки</button></div>
+  <div class="ctl"><label>&nbsp;</label><button id="recBtn">⏺ Запись</button></div>
 </div>
 
 <div class="display">
@@ -286,7 +288,7 @@
 
   /* ============ Web Audio ============ */
   let actx=null, master=null, comp=null, leadBus=null, leadFilter=null, shaper=null,
-      leadOut=null, accBus=null, reverb=null, noiseBuf=null;
+      leadOut=null, accBus=null, reverb=null, noiseBuf=null, recDest=null;
   const activeVoices = new Map();
   let kbBend=0;
 
@@ -295,6 +297,7 @@
     actx = new (window.AudioContext||window.webkitAudioContext)();
     comp = actx.createDynamicsCompressor(); comp.threshold.value=-12; comp.ratio.value=3; comp.release.value=.25;
     master = actx.createGain(); master.gain.value=1; master.connect(comp); comp.connect(actx.destination);
+    try{ recDest=actx.createMediaStreamDestination(); comp.connect(recDest); }catch(e){}   // тап для записи
     reverb = actx.createConvolver(); reverb.buffer=makeImpulse(2.8,2.4);
     const rg=actx.createGain(); rg.gain.value=.36; reverb.connect(rg); rg.connect(master);
     leadBus = actx.createGain(); leadBus.gain.value=.9;
@@ -329,32 +332,40 @@
   function cssRgb(v){ return hexToRgb(getComputedStyle(document.documentElement).getPropertyValue(v)); }
   const viz=(()=>{
     const cv=document.getElementById('viz'), ctx=cv.getContext('2d'); let W=1,H=1,dpr=1;
-    function resize(){ dpr=Math.min(2,window.devicePixelRatio||1); cv.width=Math.max(1,innerWidth*dpr); cv.height=Math.max(1,innerHeight*dpr); W=cv.width; H=cv.height; }
-    resize(); addEventListener('resize',resize);
+    const rec=document.createElement('canvas'), rctx=rec.getContext('2d'); let recording=false;
+    function size(){ dpr=Math.min(2,window.devicePixelRatio||1); const w=Math.max(1,Math.round(innerWidth*dpr)), h=Math.max(1,Math.round(innerHeight*dpr));
+      if(w!==W||h!==H){ cv.width=W=w; cv.height=H=h; rec.width=w; rec.height=h; } }
+    size(); addEventListener('resize',size);
     const P=[]; let beat=0;
     function note(x,y,rgb){ if(P.length>120) return; P.push({x:x*dpr,y:y*dpr,r:8*dpr,vr:3.0*dpr,vy:-0.6*dpr,life:1,dl:0.018,rgb,ring:1}); }
     function spark(x,y,rgb){ if(P.length>170) return; P.push({x:(x+(Math.random()*16-8))*dpr,y:y*dpr,r:2.5*dpr,vr:0.4*dpr,vy:-2.6*dpr,life:1,dl:0.03,rgb,ring:0}); }
     function pulse(s){ if(s>beat) beat=s; }
-    function frame(){
-      dpr=Math.min(2,window.devicePixelRatio||1);
-      const w=Math.max(1,Math.round(innerWidth*dpr)), h=Math.max(1,Math.round(innerHeight*dpr));
-      if(w!==W||h!==H){ cv.width=W=w; cv.height=H=h; }
-      ctx.clearRect(0,0,W,H);
-      if(beat>0.02){ const g=ctx.createRadialGradient(W/2,H*1.05,0,W/2,H*1.05,H*0.9);
-        g.addColorStop(0,'rgba(255,255,255,'+(beat*0.05).toFixed(3)+')'); g.addColorStop(1,'rgba(255,255,255,0)');
-        ctx.fillStyle=g; ctx.fillRect(0,0,W,H); beat*=0.88; }
-      ctx.globalCompositeOperation='lighter';
-      for(let i=P.length-1;i>=0;i--){ const p=P[i]; p.r+=p.vr; p.y+=p.vy; p.vy*=0.985; p.life-=p.dl;
-        if(p.life<=0){ P.splice(i,1); continue; }
-        const a=(p.life*(p.ring?0.5:0.85)).toFixed(3), col='rgba('+p.rgb[0]+','+p.rgb[1]+','+p.rgb[2]+','+a+')';
-        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,6.2832);
-        if(p.ring){ ctx.strokeStyle=col; ctx.lineWidth=2.5*dpr; ctx.stroke(); } else { ctx.fillStyle=col; ctx.fill(); }
-      }
-      ctx.globalCompositeOperation='source-over';
+    function drawScene(c,opaque){
+      if(opaque){ const a=cssRgb('--bg1'),b=cssRgb('--bg'),g=c.createLinearGradient(0,0,0,H);
+        g.addColorStop(0,'rgb('+a[0]+','+a[1]+','+a[2]+')'); g.addColorStop(1,'rgb('+b[0]+','+b[1]+','+b[2]+')'); c.fillStyle=g; c.fillRect(0,0,W,H); }
+      else c.clearRect(0,0,W,H);
+      if(beat>0.02){ const g=c.createRadialGradient(W/2,H*1.05,0,W/2,H*1.05,H*0.9);
+        g.addColorStop(0,'rgba(255,255,255,'+(beat*0.05).toFixed(3)+')'); g.addColorStop(1,'rgba(255,255,255,0)'); c.fillStyle=g; c.fillRect(0,0,W,H); }
+      c.globalCompositeOperation='lighter';
+      for(let i=0;i<P.length;i++){ const p=P[i], al=(p.life*(p.ring?0.5:0.85)).toFixed(3), col='rgba('+p.rgb[0]+','+p.rgb[1]+','+p.rgb[2]+','+al+')';
+        c.beginPath(); c.arc(p.x,p.y,p.r,0,6.2832);
+        if(p.ring){ c.strokeStyle=col; c.lineWidth=2.5*dpr; c.stroke(); } else { c.fillStyle=col; c.fill(); } }
+      c.globalCompositeOperation='source-over';
+      if(opaque){ const acc=cssRgb('--accent'); c.textAlign='center';
+        c.fillStyle='rgba('+acc[0]+','+acc[1]+','+acc[2]+',0.92)'; c.font='600 '+(22*dpr)+'px system-ui,sans-serif';
+        c.fillText(document.getElementById('h1name').textContent||'', W/2, 46*dpr);
+        c.fillStyle='rgba(255,255,255,0.94)'; c.font='800 '+(64*dpr)+'px system-ui,sans-serif';
+        c.fillText(document.getElementById('noteName').textContent||'', W/2, H*0.5); }
+    }
+    function frame(){ size();
+      for(let i=P.length-1;i>=0;i--){ const p=P[i]; p.r+=p.vr; p.y+=p.vy; p.vy*=0.985; p.life-=p.dl; if(p.life<=0) P.splice(i,1); }
+      drawScene(ctx,false);
+      if(recording) drawScene(rctx,true);
+      beat*=0.88;
       requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
-    return {note,spark,pulse};
+    return {note,spark,pulse, recCanvas:rec, startRec(){recording=true;}, stopRec(){recording=false;}};
   })();
   function vizBeat(time,s){ if(settings.viz && actx) setTimeout(()=>viz.pulse(s), Math.max(0,(time-actx.currentTime)*1000)); }
 
@@ -891,6 +902,37 @@
         : "Не поймал щелчок. Попробуй громче и в тишине.";
     }catch(err){ res.textContent="Микрофон недоступен: "+(err&&err.message||err); }
   });
+
+  /* ============ Запись → видео ============ */
+  let mediaRec=null, recChunks=[], recStart=0, recTimer=null;
+  const recBtn=document.getElementById("recBtn");
+  function pickMime(){ const t=['video/mp4;codecs=h264,aac','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+    for(const m of t) if(window.MediaRecorder && MediaRecorder.isTypeSupported(m)) return m; return ''; }
+  function startRecording(){
+    initAudio(); resumeAudio();
+    if(!window.MediaRecorder){ alert('Запись не поддерживается этим браузером'); return; }
+    const vtr = viz.recCanvas.captureStream ? viz.recCanvas.captureStream(30).getVideoTracks() : [];
+    const atr = recDest ? recDest.stream.getAudioTracks() : [];
+    const stream = new MediaStream([...vtr, ...atr]);
+    viz.startRec();
+    const mime=pickMime();
+    try{ mediaRec = new MediaRecorder(stream, mime?{mimeType:mime}:undefined); }
+    catch(e){ alert('Запись недоступна: '+e.message); viz.stopRec(); return; }
+    recChunks=[];
+    mediaRec.ondataavailable=e=>{ if(e.data && e.data.size) recChunks.push(e.data); };
+    mediaRec.onstop=()=>{ viz.stopRec(); finishRecording(new Blob(recChunks,{type:mediaRec.mimeType||'video/webm'})); };
+    mediaRec.start();
+    recStart=Date.now(); recBtn.classList.add('rec');
+    recTimer=setInterval(()=>{ const s=Math.floor((Date.now()-recStart)/1000); recBtn.textContent='⏹ '+Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); },250);
+  }
+  function stopRecording(){ if(mediaRec && mediaRec.state!=='inactive') mediaRec.stop(); clearInterval(recTimer); recBtn.classList.remove('rec'); recBtn.textContent='⏺ Запись'; }
+  function finishRecording(blob){
+    const ext=(mediaRec && mediaRec.mimeType && mediaRec.mimeType.indexOf('mp4')>=0)?'mp4':'webm';
+    const file=new File([blob],'jam.'+ext,{type:blob.type});
+    if(navigator.canShare && navigator.canShare({files:[file]})) navigator.share({files:[file], title:'Мой джем'}).catch(()=>{});
+    else { const url=URL.createObjectURL(blob), a=document.createElement('a'); a.href=url; a.download='jam.'+ext; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),10000); }
+  }
+  recBtn.addEventListener('click',()=>{ if(mediaRec && mediaRec.state==='recording') stopRecording(); else startRecording(); });
 
   /* ============ Выбор инструмента и старт ============ */
   const overlay=document.getElementById("overlay");
