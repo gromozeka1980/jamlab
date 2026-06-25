@@ -953,14 +953,14 @@
     sh.style.display = (navigator.canShare && navigator.canShare({files:[lastFile]})) ? '' : 'none';
     document.getElementById('recov').classList.remove('hidden');
   }
-  document.getElementById('recShare').addEventListener('click',async()=>{
+  document.getElementById('recShare').addEventListener('click',()=>{   // строго синхронный вызов в жесте
     if(!lastFile) return;
     const info=document.getElementById('recInfo');
-    try{
-      if(navigator.canShare && navigator.canShare({files:[lastFile]})) await navigator.share({files:[lastFile]});
-      else if(navigator.share) await navigator.share({title:'Мой джем'});
-      else throw new Error('Web Share не поддерживается');
-    }catch(e){ if(e && e.name!=='AbortError') info.textContent='Шеринг не сработал: '+(e&&(e.name+': '+e.message)||e); }
+    if(!(navigator.canShare && navigator.canShare({files:[lastFile]}))){ info.textContent='Шеринг файлов не поддерживается — жми «Скачать».'; return; }
+    navigator.share({files:[lastFile]}).catch(e=>{ if(e && e.name!=='AbortError')
+      info.textContent = (e.name==='NotAllowedError')
+        ? 'Браузер не разрешил шеринг. Открой страницу в обычном Safari/Chrome (не во встроенном браузере мессенджера) или жми «Скачать».'
+        : 'Шеринг: '+(e.name||'')+' — '+(e.message||''); });
   });
   document.getElementById('recSave').addEventListener('click',()=>{ if(!lastBlob) return; const a=document.createElement('a'); a.href=lastUrl; a.download=lastFile.name; document.body.appendChild(a); a.click(); a.remove(); });
   document.getElementById('recClose').addEventListener('click',()=>{ const v=document.getElementById('recVid'); v.pause(); document.getElementById('recov').classList.add('hidden'); });
