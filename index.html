@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Реляционные инструменты</title>
+<title>Relational Instruments</title>
 <style>
   :root{
     --bg:#0e1020; --bg1:#18324f; --panel:#171a2b; --line:#272b40;
@@ -63,7 +63,7 @@
   .key .kb{position:absolute; top:6px; font-size:10px; color:var(--muted);
     border:1px solid var(--line); border-radius:5px; padding:0 5px; min-width:16px; text-align:center;}
   .key .arrow{position:absolute; bottom:5px; font-size:13px; color:var(--accent); opacity:0; transition:opacity .15s;}
-  /* подсветка тонов текущего аккорда (1/3/5/7) */
+  /* current-chord tone highlight (1/3/5/7) */
   .key .dot{position:absolute; top:7px; right:7px; width:11px; height:11px; border-radius:50%; background:transparent; transition:background .12s; box-shadow:0 0 0 1px rgba(0,0,0,.25) inset;}
   .key.t1 .dot{background:#ffd43b;} .key.t3 .dot{background:#ff6b6b;}
   .key.t5 .dot{background:#4dabf7;} .key.t7 .dot{background:#69db7c;}
@@ -114,83 +114,84 @@
 <body>
 <canvas id="viz"></canvas>
 <div id="overlay">
-  <h2>Реляционные инструменты</h2>
-  <p>Клавиши — это шаги по гамме, а не отдельные ноты. Промахнуться нельзя. Выбери инструмент:</p>
+  <h2 data-i18n="app.title">Relational Instruments</h2>
+  <p data-i18n="intro.p">Keys are steps along a scale, not separate notes — you can't play a wrong one. Pick an instrument:</p>
   <div class="pickers">
-    <div class="pick" data-mode="blues"><b>🎸 Блюз</b><span>блюзовая гамма, бенды, 12-тактовый бэк</span></div>
-    <div class="pick" data-mode="jazz"><b>🎷 Джаз</b><span>лад сам едет по аккордам (золотая секвенция)</span></div>
-    <div class="pick" data-mode="koto"><b>🎴 Кото</b><span>японская пентатоника, дрон/остинато</span></div>
-    <div class="pick" data-mode="dream"><b>🌫 Грёза</b><span>целотонная гамма, парящий пэд</span></div>
-    <div class="pick" data-mode="gamelan"><b>🔔 Гамелан</b><span>пелог/слендро, гонг и металлофон</span></div>
-    <div class="pick" data-mode="vostok"><b>🏜 Восток</b><span>фригийский доминантовый, дрон</span></div>
-    <div class="pick" data-mode="light"><b>☀️ Светлая</b><span>мажорная/минорная пентатоника</span></div>
-    <!-- Дорийский, Космос и флейта скрыты (код в MODES сохранён) -->
+    <div class="pick" data-mode="blues"><b data-i18n="pick.blues.t">🎸 Blues</b><span data-i18n="pick.blues.d">blues scale, bends, 12-bar backing</span></div>
+    <div class="pick" data-mode="jazz"><b data-i18n="pick.jazz.t">🎷 Jazz</b><span data-i18n="pick.jazz.d">the scale follows the chords (golden sequence)</span></div>
+    <div class="pick" data-mode="koto"><b data-i18n="pick.koto.t">🎴 Koto</b><span data-i18n="pick.koto.d">Japanese pentatonic, drone/ostinato</span></div>
+    <div class="pick" data-mode="dream"><b data-i18n="pick.dream.t">🌫 Dream</b><span data-i18n="pick.dream.d">whole-tone scale, floating pad</span></div>
+    <div class="pick" data-mode="gamelan"><b data-i18n="pick.gamelan.t">🔔 Gamelan</b><span data-i18n="pick.gamelan.d">pelog/slendro, gong and metallophone</span></div>
+    <div class="pick" data-mode="vostok"><b data-i18n="pick.vostok.t">🏜 East</b><span data-i18n="pick.vostok.d">phrygian dominant, drone</span></div>
+    <div class="pick" data-mode="light"><b data-i18n="pick.light.t">☀️ Bright</b><span data-i18n="pick.light.d">major/minor pentatonic</span></div>
+    <!-- Dorian, Cosmos and flute are hidden (code kept in MODES) -->
   </div>
 </div>
 
 <div id="settings" class="hidden">
   <div class="sheet">
-    <h3>⚙ Настройки</h3>
-    <div class="srow"><label>Нижняя нота</label><select id="loSel"></select></div>
-    <div class="srow"><label>Верхняя нота</label><select id="hiSel"></select></div>
-    <div class="srow"><label>Темп фона</label><input id="bpm" type="range" min="40" max="160" value="85"><span class="val" id="bpmVal">85</span></div>
-    <div class="srow"><label>Тон (яркость)</label><input id="tone" type="range" min="600" max="6000" value="2600"></div>
-    <div class="srow"><label>Громкость соло</label><input id="volSolo" type="range" min="0" max="100" value="80"></div>
-    <div class="srow"><label>Громкость фона</label><input id="volAcc" type="range" min="0" max="100" value="55"></div>
-    <div class="srow"><label>Визуализатор</label><select id="vizSel"><option value="on">Вкл</option><option value="off">Выкл</option></select></div>
-    <div class="srow"><label>Гироскоп (телефон)</label><select id="gyroSel"><option value="off">Выкл</option><option value="vibrato">Вибрато</option><option value="volume">Громкость</option><option value="tone">Яркость</option></select></div>
-    <div class="srow"><label>Задержка звука</label><button id="latBtn">🔬 Измерить</button></div>
-    <button id="closeSettings">Готово</button>
+    <h3 data-i18n="set.title">⚙ Settings</h3>
+    <div class="srow"><label data-i18n="set.lang">Language</label><select id="langSel"><option value="en">English</option><option value="ru">Русский</option></select></div>
+    <div class="srow"><label data-i18n="set.lo">Lowest note</label><select id="loSel"></select></div>
+    <div class="srow"><label data-i18n="set.hi">Highest note</label><select id="hiSel"></select></div>
+    <div class="srow"><label data-i18n="set.bpm">Backing tempo</label><input id="bpm" type="range" min="40" max="160" value="85"><span class="val" id="bpmVal">85</span></div>
+    <div class="srow"><label data-i18n="set.tone">Tone (brightness)</label><input id="tone" type="range" min="600" max="6000" value="2600"></div>
+    <div class="srow"><label data-i18n="set.volSolo">Lead volume</label><input id="volSolo" type="range" min="0" max="100" value="80"></div>
+    <div class="srow"><label data-i18n="set.volAcc">Backing volume</label><input id="volAcc" type="range" min="0" max="100" value="55"></div>
+    <div class="srow"><label data-i18n="set.viz">Visualizer</label><select id="vizSel"><option value="on" data-i18n="opt.on">On</option><option value="off" data-i18n="opt.off">Off</option></select></div>
+    <div class="srow"><label data-i18n="set.gyro">Gyroscope (phone)</label><select id="gyroSel"><option value="off" data-i18n="opt.off">Off</option><option value="vibrato" data-i18n="gyro.vibrato">Vibrato</option><option value="volume" data-i18n="gyro.volume">Volume</option><option value="tone" data-i18n="gyro.tone">Brightness</option></select></div>
+    <div class="srow"><label data-i18n="set.lat">Audio latency</label><button id="latBtn" data-i18n="btn.measure">🔬 Measure</button></div>
+    <button id="closeSettings" data-i18n="btn.done">Done</button>
   </div>
 </div>
 
 <div id="recov" class="hidden">
   <div class="sheet">
-    <h3>🎬 Запись</h3>
+    <h3 data-i18n="rec.title">🎬 Recording</h3>
     <video id="recVid" playsinline controls style="width:100%; max-height:46vh; border-radius:10px; background:#000;"></video>
     <div id="recInfo" style="color:var(--muted); font-size:12px;"></div>
     <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-      <button id="recShare">Поделиться</button>
-      <button id="recSave">Скачать</button>
-      <button id="recClose">Закрыть</button>
+      <button id="recShare" data-i18n="btn.share">Share</button>
+      <button id="recSave" data-i18n="btn.save">Download</button>
+      <button id="recClose" data-i18n="btn.close">Close</button>
     </div>
   </div>
 </div>
 
 <div id="latov" class="hidden">
   <div class="sheet">
-    <h3>🔬 Задержка звука</h3>
+    <h3 data-i18n="lat.title">🔬 Audio latency</h3>
     <div id="latInfo" style="font-size:13px; line-height:1.5;">…</div>
-    <button id="latMic">Акустический тест (микрофон)</button>
+    <button id="latMic" data-i18n="lat.micBtn">Acoustic test (microphone)</button>
     <div id="latResult" style="color:var(--muted); font-size:13px; line-height:1.4;"></div>
-    <button id="latClose">Закрыть</button>
+    <button id="latClose" data-i18n="btn.close">Close</button>
   </div>
 </div>
 
 <header><h1><span id="h1name">—</span> <small id="h1sub"></small></h1></header>
 
 <div class="controls">
-  <div class="ctl"><label>&nbsp;</label><button id="homeBtn">⌂ Стили</button></div>
-  <div class="ctl"><label>Инструмент</label>
+  <div class="ctl"><label>&nbsp;</label><button id="homeBtn" data-i18n="ctl.styles">⌂ Styles</button></div>
+  <div class="ctl"><label data-i18n="ctl.instrument">Instrument</label>
     <select id="modeSel">
-      <option value="blues">Блюз</option>
-      <option value="jazz">Джаз</option>
-      <option value="koto">Кото</option>
-      <option value="dream">Грёза</option>
-      <option value="gamelan">Гамелан</option>
-      <option value="vostok">Восток</option>
-      <option value="light">Светлая</option>
+      <option value="blues" data-i18n="mode.blues.name">Blues</option>
+      <option value="jazz" data-i18n="mode.jazz.name">Jazz</option>
+      <option value="koto" data-i18n="mode.koto.name">Koto</option>
+      <option value="dream" data-i18n="mode.dream.name">Dream</option>
+      <option value="gamelan" data-i18n="mode.gamelan.name">Gamelan</option>
+      <option value="vostok" data-i18n="mode.vostok.name">East</option>
+      <option value="light" data-i18n="mode.light.name">Bright</option>
     </select>
   </div>
-  <div class="ctl"><label>Тоника</label><select id="rootSel"></select></div>
-  <div class="ctl" id="ctlBack"><label>Фон</label><select id="backSel"></select></div>
-  <div class="ctl" id="ctlHarm"><label>Гармония</label><select id="harmSel"></select></div>
-  <div class="ctl" id="ctlRhythm"><label>Ритм</label><select id="rhythmSel"></select></div>
-  <div class="ctl" id="ctlColor"><label>Лады</label><select id="colorSel"><option value="calm">Спокойнее</option><option value="hot">Острее</option></select></div>
-  <div class="ctl" id="ctlLand"><label>Заход</label><select id="landSel"><option value="line">Веди линию</option><option value="root">К тонике</option></select></div>
-  <div class="ctl"><label>&nbsp;</label><button id="accBtn" class="toggle">▶ Фон</button></div>
-  <div class="ctl"><label>&nbsp;</label><button id="settingsBtn">⚙ Настройки</button></div>
-  <div class="ctl"><label>&nbsp;</label><button id="recBtn">⏺ Запись</button></div>
+  <div class="ctl"><label data-i18n="ctl.root">Root</label><select id="rootSel"></select></div>
+  <div class="ctl" id="ctlBack"><label data-i18n="ctl.back">Backing</label><select id="backSel"></select></div>
+  <div class="ctl" id="ctlHarm"><label data-i18n="ctl.harm">Harmony</label><select id="harmSel"></select></div>
+  <div class="ctl" id="ctlRhythm"><label data-i18n="ctl.rhythm">Rhythm</label><select id="rhythmSel"></select></div>
+  <div class="ctl" id="ctlColor"><label data-i18n="ctl.scale">Scales</label><select id="colorSel"><option value="calm" data-i18n="color.calm">Calmer</option><option value="hot" data-i18n="color.hot">Edgier</option></select></div>
+  <div class="ctl" id="ctlLand"><label data-i18n="ctl.land">Approach</label><select id="landSel"><option value="line" data-i18n="land.line">Lead the line</option><option value="root" data-i18n="land.root">To the root</option></select></div>
+  <div class="ctl"><label>&nbsp;</label><button id="accBtn" class="toggle" data-i18n="btn.bgStart">▶ Backing</button></div>
+  <div class="ctl"><label>&nbsp;</label><button id="settingsBtn" data-i18n="btn.settings">⚙ Settings</button></div>
+  <div class="ctl"><label>&nbsp;</label><button id="recBtn" data-i18n="btn.rec">⏺ Record</button></div>
 </div>
 
 <div class="display">
@@ -211,84 +212,228 @@
 (() => {
   "use strict";
 
-  /* ============ КОНФИГ РЕЖИМОВ ============ */
+  /* ============ I18N ============ */
+  const I18N = {
+    en: {
+      'app.title':'Relational Instruments',
+      'intro.p':"Keys are steps along a scale, not separate notes — you can't play a wrong one. Pick an instrument:",
+      'pick.blues.t':'🎸 Blues','pick.blues.d':'blues scale, bends, 12-bar backing',
+      'pick.jazz.t':'🎷 Jazz','pick.jazz.d':'the scale follows the chords (golden sequence)',
+      'pick.koto.t':'🎴 Koto','pick.koto.d':'Japanese pentatonic, drone/ostinato',
+      'pick.dream.t':'🌫 Dream','pick.dream.d':'whole-tone scale, floating pad',
+      'pick.gamelan.t':'🔔 Gamelan','pick.gamelan.d':'pelog/slendro, gong and metallophone',
+      'pick.vostok.t':'🏜 East','pick.vostok.d':'phrygian dominant, drone',
+      'pick.light.t':'☀️ Bright','pick.light.d':'major/minor pentatonic',
+      'set.title':'⚙ Settings','set.lang':'Language','set.lo':'Lowest note','set.hi':'Highest note',
+      'set.bpm':'Backing tempo','set.tone':'Tone (brightness)','set.volSolo':'Lead volume','set.volAcc':'Backing volume',
+      'set.viz':'Visualizer','opt.on':'On','opt.off':'Off','set.gyro':'Gyroscope (phone)',
+      'gyro.vibrato':'Vibrato','gyro.volume':'Volume','gyro.tone':'Brightness',
+      'set.lat':'Audio latency','btn.measure':'🔬 Measure','btn.done':'Done',
+      'rec.title':'🎬 Recording','btn.share':'Share','btn.save':'Download','btn.close':'Close',
+      'lat.title':'🔬 Audio latency','lat.micBtn':'Acoustic test (microphone)',
+      'ctl.styles':'⌂ Styles','ctl.instrument':'Instrument','ctl.root':'Root','ctl.back':'Backing',
+      'ctl.harm':'Harmony','ctl.rhythm':'Rhythm','ctl.scale':'Scales',
+      'color.calm':'Calmer','color.hot':'Edgier','ctl.land':'Approach','land.line':'Lead the line','land.root':'To the root',
+      'btn.bgStart':'▶ Backing','btn.bgStop':'⏸ Backing','btn.settings':'⚙ Settings','btn.rec':'⏺ Record','btn.recStop':'⏹ ',
+      'mode.blues.name':'Blues','mode.blues.sub':'· scale steps + bends',
+      'mode.jazz.name':'Jazz','mode.jazz.sub':'· auto-scale on chords',
+      'mode.gamelan.name':'Gamelan','mode.gamelan.sub':'· pelog / slendro',
+      'mode.dream.name':'Dream','mode.dream.sub':'· whole-tone',
+      'mode.koto.name':'Koto','mode.koto.sub':'· Japanese pentatonic',
+      'mode.vostok.name':'East','mode.vostok.sub':'· phrygian dominant',
+      'mode.light.name':'Bright','mode.light.sub':'· pentatonic',
+      'mode.dorian.name':'Dorian','mode.dorian.sub':'· modal minor',
+      'mode.cosmos.name':'Cosmos','mode.cosmos.sub':'· lydian',
+      'mode.flute.name':'Overtone flute','mode.flute.sub':'· natural harmonic series',
+      'variant.blues.minor':'Minor','variant.blues.major':'Major',
+      'variant.pelog':'Pelog','variant.slendro':'Slendro',
+      'variant.hira':'Hirajoshi','variant.kumoi':'Kumoi','variant.insen':'In-sen','variant.iwato':'Iwato',
+      'variant.freygish':'Phrygian dom.','variant.hungarian':'Hungarian',
+      'variant.light.major':'Major','variant.light.minor':'Minor',
+      'variant.dorian':'Dorian','variant.aeolian':'Aeolian','variant.lydian':'Lydian','variant.mixo':'Mixolydian',
+      'backing.shuffle':'Shuffle','backing.minor':'Minor','backing.rock':'Rock','backing.slow':'Slow',
+      'backing.country':'Country','backing.funk':'Funk vamp','backing.rhumba':'Rhumba','backing.honky':'Honky-tonk',
+      'backing.swing':'Swing','backing.gong':'Gong','backing.pattern':'Pattern',
+      'backing.drone':'Drone','backing.shimmer':'Shimmer','backing.arp':'Arpeggio','backing.both':'Drone + arpeggio',
+      'backing.koto.padperc':'Drone + taiko','backing.koto.arpperc':'Arpeggio + taiko',
+      'backing.vostok.padperc':'Drone + darbuka','backing.vostok.arpperc':'Arpeggio + darbuka','backing.vostok.vamp':'Vamp ♭II + darbuka',
+      'backing.light.padperc':'Drone + percussion','backing.light.arpperc':'Arpeggio + percussion',
+      'harm.major':'Major','harm.minor':'Minor','harm.country':'Country','harm.funk':'Funk vamp',
+      'rhy.shuffle':'Shuffle','rhy.rock':'Rock','rhy.slow':'Slow','rhy.train':'Train','rhy.rhumba':'Rhumba','rhy.honky':'Honky-tonk','rhy.funk':'Funk',
+      'deg.0':'root','deg.1':'♭2','deg.2':'second','deg.3':'third','deg.4':'third','deg.5':'fourth','deg.6':'tritone','deg.7':'fifth','deg.8':'sixth','deg.9':'sixth','deg.10':'seventh','deg.11':'maj7','deg.step':'step',
+      'scale.dorian':'dorian','scale.aeolian':'aeolian','scale.mixo':'mixolydian','scale.lyddom':'lydian dom.','scale.alt':'altered','scale.whole':'whole-tone','scale.ionian':'ionian','scale.lydian':'lydian','scale.locr2':'locrian ♮2','scale.locr':'locrian','scale.phrdom':'phrygian dom.','scale.hw':'half-whole dim.',
+      'role.harmonicWord':'harmonic','role.oct':'oct','ord':'{n}th','tip.bend':'bend',
+      'extra.octDown':'Octave ↓','extra.toRoot':'To root','extra.octUp':'Octave ↑',
+      'hint.harmonic':"Keys: <b>S D F G H · Space · J K L ; '</b> · Shift — bend · [ ] — fundamental octave · Backspace — reset",
+      'hint.scale':"Keys: <b>S D F G H · Space · J K L ; '</b> · Shift — bend · [ ] — octave · Backspace — root · ↑↓ — scale",
+      'lat.sampleRate':'Sample rate','lat.hz':'Hz','lat.ms':'ms','lat.na':'n/a',
+      'lat.outNote':'outputLatency ≈ tap→sound delay for scheduled audio (browser report)',
+      'lat.measuring':'Measuring… turn up the volume, keep quiet (10 clicks)…',
+      'lat.rtt':'Round-trip: median <b>{med} ms</b> ({n} tries, incl. the speaker→mic path)',
+      'lat.rttNote':"the 'feel' is usually lower — minus the microphone delay",
+      'lat.noClick':"Didn't catch a click. Try louder and in silence.",
+      'lat.micErr':'Microphone unavailable: ',
+      'rec.noSupport':"Recording isn't supported in this browser",
+      'rec.unavailable':'Recording unavailable: ',
+      'rec.size':'Size: {kb} KB · {type}',
+      'rec.empty':'Empty: nothing recorded (format not supported by the device?)',
+      'rec.shareUnsupported':'File sharing isn’t supported — tap “Download”.',
+      'rec.shareDenied':'The browser blocked sharing. Open the page in regular Safari/Chrome (not an in-app messenger browser) or tap “Download”.',
+      'rec.shareErr':'Share: {name} — {msg}',
+    },
+    ru: {
+      'app.title':'Реляционные инструменты',
+      'intro.p':'Клавиши — это шаги по гамме, а не отдельные ноты. Промахнуться нельзя. Выбери инструмент:',
+      'pick.blues.t':'🎸 Блюз','pick.blues.d':'блюзовая гамма, бенды, 12-тактовый бэк',
+      'pick.jazz.t':'🎷 Джаз','pick.jazz.d':'лад сам едет по аккордам (золотая секвенция)',
+      'pick.koto.t':'🎴 Кото','pick.koto.d':'японская пентатоника, дрон/остинато',
+      'pick.dream.t':'🌫 Грёза','pick.dream.d':'целотонная гамма, парящий пэд',
+      'pick.gamelan.t':'🔔 Гамелан','pick.gamelan.d':'пелог/слендро, гонг и металлофон',
+      'pick.vostok.t':'🏜 Восток','pick.vostok.d':'фригийский доминантовый, дрон',
+      'pick.light.t':'☀️ Светлая','pick.light.d':'мажорная/минорная пентатоника',
+      'set.title':'⚙ Настройки','set.lang':'Язык','set.lo':'Нижняя нота','set.hi':'Верхняя нота',
+      'set.bpm':'Темп фона','set.tone':'Тон (яркость)','set.volSolo':'Громкость соло','set.volAcc':'Громкость фона',
+      'set.viz':'Визуализатор','opt.on':'Вкл','opt.off':'Выкл','set.gyro':'Гироскоп (телефон)',
+      'gyro.vibrato':'Вибрато','gyro.volume':'Громкость','gyro.tone':'Яркость',
+      'set.lat':'Задержка звука','btn.measure':'🔬 Измерить','btn.done':'Готово',
+      'rec.title':'🎬 Запись','btn.share':'Поделиться','btn.save':'Скачать','btn.close':'Закрыть',
+      'lat.title':'🔬 Задержка звука','lat.micBtn':'Акустический тест (микрофон)',
+      'ctl.styles':'⌂ Стили','ctl.instrument':'Инструмент','ctl.root':'Тоника','ctl.back':'Фон',
+      'ctl.harm':'Гармония','ctl.rhythm':'Ритм','ctl.scale':'Лады',
+      'color.calm':'Спокойнее','color.hot':'Острее','ctl.land':'Заход','land.line':'Веди линию','land.root':'К тонике',
+      'btn.bgStart':'▶ Фон','btn.bgStop':'⏸ Фон','btn.settings':'⚙ Настройки','btn.rec':'⏺ Запись','btn.recStop':'⏹ ',
+      'mode.blues.name':'Блюз','mode.blues.sub':'· шаги по гамме + бенды',
+      'mode.jazz.name':'Джаз','mode.jazz.sub':'· авто-лад по аккордам',
+      'mode.gamelan.name':'Гамелан','mode.gamelan.sub':'· пелог / слендро',
+      'mode.dream.name':'Грёза','mode.dream.sub':'· целотонная',
+      'mode.koto.name':'Кото','mode.koto.sub':'· японская пентатоника',
+      'mode.vostok.name':'Восток','mode.vostok.sub':'· фригийский доминантовый',
+      'mode.light.name':'Светлая','mode.light.sub':'· пентатоника',
+      'mode.dorian.name':'Дорийский','mode.dorian.sub':'· модальный минор',
+      'mode.cosmos.name':'Космос','mode.cosmos.sub':'· лидийский',
+      'mode.flute.name':'Обертоновая флейта','mode.flute.sub':'· натуральный звукоряд',
+      'variant.blues.minor':'Минор','variant.blues.major':'Мажор',
+      'variant.pelog':'Пелог','variant.slendro':'Слендро',
+      'variant.hira':'Хирадзёси','variant.kumoi':'Кумои','variant.insen':'Ин-сэн','variant.iwato':'Ивато',
+      'variant.freygish':'Фригийский дом.','variant.hungarian':'Венгерский',
+      'variant.light.major':'Мажорная','variant.light.minor':'Минорная',
+      'variant.dorian':'Дорийский','variant.aeolian':'Эолийский','variant.lydian':'Лидийский','variant.mixo':'Миксолидийский',
+      'backing.shuffle':'Шаффл','backing.minor':'Минорный','backing.rock':'Рок','backing.slow':'Медленный',
+      'backing.country':'Кантри','backing.funk':'Фанк-вамп','backing.rhumba':'Румба','backing.honky':'Хонки-тонк',
+      'backing.swing':'Свинг','backing.gong':'Гонг','backing.pattern':'Узор',
+      'backing.drone':'Дрон','backing.shimmer':'Мерцание','backing.arp':'Арпеджио','backing.both':'Дрон + арпеджио',
+      'backing.koto.padperc':'Дрон + тайко','backing.koto.arpperc':'Арпеджио + тайко',
+      'backing.vostok.padperc':'Дрон + дарбука','backing.vostok.arpperc':'Арпеджио + дарбука','backing.vostok.vamp':'Вамп ♭II + дарбука',
+      'backing.light.padperc':'Дрон + перкуссия','backing.light.arpperc':'Арпеджио + перкуссия',
+      'harm.major':'Мажорный','harm.minor':'Минорный','harm.country':'Кантри','harm.funk':'Фанк-вамп',
+      'rhy.shuffle':'Шаффл','rhy.rock':'Рок','rhy.slow':'Медленный','rhy.train':'Трейн','rhy.rhumba':'Румба','rhy.honky':'Хонки-тонк','rhy.funk':'Фанк',
+      'deg.0':'тоника','deg.1':'♭2','deg.2':'секунда','deg.3':'терция','deg.4':'терция','deg.5':'кварта','deg.6':'тритон','deg.7':'квинта','deg.8':'секста','deg.9':'секста','deg.10':'септима','deg.11':'б.септ.','deg.step':'ступени',
+      'scale.dorian':'дорийский','scale.aeolian':'эолийский','scale.mixo':'миксолидийский','scale.lyddom':'лидийский дом.','scale.alt':'альтерированный','scale.whole':'целотонный','scale.ionian':'ионийский','scale.lydian':'лидийский','scale.locr2':'локрийский ♮2','scale.locr':'локрийский','scale.phrdom':'фригийский дом.','scale.hw':'п/тон-тон',
+      'role.harmonicWord':'гармоника','role.oct':'окт','ord':'{n}-я','tip.bend':'тяни',
+      'extra.octDown':'Октава ↓','extra.toRoot':'К тонике','extra.octUp':'Октава ↑',
+      'hint.harmonic':"Клавиши: <b>S D F G H · Пробел · J K L ; '</b> · Shift — подтяг · [ ] — октава фундаментала · Backspace — сброс",
+      'hint.scale':"Клавиши: <b>S D F G H · Пробел · J K L ; '</b> · Shift — бенд · [ ] — октава · Backspace — тоника · ↑↓ — лад",
+      'lat.sampleRate':'Частота','lat.hz':'Гц','lat.ms':'мс','lat.na':'н/д',
+      'lat.outNote':'outputLatency ≈ задержка «тап → звук» для запланированного аудио (отчёт браузера)',
+      'lat.measuring':'Измеряю… выкрути громкость, тихо вокруг (10 щелчков)…',
+      'lat.rtt':'Round-trip: медиана <b>{med} мс</b> (попыток {n}, вкл. путь динамик→микрофон)',
+      'lat.rttNote':'«на ощупь» обычно меньше — за вычетом задержки микрофона',
+      'lat.noClick':'Не поймал щелчок. Попробуй громче и в тишине.',
+      'lat.micErr':'Микрофон недоступен: ',
+      'rec.noSupport':'Запись не поддерживается этим браузером',
+      'rec.unavailable':'Запись недоступна: ',
+      'rec.size':'Размер: {kb} КБ · {type}',
+      'rec.empty':'Пусто: видео не записалось (формат не поддержан устройством?)',
+      'rec.shareUnsupported':'Шеринг файлов не поддерживается — жми «Скачать».',
+      'rec.shareDenied':'Браузер не разрешил шеринг. Открой страницу в обычном Safari/Chrome (не во встроенном браузере мессенджера) или жми «Скачать».',
+      'rec.shareErr':'Шеринг: {name} — {msg}',
+    },
+  };
+  let LANG = (()=>{ try{ const s=localStorage.getItem('jamlab.lang'); if(s==='en'||s==='ru') return s; }catch(e){} return 'en'; })();
+  function t(k,vars){
+    let s = (I18N[LANG] && I18N[LANG][k]!=null) ? I18N[LANG][k] : (I18N.en[k]!=null ? I18N.en[k] : k);
+    if(vars) for(const p in vars) s = s.split('{'+p+'}').join(vars[p]);
+    return s;
+  }
+  function degName(pc){ return t('deg.'+pc); }
+
+  /* ============ MODE CONFIG ============ */
   const MODES = {
     blues: {
-      id:'blues', name:'Блюз', sub:'· шаги по гамме + бенды', voice:'saw', back:'blues',
+      id:'blues', name:'mode.blues.name', sub:'mode.blues.sub', voice:'saw', back:'blues',
       theme:{bg1:'#18324f', accent:'#ffd43b', zero:'#2f9e44', neg:'#3b5bdb', pos:'#e8590c', blue:'#4dd0e1'},
       kind:'scale',
       scales:{minor:[0,3,5,6,7,10], major:[0,2,3,4,7,9]},
-      variants:[{id:'minor',label:'Минор'},{id:'major',label:'Мажор'}], defVariant:'minor',
-      backings:[{id:'shuffle',label:'Шаффл'},{id:'minor',label:'Минорный'},{id:'rock',label:'Рок'},{id:'slow',label:'Медленный'},{id:'country',label:'Кантри'},{id:'funk',label:'Фанк-вамп'},{id:'rhumba',label:'Румба'},{id:'honky',label:'Хонки-тонк'}], defBacking:'shuffle',
+      variants:[{id:'minor',label:'variant.blues.minor'},{id:'major',label:'variant.blues.major'}], defVariant:'minor',
+      backings:[{id:'shuffle',label:'backing.shuffle'},{id:'minor',label:'backing.minor'},{id:'rock',label:'backing.rock'},{id:'slow',label:'backing.slow'},{id:'country',label:'backing.country'},{id:'funk',label:'backing.funk'},{id:'rhumba',label:'backing.rhumba'},{id:'honky',label:'backing.honky'}], defBacking:'shuffle',
     },
     jazz: {
-      id:'jazz', name:'Джаз', sub:'· авто-лад по аккордам', voice:'pluck', back:'jazz', defBpm:160,
+      id:'jazz', name:'mode.jazz.name', sub:'mode.jazz.sub', voice:'pluck', back:'jazz', defBpm:160,
       theme:{bg1:'#1a1a2e', accent:'#e0b974', zero:'#c44569', neg:'#5b6ee1', pos:'#d98c3a', blue:'#5ad1c8'},
       kind:'scale', variants:[],
-      backings:[{id:'swing',label:'Свинг'}], defBacking:'swing',
+      backings:[{id:'swing',label:'backing.swing'}], defBacking:'swing',
     },
     gamelan: {
-      id:'gamelan', name:'Гамелан', sub:'· пелог / слендро', voice:'metal', back:'gamelan',
+      id:'gamelan', name:'mode.gamelan.name', sub:'mode.gamelan.sub', voice:'metal', back:'gamelan',
       theme:{bg1:'#3a2e10', accent:'#ffd43b', zero:'#e8a23a', neg:'#c98a2a', pos:'#e8c14a', blue:'#7fd1ff'},
       kind:'scale', scales:{pelog:[0,1,3,7,8], slendro:[0,2,5,7,10]},
-      variants:[{id:'pelog',label:'Пелог'},{id:'slendro',label:'Слендро'}], defVariant:'pelog',
-      backings:[{id:'gong',label:'Гонг'},{id:'pattern',label:'Узор'}], defBacking:'gong',
+      variants:[{id:'pelog',label:'variant.pelog'},{id:'slendro',label:'variant.slendro'}], defVariant:'pelog',
+      backings:[{id:'gong',label:'backing.gong'},{id:'pattern',label:'backing.pattern'}], defBacking:'gong',
     },
     dream: {
-      id:'dream', name:'Грёза', sub:'· целотонная', voice:'pad', back:'dream',
+      id:'dream', name:'mode.dream.name', sub:'mode.dream.sub', voice:'pad', back:'dream',
       theme:{bg1:'#243a66', accent:'#a5d8ff', zero:'#74c0fc', neg:'#748ffc', pos:'#b197fc', blue:'#99e9f2'},
       kind:'scale', scales:{whole:[0,2,4,6,8,10]}, variants:[], defVariant:'whole',
-      backings:[{id:'drone',label:'Дрон'},{id:'shimmer',label:'Мерцание'}], defBacking:'drone',
+      backings:[{id:'drone',label:'backing.drone'},{id:'shimmer',label:'backing.shimmer'}], defBacking:'drone',
     },
     koto: {
-      id:'koto', name:'Кото', sub:'· японская пентатоника', voice:'pluck', back:'koto', perc:'taiko',
+      id:'koto', name:'mode.koto.name', sub:'mode.koto.sub', voice:'pluck', back:'koto', perc:'taiko',
       theme:{bg1:'#2a2150', accent:'#ffcf6b', zero:'#e23b3b', neg:'#4263eb', pos:'#e8590c', blue:'#4dd0e1'},
       kind:'scale',
       scales:{hira:[0,2,3,7,8], kumoi:[0,2,3,7,9], insen:[0,1,5,7,10], iwato:[0,1,5,6,10]},
-      variants:[{id:'hira',label:'Хирадзёси'},{id:'kumoi',label:'Кумои'},{id:'insen',label:'Ин-сэн'},{id:'iwato',label:'Ивато'}], defVariant:'hira',
-      backings:[{id:'drone',label:'Дрон',pad:1},{id:'arp',label:'Арпеджио',arp:1},{id:'both',label:'Дрон + арпеджио',pad:1,arp:1},{id:'padperc',label:'Дрон + тайко',pad:1,perc:1,bass:1},{id:'arpperc',label:'Арпеджио + тайко',arp:1,perc:1,bass:1}], defBacking:'drone',
+      variants:[{id:'hira',label:'variant.hira'},{id:'kumoi',label:'variant.kumoi'},{id:'insen',label:'variant.insen'},{id:'iwato',label:'variant.iwato'}], defVariant:'hira',
+      backings:[{id:'drone',label:'backing.drone',pad:1},{id:'arp',label:'backing.arp',arp:1},{id:'both',label:'backing.both',pad:1,arp:1},{id:'padperc',label:'backing.koto.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.koto.arpperc',arp:1,perc:1,bass:1}], defBacking:'drone',
     },
     vostok: {
-      id:'vostok', name:'Восток', sub:'· фригийский доминантовый', voice:'pluck', back:'koto', perc:'darbuka', vamp:[0,1],
+      id:'vostok', name:'mode.vostok.name', sub:'mode.vostok.sub', voice:'pluck', back:'koto', perc:'darbuka', vamp:[0,1],
       theme:{bg1:'#3a2417', accent:'#e8b04b', zero:'#d6453b', neg:'#b5651d', pos:'#e8930c', blue:'#e8b04b'},
       kind:'scale',
       scales:{freygish:[0,1,4,5,7,8,10], hungarian:[0,2,3,6,7,8,11]},
-      variants:[{id:'freygish',label:'Фригийский дом.'},{id:'hungarian',label:'Венгерский'}], defVariant:'freygish',
-      backings:[{id:'drone',label:'Дрон',pad:1},{id:'padperc',label:'Дрон + дарбука',pad:1,perc:1,bass:1},{id:'arpperc',label:'Арпеджио + дарбука',arp:1,perc:1,bass:1},{id:'vamp',label:'Вамп ♭II + дарбука',vamp:1,arp:1,perc:1,bass:1}], defBacking:'drone',
+      variants:[{id:'freygish',label:'variant.freygish'},{id:'hungarian',label:'variant.hungarian'}], defVariant:'freygish',
+      backings:[{id:'drone',label:'backing.drone',pad:1},{id:'padperc',label:'backing.vostok.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.vostok.arpperc',arp:1,perc:1,bass:1},{id:'vamp',label:'backing.vostok.vamp',vamp:1,arp:1,perc:1,bass:1}], defBacking:'drone',
     },
     light: {
-      id:'light', name:'Светлая', sub:'· пентатоника', voice:'pluck', back:'koto', perc:'shaker',
+      id:'light', name:'mode.light.name', sub:'mode.light.sub', voice:'pluck', back:'koto', perc:'shaker',
       theme:{bg1:'#13405a', accent:'#ffe08a', zero:'#37b24d', neg:'#4dabf7', pos:'#ffa94d', blue:'#66d9e8'},
       kind:'scale',
       scales:{major:[0,2,4,7,9], minor:[0,3,5,7,10]},
-      variants:[{id:'major',label:'Мажорная'},{id:'minor',label:'Минорная'}], defVariant:'major',
-      backings:[{id:'drone',label:'Дрон',pad:1},{id:'arp',label:'Арпеджио',arp:1},{id:'padperc',label:'Дрон + перкуссия',pad:1,perc:1,bass:1},{id:'arpperc',label:'Арпеджио + перкуссия',arp:1,perc:1,bass:1}], defBacking:'drone',
+      variants:[{id:'major',label:'variant.light.major'},{id:'minor',label:'variant.light.minor'}], defVariant:'major',
+      backings:[{id:'drone',label:'backing.drone',pad:1},{id:'arp',label:'backing.arp',arp:1},{id:'padperc',label:'backing.light.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.light.arpperc',arp:1,perc:1,bass:1}], defBacking:'drone',
     },
     dorian: {
-      id:'dorian', name:'Дорийский', sub:'· модальный минор', voice:'saw', back:'koto',
+      id:'dorian', name:'mode.dorian.name', sub:'mode.dorian.sub', voice:'saw', back:'koto',
       theme:{bg1:'#13392b', accent:'#a9e34b', zero:'#37b24d', neg:'#3bc9db', pos:'#82c91e', blue:'#3bc9db'},
       kind:'scale',
       scales:{dorian:[0,2,3,5,7,9,10], aeolian:[0,2,3,5,7,8,10]},
-      variants:[{id:'dorian',label:'Дорийский'},{id:'aeolian',label:'Эолийский'}], defVariant:'dorian',
-      backings:[{id:'drone',label:'Дрон',pad:1}], defBacking:'drone',
+      variants:[{id:'dorian',label:'variant.dorian'},{id:'aeolian',label:'variant.aeolian'}], defVariant:'dorian',
+      backings:[{id:'drone',label:'backing.drone',pad:1}], defBacking:'drone',
     },
     cosmos: {
-      id:'cosmos', name:'Космос', sub:'· лидийский', voice:'pad', back:'flute',
+      id:'cosmos', name:'mode.cosmos.name', sub:'mode.cosmos.sub', voice:'pad', back:'flute',
       theme:{bg1:'#241a44', accent:'#b197fc', zero:'#9775fa', neg:'#5c7cfa', pos:'#da77f2', blue:'#66d9e8'},
       kind:'scale',
       scales:{lydian:[0,2,4,6,7,9,11], mixo:[0,2,4,5,7,9,10]},
-      variants:[{id:'lydian',label:'Лидийский'},{id:'mixo',label:'Миксолидийский'}], defVariant:'lydian',
-      backings:[{id:'drone',label:'Дрон'}], defBacking:'drone',
+      variants:[{id:'lydian',label:'variant.lydian'},{id:'mixo',label:'variant.mixo'}], defVariant:'lydian',
+      backings:[{id:'drone',label:'backing.drone'}], defBacking:'drone',
     },
     flute: {
-      id:'flute', name:'Обертоновая флейта', sub:'· натуральный звукоряд', voice:'flute', back:'flute',
+      id:'flute', name:'mode.flute.name', sub:'mode.flute.sub', voice:'flute', back:'flute',
       theme:{bg1:'#10302e', accent:'#9be7c4', zero:'#2f9e9e', neg:'#3b8bdb', pos:'#d6a24a', blue:'#7fd1ff'},
-      kind:'harmonic', base:4,                 // индекс 0 -> 4-я гармоника
+      kind:'harmonic', base:4,                 // index 0 -> 4th harmonic
       variants:[],
-      backings:[{id:'drone',label:'Дрон'}], defBacking:'drone',
+      backings:[{id:'drone',label:'backing.drone'}], defBacking:'drone',
     },
   };
-  const DEG_NAME = {0:"тоника",1:"♭2",2:"секунда",3:"терция",4:"терция",5:"кварта",6:"тритон",7:"квинта",8:"секста",9:"секста",10:"септима",11:"б.септ."};
   const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 
   let M = MODES.blues;
@@ -296,7 +441,7 @@
   const settings = { rootMidi:57, bpm:85, tone:2600, variant:'minor', backing:'major',
                      harmony:'major', rhythm:'shuffle', jazzColor:'calm', jazzLand:'line',
                      volSolo:0.8, volAcc:0.55, minMidi:33, maxMidi:93, viz:true, gyro:'off' };
-  let gyroV=0;                                       // текущее значение наклона (0..1)
+  let gyroV=0;                                       // current tilt value (0..1)
   let currentIndex = 0;
 
   /* ============ Web Audio ============ */
@@ -310,7 +455,7 @@
     actx = new (window.AudioContext||window.webkitAudioContext)();
     comp = actx.createDynamicsCompressor(); comp.threshold.value=-12; comp.ratio.value=3; comp.release.value=.25;
     master = actx.createGain(); master.gain.value=1; master.connect(comp); comp.connect(actx.destination);
-    try{ recDest=actx.createMediaStreamDestination(); comp.connect(recDest); }catch(e){}   // тап для записи
+    try{ recDest=actx.createMediaStreamDestination(); comp.connect(recDest); }catch(e){}   // tap for recording
     reverb = actx.createConvolver(); reverb.buffer=makeImpulse(2.8,2.4);
     const rg=actx.createGain(); rg.gain.value=.36; reverb.connect(rg); rg.connect(master);
     leadBus = actx.createGain(); leadBus.gain.value=.9;
@@ -340,7 +485,7 @@
     if(!silentEl){ try{ silentEl=document.createElement('audio'); silentEl.src=buildSilentWavUrl(); silentEl.loop=true; silentEl.volume=0.0001;
       silentEl.setAttribute('playsinline','');silentEl.setAttribute('webkit-playsinline',''); document.body.appendChild(silentEl); silentEl.play().catch(()=>{}); }catch(e){} } }
 
-  /* ============ Визуализатор ============ */
+  /* ============ Visualizer ============ */
   function hexToRgb(h){ h=(h||'').trim().replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join(''); const n=parseInt(h||'888888',16); return [(n>>16)&255,(n>>8)&255,n&255]; }
   function cssRgb(v){ return hexToRgb(getComputedStyle(document.documentElement).getPropertyValue(v)); }
   const viz=(()=>{
@@ -382,7 +527,7 @@
   })();
   function vizBeat(time,s){ if(settings.viz && actx) setTimeout(()=>viz.pulse(s), Math.max(0,(time-actx.currentTime)*1000)); }
 
-  /* ============ Гироскоп (наклон телефона) ============ */
+  /* ============ Gyroscope (phone tilt) ============ */
   function applyGyro(x){
     if(settings.gyro==='volume'){ if(leadOut) leadOut.gain.value=0.12+x*0.9; }
     else if(settings.gyro==='tone'){ if(leadFilter) leadFilter.frequency.value=500+x*5500; }
@@ -400,16 +545,16 @@
     else add();
   }
 
-  /* ============ Высота ноты (зависит от режима) ============ */
+  /* ============ Pitch (depends on mode) ============ */
   function midiToFreq(m){ return 440*Math.pow(2,(m-69)/12); }
   function freqToMidi(f){ return 69+12*Math.log2(f/440); }
   function midiToName(m){ m=Math.round(m); return NOTE_NAMES[((m%12)+12)%12]+(Math.floor(m/12)-1); }
-  let jazzRoot=57, jazzLabel="";                     // корень лада в джазе (едет за аккордом) + подпись «аккорд · лад»
-  let curChord=null;                                 // {r:корень pc, ivs} текущего аккорда (для подсветки 1/3/5/7) — джаз/блюз
+  let jazzRoot=57, jazzLabel="";                     // scale root in jazz (follows the chord) + "chord · scale" label
+  let curChord=null;                                 // {r:root pc, ivs} of the current chord (for 1/3/5/7 highlight) — jazz/blues
   function leadRoot(){ return M.id==='jazz' ? jazzRoot : settings.rootMidi; }
   function indexToMidi(i){ const len=SCALE.length,o=Math.floor(i/len),s=((i%len)+len)%len; return leadRoot()+12*o+SCALE[s]; }
   function fluteHarmonic(i){ return Math.max(2, M.base+i); }
-  function f0freq(){ return midiToFreq(settings.rootMidi-24); }      // фундаментал на 2 октавы ниже тоники
+  function f0freq(){ return midiToFreq(settings.rootMidi-24); }      // fundamental two octaves below the root
   function pitchFreq(i){ return M.kind==='harmonic' ? f0freq()*fluteHarmonic(i) : midiToFreq(indexToMidi(i)); }
   function pitchLabel(i){
     if(M.kind==='harmonic'){ const n=fluteHarmonic(i); return {deg:n, note:midiToName(freqToMidi(pitchFreq(i)))}; }
@@ -431,58 +576,58 @@
     return best;
   }
 
-  /* ============ Цели бенда ============ */
+  /* ============ Bend targets ============ */
   let liveChordPcs=null;
   function currentChordPcs(){ if(accOn && liveChordPcs) return liveChordPcs;
     return settings.variant==='major' ? new Set([0,4,7,10]) : new Set([0,3,7,10]); }
   function bendTargets(i){
     if(M.kind==='harmonic'){
       const n=fluteHarmonic(i);
-      const up={amt:Math.min(2,12*Math.log2((n+1)/n)), name:(n+1)+"-я"};
-      const down = n-1>=2 ? {amt:Math.min(2,12*Math.log2(n/(n-1))), name:(n-1)+"-я"} : null;
+      const up={amt:Math.min(2,12*Math.log2((n+1)/n)), name:t('ord',{n:n+1})};
+      const down = n-1>=2 ? {amt:Math.min(2,12*Math.log2(n/(n-1))), name:t('ord',{n:n-1})} : null;
       return {up, down};
     }
     const len=SCALE.length, step=((i%len)+len)%len, pc=SCALE[step];
     const chord = M.id==='blues' ? currentChordPcs() : new Set(SCALE);
     let up=null,down=null;
-    for(const a of [1,2]){ const t=(pc+a)%12;    if(chord.has(t)){ up  ={amt:a,name:DEG_NAME[t]||"ступени"}; break; } }
-    for(const a of [1,2]){ const t=(pc-a+12)%12; if(chord.has(t)){ down={amt:a,name:DEG_NAME[t]||"ступени"}; break; } }
+    for(const a of [1,2]){ const tp=(pc+a)%12;    if(chord.has(tp)){ up  ={amt:a,name:degName(tp)}; break; } }
+    for(const a of [1,2]){ const tp=(pc-a+12)%12; if(chord.has(tp)){ down={amt:a,name:degName(tp)}; break; } }
     return {up,down};
   }
 
-  /* ============ Голос (тембр зависит от режима) ============ */
+  /* ============ Voice (timbre depends on mode) ============ */
   function makeVoice(freq,maxUp,maxDown){
-    const t=actx.currentTime, g=actx.createGain();
+    const t0=actx.currentTime, g=actx.createGain();
     const v={g,baseFreq:freq,dragBend:0,maxUp:maxUp||0,maxDown:maxDown||0,freqNodes:[],stops:[]};
     const vib=actx.createOscillator(), vibG=actx.createGain();
     vib.frequency.value = (M.voice==='flute'?4.5:M.voice==='pad'?4.2:5.0);
     vibG.gain.value = (M.voice==='flute'?7:M.voice==='pad'?4:3.8);
     v.vibG=vibG; v.vibBase=vibG.gain.value;
-    if(settings.gyro==='vibrato') vibG.gain.value = v.vibBase + gyroV*18;   // подхватить текущий наклон
-    vib.connect(vibG); vib.start(t); v.stops.push(vib);
+    if(settings.gyro==='vibrato') vibG.gain.value = v.vibBase + gyroV*18;   // pick up the current tilt
+    vib.connect(vibG); vib.start(t0); v.stops.push(vib);
     const addOsc=(type,mult,detune,gain)=>{ const o=actx.createOscillator(); o.type=type; o.frequency.value=freq*mult;
       if(detune)o.detune.value=detune; vibG.connect(o.detune);
       const og=actx.createGain(); og.gain.value=(gain==null?1:gain); o.connect(og); og.connect(g);
-      o.start(t); v.freqNodes.push({osc:o,mult}); v.stops.push(o); };
+      o.start(t0); v.freqNodes.push({osc:o,mult}); v.stops.push(o); };
     if(M.voice==='saw'){
       addOsc('sawtooth',1,0,1); addOsc('sawtooth',1,8,1);
-      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.30,t+0.012); g.gain.exponentialRampToValueAtTime(.2,t+0.3);
+      g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.30,t0+0.012); g.gain.exponentialRampToValueAtTime(.2,t0+0.3);
     } else if(M.voice==='pluck'){
       addOsc('triangle',1,0,1); addOsc('sine',2,6,0.4);
-      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.42,t+0.006); g.gain.exponentialRampToValueAtTime(.12,t+1.4);
-    } else if(M.voice==='metal'){         // металлофон/гамелан: неинтегральные обертоны, звонкий спад
+      g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.42,t0+0.006); g.gain.exponentialRampToValueAtTime(.12,t0+1.4);
+    } else if(M.voice==='metal'){         // metallophone/gamelan: inharmonic partials, bright decay
       addOsc('triangle',1,0,1); addOsc('sine',2.01,0,0.5); addOsc('sine',3.0,0,0.25); addOsc('sine',5.4,0,0.12);
-      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.4,t+0.003); g.gain.exponentialRampToValueAtTime(.08,t+1.8);
-    } else if(M.voice==='pad'){           // мягкий синус-пэд (лидийский «космос»)
+      g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.4,t0+0.003); g.gain.exponentialRampToValueAtTime(.08,t0+1.8);
+    } else if(M.voice==='pad'){           // soft sine pad (lydian "cosmos")
       addOsc('sine',1,0,1); addOsc('sine',2,0,0.22); addOsc('sine',3,0,0.08);
-      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.30,t+0.12);
-    } else { // flute — синус + обертоны + дыхание
+      g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.30,t0+0.12);
+    } else { // flute — sine + overtones + breath
       addOsc('sine',1,0,1); addOsc('sine',2,0,0.16); addOsc('triangle',3,0,0.05);
       const nz=actx.createBufferSource(); nz.buffer=noiseBuf; nz.loop=true;
       const bp=actx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=freq*2.5; bp.Q.value=5;
       const ng=actx.createGain(); ng.gain.value=0.05; nz.connect(bp); bp.connect(ng); ng.connect(g);
-      nz.start(t); v.stops.push(nz);
-      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.26,t+0.06);
+      nz.start(t0); v.stops.push(nz);
+      g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.26,t0+0.06);
     }
     g.connect(leadBus);
     if(kbBend>0) applyBend(v);
@@ -490,14 +635,14 @@
   }
   function applyBend(v){
     let b=v.dragBend; if(kbBend>0) b=Math.max(b,kbBend);
-    const semis=Math.max(-v.maxDown,Math.min(v.maxUp,b)), r=Math.pow(2,semis/12), t=actx.currentTime;
-    for(const fn of v.freqNodes) fn.osc.frequency.setTargetAtTime(v.baseFreq*fn.mult*r,t,0.025);
+    const semis=Math.max(-v.maxDown,Math.min(v.maxUp,b)), r=Math.pow(2,semis/12), t0=actx.currentTime;
+    for(const fn of v.freqNodes) fn.osc.frequency.setTargetAtTime(v.baseFreq*fn.mult*r,t0,0.025);
   }
   function stopVoice(id){ const v=activeVoices.get(id); if(!v) return; activeVoices.delete(id);
-    const t=actx.currentTime; v.g.gain.cancelScheduledValues(t); v.g.gain.setValueAtTime(v.g.gain.value,t);
-    v.g.gain.exponentialRampToValueAtTime(.0008,t+0.3); for(const n of v.stops){ try{n.stop(t+0.34);}catch(e){} } }
+    const t0=actx.currentTime; v.g.gain.cancelScheduledValues(t0); v.g.gain.setValueAtTime(v.g.gain.value,t0);
+    v.g.gain.exponentialRampToValueAtTime(.0008,t0+0.3); for(const n of v.stops){ try{n.stop(t0+0.34);}catch(e){} } }
 
-  /* ============ Нажатие ============ */
+  /* ============ Key press ============ */
   function noteOn(id,offset,el){ initAudio(); resumeAudio(); if(activeVoices.has(id)) return null;
     currentIndex=clampIndex(currentIndex+offset);
     const bt=bendTargets(currentIndex);
@@ -517,30 +662,30 @@
   function allowedVariants(){ return (M.id==='blues' && HARM_LADS[settings.harmony]) || M.variants.map(v=>v.id); }
   function cycleVariant(dir){ const ids=allowedVariants(); if(ids.length<2) return false;
     let i=ids.indexOf(settings.variant); if(i<0)i=0; setVariant(ids[(i+dir+ids.length)%ids.length]); return true; }
-  function applyLadLock(){            // отключаем лады, не подходящие к гармонии; несовместимый — переключаем
+  function applyLadLock(){            // disable scales that don't fit the harmony; switch away from an incompatible one
     const allow=allowedVariants();
     for(const b of ladHost.querySelectorAll('button')) b.disabled = !allow.includes(b.dataset.v);
     if(allow.length && !allow.includes(settings.variant)) setVariant(allow[0]);
   }
 
-  /* ============ Дисплей ============ */
+  /* ============ Display ============ */
   const elNote=document.getElementById("noteName"), elRole=document.getElementById("roleName"), elTip=document.getElementById("tip");
   function updateDisplay(){
     const lab=pitchLabel(currentIndex); elNote.textContent=lab.note;
     let role;
     if(M.id==='jazz') role=jazzLabel;
-    else if(M.kind==='harmonic') role=lab.deg+"-я гармоника";
+    else if(M.kind==='harmonic') role=t('ord',{n:lab.deg})+" "+t('role.harmonicWord');
     else { const len=SCALE.length, step=((currentIndex%len)+len)%len, oct=Math.floor(currentIndex/len);
-      role=(DEG_NAME[SCALE[step]]||"")+(oct? " · окт "+(oct>0?"+":"")+oct : ""); }
+      role=degName(SCALE[step])+(oct? " · "+t('role.oct')+" "+(oct>0?"+":"")+oct : ""); }
     elRole.textContent=role;
     const bt=bendTargets(currentIndex), parts=[];
     if(bt.up) parts.push("↑ "+bt.up.name); if(bt.down) parts.push("↓ "+bt.down.name);
-    elTip.textContent = parts.length ? "тяни "+parts.join("  ·  ") : "";
+    elTip.textContent = parts.length ? t('tip.bend')+" "+parts.join("  ·  ") : "";
     refreshKeyLabels();
   }
   function refreshKeyLabels(){ const ct=curChord; for(const k of noteKeys){
       const idx=clampIndex(currentIndex+k.off), lab=pitchLabel(idx); k.lead.textContent=lab.deg+" ("+lab.note+")";
-      let role=0;                                  // тон текущего аккорда: 1/3/5/7
+      let role=0;                                  // current-chord tone: 1/3/5/7
       if(ct){ const pc=((indexToMidi(idx)%12)+12)%12;
         if(pc===ct.r) role=1; else if(pc===(ct.r+ct.ivs[1])%12) role=3;
         else if(pc===(ct.r+ct.ivs[2])%12) role=5; else if(ct.ivs[3]!=null && pc===(ct.r+ct.ivs[3])%12) role=7; }
@@ -548,7 +693,7 @@
       k.el.classList.toggle('t5',role===5); k.el.classList.toggle('t7',role===7);
     } }
 
-  /* ============ Клавиши ============ */
+  /* ============ Keys ============ */
   const TOP=[{off:-5,code:"KeyS",lbl:"S",w:1.0},{off:-4,code:"KeyD",lbl:"D",w:1.3},{off:-3,code:"KeyF",lbl:"F",w:1.7},
              {off:3,code:"KeyL",lbl:"L",w:1.7},{off:4,code:"Semicolon",lbl:";",w:1.3},{off:5,code:"Quote",lbl:"'",w:1.0}];
   const BOTTOM=[{off:-2,code:"KeyG",lbl:"G",w:2.4},{off:-1,code:"KeyH",lbl:"H",w:3.2},{off:0,code:"Space",lbl:"␣",w:3.8},
@@ -561,15 +706,17 @@
     noteKeys.push({off:k.off, el, lead:el.querySelector(".lead")}); }); }
   buildRow(TOP,document.getElementById("rowTop")); buildRow(BOTTOM,document.getElementById("rowBottom"));
 
-  const EXTRA=[{label:"Октава ↓",code:"BracketLeft",act:()=>shiftOctave(-1)},
-               {label:"К тонике",code:"Backspace",act:resetToRoot},
-               {label:"Октава ↑",code:"BracketRight",act:()=>shiftOctave(1)}];
-  const extraHost=document.getElementById("extra");
-  EXTRA.forEach(k=>{ const el=document.createElement("div"); el.className="key zero"; el.innerHTML=`<span class="off">${k.label}</span>`;
+  const EXTRA=[{key:'extra.octDown',code:"BracketLeft",act:()=>shiftOctave(-1)},
+               {key:'extra.toRoot',code:"Backspace",act:resetToRoot},
+               {key:'extra.octUp',code:"BracketRight",act:()=>shiftOctave(1)}];
+  const extraHost=document.getElementById("extra"), extraLabelEls=[];
+  EXTRA.forEach(k=>{ const el=document.createElement("div"); el.className="key zero";
+    const sp=document.createElement('span'); sp.className='off'; sp.textContent=t(k.key); el.appendChild(sp);
     el.addEventListener("pointerdown",e=>{e.preventDefault();initAudio();resumeAudio();k.act();el.classList.add("active");setTimeout(()=>el.classList.remove("active"),120);});
-    extraHost.appendChild(el); codeMap[k.code]={el,act:k.act,momentary:true}; });
+    extraHost.appendChild(el); codeMap[k.code]={el,act:k.act,momentary:true}; extraLabelEls.push({sp,key:k.key}); });
+  function setExtraLabels(){ extraLabelEls.forEach(o=>o.sp.textContent=t(o.key)); }
 
-  /* ============ Указатель + бенд ============ */
+  /* ============ Pointer + bend ============ */
   const BEND_PX=110; const pointers=new Map();
   function bindPointer(el,off){ el.addEventListener("pointerdown",e=>{ e.preventDefault(); const id="p"+e.pointerId;
     const v=noteOn(id,off,el); if(v) pointers.set(e.pointerId,{id,startY:e.clientY,el,voice:v}); }); }
@@ -583,7 +730,7 @@
   function endPointer(e){ const p=pointers.get(e.pointerId); if(!p) return; pointers.delete(e.pointerId); noteOff(p.id,p.el); }
   window.addEventListener("pointerup",endPointer); window.addEventListener("pointercancel",endPointer);
 
-  /* ============ Клавиатура ============ */
+  /* ============ Keyboard ============ */
   const held=new Set();
   function setKbBend(s){ kbBend=s; for(const v of activeVoices.values()) applyBend(v); }
   window.addEventListener("keydown",e=>{
@@ -597,23 +744,23 @@
     const m=codeMap[e.code]; if(!m) return; held.delete(e.code);
     if(m.momentary) m.el.classList.remove("active"); else noteOff("k"+e.code,m.el); });
 
-  /* ============ Фон ============ */
+  /* ============ Backing ============ */
   let accOn=false, schedTimer=null, padNodes=[], nextNoteTime=0, eighth=0, qStep=0, mStep=0;
   const accGain=l=>{const g=actx.createGain();g.gain.value=l;g.connect(accBus);return g;};
 
-  // --- блюз: 12 тактов ---
+  // --- blues: 12 bars ---
   const DOM7=[0,4,7,10], MIN7=[0,3,7,10], MAJ=[0,4,7];
   const MAJ6=[0,4,7,9];
   const dom12=[0,0,0,0,5,5,0,0,7,5,0,7].map(r=>({root:r,ivs:DOM7}));
   const cnt12=[0,0,0,0,5,5,0,0,7,5,0,7].map(r=>({root:r,ivs:MAJ6}));
   const min12=[{root:0,ivs:MIN7},{root:0,ivs:MIN7},{root:0,ivs:MIN7},{root:0,ivs:MIN7},{root:5,ivs:MIN7},{root:5,ivs:MIN7},
                {root:0,ivs:MIN7},{root:0,ivs:MIN7},{root:8,ivs:MAJ},{root:7,ivs:DOM7},{root:0,ivs:MIN7},{root:7,ivs:DOM7}];
-  // --- гармония: прогрессия + качество аккордов ---
+  // --- harmony: progression + chord quality ---
   const HARMONY={ major:{bars:dom12}, minor:{bars:min12}, country:{bars:cnt12}, funk:{bars:[{root:0,ivs:DOM7}]} };
-  const HARM_OPTS=[['major','Мажорный'],['minor','Минорный'],['country','Кантри'],['funk','Фанк-вамп']];
-  // какой лад подходит под гармонию (защита от фальшивых сочетаний)
+  const HARM_OPTS=[['major','harm.major'],['minor','harm.minor'],['country','harm.country'],['funk','harm.funk']];
+  // which scale fits the harmony (guard against clashing combos)
   const HARM_LADS={ major:['minor','major'], minor:['minor'], country:['major'], funk:['minor','major'] };
-  // --- ритм: бас по «ролям» (тоны текущего аккорда), свинг, барабаны, комп ---
+  // --- rhythm: bass by "roles" (tones of the current chord), swing, drums, comping ---
   const RHYTHM={
     shuffle:{bass:['R','3','5','6','b7','6','5','3'],              swing:0.16, drum:'shuffle', comp:'sustain'},
     rock:   {bass:['R','5','R','5','R','5','R','5'],              swing:0,    drum:'rock',    comp:'sustain'},
@@ -623,7 +770,7 @@
     honky:  {bass:['R',null,null,null,'5',null,null,null],        swing:0.16, drum:'shuffle', comp:'offbeat'},
     funk:   {bass:['R',null,'5',null,'R',null,null,'b7'],         swing:0,    drum:'funk',    comp:'stab'},
   };
-  const RHY_OPTS=[['shuffle','Шаффл'],['rock','Рок'],['slow','Медленный'],['train','Трейн'],['rhumba','Румба'],['honky','Хонки-тонк'],['funk','Фанк']];
+  const RHY_OPTS=[['shuffle','rhy.shuffle'],['rock','rhy.rock'],['slow','rhy.slow'],['train','rhy.train'],['rhumba','rhy.rhumba'],['honky','rhy.honky'],['funk','rhy.funk']];
   function bassRole(role,ivs){ if(role==='R')return 0; if(role==='5')return 7; if(role==='8')return 12;
     if(role==='b7')return 10; if(role==='6')return 9; if(role==='3')return ivs.includes(3)?3:4; return null; }
   function bChord(rootSemi,time,dur,ivs,lvl){ const base=settings.rootMidi-12+rootSemi; lvl=lvl||0.05;
@@ -638,29 +785,29 @@
   function kick(time,vel){vizBeat(time,0.9*(vel||1));const o=actx.createOscillator();o.type="sine";const g=accGain(0);o.frequency.setValueAtTime(150,time);o.frequency.exponentialRampToValueAtTime(48,time+0.12);g.gain.setValueAtTime(.9*(vel||1),time);g.gain.exponentialRampToValueAtTime(.001,time+0.18);o.connect(g);o.start(time);o.stop(time+0.2);}
   function snare(time,vel){const n=actx.createBufferSource();n.buffer=noiseBuf;const f=actx.createBiquadFilter();f.type="bandpass";f.frequency.value=1800;const g=accGain(0);g.gain.setValueAtTime(.45*(vel||1),time);g.gain.exponentialRampToValueAtTime(.001,time+0.18);n.connect(f);f.connect(g);n.start(time);n.stop(time+0.2);}
   function hat(time,open,vel){const n=actx.createBufferSource();n.buffer=noiseBuf;const f=actx.createBiquadFilter();f.type="highpass";f.frequency.value=7000;const g=accGain(0);const dur=open?0.12:0.04;g.gain.setValueAtTime(.16*(vel||1),time);g.gain.exponentialRampToValueAtTime(.001,time+dur);n.connect(f);f.connect(g);n.start(time);n.stop(time+dur+0.02);}
-  function drumPat(style,step,t){
-    if(style==='shuffle'){ hat(t,step%2); if(step===0||step===4)kick(t); if(step===2||step===6)snare(t); }
-    else if(style==='rock'){ hat(t,false,0.7); if(step===0||step===4)kick(t); if(step===3)kick(t,0.5); if(step===2||step===6)snare(t); }
-    else if(style==='slow'){ if(step===0)kick(t); if(step===4)snare(t); if(step%2)hat(t,true,0.6); }
-    else if(style==='train'){ if(step===0||step===4)kick(t,0.9); snare(t, step%2?0.4:0.18); }
-    else if(style==='funk'){ hat(t,false,0.7); if(step===0||step===3)kick(t); if(step===2||step===6)snare(t); }
-    else if(style==='rhumba'){ hat(t,false,0.5); if(step===0||step===3||step===6)kick(t,0.9); if(step===2||step===5)snare(t,0.3); }
+  function drumPat(style,step,t0){
+    if(style==='shuffle'){ hat(t0,step%2); if(step===0||step===4)kick(t0); if(step===2||step===6)snare(t0); }
+    else if(style==='rock'){ hat(t0,false,0.7); if(step===0||step===4)kick(t0); if(step===3)kick(t0,0.5); if(step===2||step===6)snare(t0); }
+    else if(style==='slow'){ if(step===0)kick(t0); if(step===4)snare(t0); if(step%2)hat(t0,true,0.6); }
+    else if(style==='train'){ if(step===0||step===4)kick(t0,0.9); snare(t0, step%2?0.4:0.18); }
+    else if(style==='funk'){ hat(t0,false,0.7); if(step===0||step===3)kick(t0); if(step===2||step===6)snare(t0); }
+    else if(style==='rhumba'){ hat(t0,false,0.5); if(step===0||step===3||step===6)kick(t0,0.9); if(step===2||step===5)snare(t0,0.3); }
   }
   function bluesScheduler(){ const H=HARMONY[settings.harmony]||HARMONY.major, R=RHYTHM[settings.rhythm]||RHYTHM.shuffle, nb=H.bars.length;
-    while(nextNoteTime < actx.currentTime+0.12){ const beat=60/settings.bpm, step=eighth%8, off=step%2, t=nextNoteTime+(off?beat*(R.swing||0):0);
+    while(nextNoteTime < actx.currentTime+0.12){ const beat=60/settings.bpm, step=eighth%8, off=step%2, t0=nextNoteTime+(off?beat*(R.swing||0):0);
       const chord=H.bars[Math.floor(eighth/8)%nb];
-      drumPat(R.drum,step,t);
-      const role=R.bass[step], bo=role?bassRole(role,chord.ivs):null; if(bo!=null) bBass(chord.root,t,bo);
-      if(R.comp==='stab'){ if(step===2||step===6) bChord(chord.root,t,beat*0.5,chord.ivs,0.07); }
-      else if(R.comp==='offbeat'){ if(step%2===1) bChord(chord.root,t,beat*0.45,chord.ivs,0.06); }
+      drumPat(R.drum,step,t0);
+      const role=R.bass[step], bo=role?bassRole(role,chord.ivs):null; if(bo!=null) bBass(chord.root,t0,bo);
+      if(R.comp==='stab'){ if(step===2||step===6) bChord(chord.root,t0,beat*0.5,chord.ivs,0.07); }
+      else if(R.comp==='offbeat'){ if(step%2===1) bChord(chord.root,t0,beat*0.45,chord.ivs,0.06); }
       else if(step===0){ bChord(chord.root,nextNoteTime,beat*4*0.95,chord.ivs,0.05); }
       if(step===0){ const pcs=new Set(chord.ivs.map(iv=>(chord.root+iv)%12)), cc={r:(settings.rootMidi+chord.root)%12, ivs:chord.ivs}; setTimeout(()=>{ if(!accOn||M.back!=='blues')return; liveChordPcs=pcs; curChord=cc; updateDisplay();}, Math.max(0,(nextNoteTime-actx.currentTime)*1000)); }
       nextNoteTime+=beat/2; eighth++; } }
 
-  // --- модальный фон: арпеджио + бас + перкуссия + вамп ---
-  const ARP=[0,7,12,7];           // тоника-квинта-октава (консонансно в любом ладу)
+  // --- modal backing: arpeggio + bass + percussion + vamp ---
+  const ARP=[0,7,12,7];           // root-fifth-octave (consonant in any scale)
   function curBack(){ return M.backings.find(b=>b.id===settings.backing) || M.backings[0]; }
-  function kotoPluck(off,time){ const m=settings.rootMidi+off;   // октавой выше дрона
+  function kotoPluck(off,time){ const m=settings.rootMidi+off;   // an octave above the drone
     const o=actx.createOscillator();o.type="triangle";o.frequency.value=midiToFreq(m);
     const f=actx.createBiquadFilter();f.type="lowpass";f.frequency.setValueAtTime(5200,time);f.frequency.exponentialRampToValueAtTime(1500,time+0.5);
     const g=actx.createGain();g.gain.setValueAtTime(0,time);g.gain.linearRampToValueAtTime(0.22,time+0.004);g.gain.exponentialRampToValueAtTime(0.001,time+0.85);
@@ -669,7 +816,7 @@
     const dur=(60/settings.bpm)*0.9, g=accGain(0);
     g.gain.setValueAtTime(0,time);g.gain.linearRampToValueAtTime(0.34,time+0.02);g.gain.exponentialRampToValueAtTime(0.001,time+dur);
     o.connect(g);o.start(time);o.stop(time+dur+0.05); }
-  // ударные
+  // drums
   function taiko(time,vel){ vizBeat(time,0.85*vel); const o=actx.createOscillator();o.type='sine';o.frequency.setValueAtTime(95,time);o.frequency.exponentialRampToValueAtTime(48,time+0.18);
     const g=accGain(0);g.gain.setValueAtTime(0.55*vel,time);g.gain.exponentialRampToValueAtTime(0.001,time+0.28);o.connect(g);o.start(time);o.stop(time+0.3);
     const n=actx.createBufferSource();n.buffer=noiseBuf;const f=actx.createBiquadFilter();f.type='lowpass';f.frequency.value=380;const ng=accGain(0);
@@ -680,7 +827,7 @@
     g.gain.setValueAtTime(vel||0.3,time);g.gain.exponentialRampToValueAtTime(0.001,time+0.05);n.connect(f);f.connect(g);n.start(time);n.stop(time+0.07); }
   function shaker(time,vel){ const n=actx.createBufferSource();n.buffer=noiseBuf;const f=actx.createBiquadFilter();f.type='highpass';f.frequency.value=6500;const g=accGain(0);
     g.gain.setValueAtTime(vel,time);g.gain.exponentialRampToValueAtTime(0.001,time+0.04);n.connect(f);f.connect(g);n.start(time);n.stop(time+0.06); }
-  const DARBUKA=['D','.','t','.','D','t','.','t'];  // баляди-образный рисунок по восьмым
+  const DARBUKA=['D','.','t','.','D','t','.','t'];  // baladi-ish pattern over eighths
   function percHit(type,step,time){
     if(type==='taiko'){ if(step===0) taiko(time,1.0); else if(step===4) taiko(time,0.6); else if(step===6) taiko(time,0.32); }
     else if(type==='darbuka'){ const x=DARBUKA[step]; if(x==='D') doum(time); else if(x==='t') tek(time,0.3); }
@@ -695,42 +842,42 @@
       nextNoteTime += beat/2; mStep++;
     } }
 
-  // --- пэды ---
-  function stopPad(){ if(!actx){padNodes=[];return;} const t=actx.currentTime;
-    padNodes.forEach(p=>{ try{ p.g.gain.cancelScheduledValues(t); p.g.gain.setValueAtTime(p.g.gain.value,t); p.g.gain.linearRampToValueAtTime(0,t+0.5); p.stops.forEach(n=>n.stop(t+0.6)); }catch(e){} }); padNodes=[]; }
-  function startPadKoto(){ stopPad(); const t=actx.currentTime;
+  // --- pads ---
+  function stopPad(){ if(!actx){padNodes=[];return;} const t0=actx.currentTime;
+    padNodes.forEach(p=>{ try{ p.g.gain.cancelScheduledValues(t0); p.g.gain.setValueAtTime(p.g.gain.value,t0); p.g.gain.linearRampToValueAtTime(0,t0+0.5); p.stops.forEach(n=>n.stop(t0+0.6)); }catch(e){} }); padNodes=[]; }
+  function startPadKoto(){ stopPad(); const t0=actx.currentTime;
     [[settings.rootMidi-12,0.085],[settings.rootMidi-5,0.05],[settings.rootMidi,0.05]].forEach(([m,vol],i)=>{
       const o1=actx.createOscillator(),o2=actx.createOscillator();o1.type=o2.type='sawtooth';o1.frequency.value=midiToFreq(m);o2.frequency.value=midiToFreq(m);o2.detune.value=6;
-      const f=actx.createBiquadFilter();f.type='lowpass';f.frequency.value=850; const g=actx.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+1.4);
+      const f=actx.createBiquadFilter();f.type='lowpass';f.frequency.value=850; const g=actx.createGain();g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(vol,t0+1.4);
       const lfo=actx.createOscillator(),lg=actx.createGain();lfo.frequency.value=0.12+i*0.03;lg.gain.value=0.015;lfo.connect(lg);lg.connect(g.gain);
-      o1.connect(f);o2.connect(f);f.connect(g);g.connect(accBus);o1.start(t);o2.start(t);lfo.start(t); padNodes.push({g,stops:[o1,o2,lfo]}); }); }
-  function startPadFlute(){ stopPad(); const t=actx.currentTime;
+      o1.connect(f);o2.connect(f);f.connect(g);g.connect(accBus);o1.start(t0);o2.start(t0);lfo.start(t0); padNodes.push({g,stops:[o1,o2,lfo]}); }); }
+  function startPadFlute(){ stopPad(); const t0=actx.currentTime;
     [[settings.rootMidi-12,0.06],[settings.rootMidi-5,0.04]].forEach(([m,vol],i)=>{
-      const o=actx.createOscillator();o.type='sine';o.frequency.value=midiToFreq(m); const g=actx.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+2.0);
+      const o=actx.createOscillator();o.type='sine';o.frequency.value=midiToFreq(m); const g=actx.createGain();g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(vol,t0+2.0);
       const lfo=actx.createOscillator(),lg=actx.createGain();lfo.frequency.value=0.1+i*0.03;lg.gain.value=0.012;lfo.connect(lg);lg.connect(g.gain);
-      o.connect(g);g.connect(accBus);o.start(t);lfo.start(t); padNodes.push({g,stops:[o,lfo]}); });
+      o.connect(g);g.connect(accBus);o.start(t0);lfo.start(t0); padNodes.push({g,stops:[o,lfo]}); });
     const nz=actx.createBufferSource();nz.buffer=noiseBuf;nz.loop=true; const bp=actx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=midiToFreq(settings.rootMidi);bp.Q.value=3;
-    const g=actx.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.02,t+2.0); nz.connect(bp);bp.connect(g);g.connect(accBus);nz.start(t); padNodes.push({g,stops:[nz]}); }
-  // «Грёза»: увеличенный пэд (тоника+терция+ув.квинта — все из целотонной) + опц. мерцание
-  function startPadDream(){ stopPad(); const t=actx.currentTime;
+    const g=actx.createGain();g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(0.02,t0+2.0); nz.connect(bp);bp.connect(g);g.connect(accBus);nz.start(t0); padNodes.push({g,stops:[nz]}); }
+  // "Dream": augmented pad (root+third+aug.fifth — all from whole-tone) + optional shimmer
+  function startPadDream(){ stopPad(); const t0=actx.currentTime;
     [[settings.rootMidi-12,0.06],[settings.rootMidi-12+4,0.04],[settings.rootMidi-12+8,0.035]].forEach(([m,vol],i)=>{
-      const o=actx.createOscillator();o.type='sine';o.frequency.value=midiToFreq(m); const g=actx.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+2.5);
+      const o=actx.createOscillator();o.type='sine';o.frequency.value=midiToFreq(m); const g=actx.createGain();g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(vol,t0+2.5);
       const lfo=actx.createOscillator(),lg=actx.createGain();lfo.frequency.value=0.08+i*0.04;lg.gain.value=0.014;lfo.connect(lg);lg.connect(g.gain);
-      o.connect(g);g.connect(accBus);o.start(t);lfo.start(t); padNodes.push({g,stops:[o,lfo]}); }); }
+      o.connect(g);g.connect(accBus);o.start(t0);lfo.start(t0); padNodes.push({g,stops:[o,lfo]}); }); }
   const DREAMARP=[0,4,8,12,8,4];
   function dreamScheduler(){ const beat=60/settings.bpm; while(nextNoteTime<actx.currentTime+0.2){ kotoPluck(DREAMARP[qStep%DREAMARP.length],nextNoteTime); nextNoteTime+=beat; qStep++; } }
-  // «Гамелан»: гонг, колокольный узор (металлофон), мягкий дрон
+  // "Gamelan": gong, bell pattern (metallophone), soft drone
   function gong(time){ vizBeat(time,0.9); const f=midiToFreq(settings.rootMidi-24);
     [[1,0.5],[2.0,0.16],[2.7,0.1]].forEach(([mult,vol])=>{ const o=actx.createOscillator();o.type='sine';o.frequency.value=f*mult;
       const g=accGain(0); g.gain.setValueAtTime(vol,time); g.gain.exponentialRampToValueAtTime(0.001,time+3.2); o.connect(g);o.start(time);o.stop(time+3.3); }); }
   function bell(midi,time){ const f=midiToFreq(midi);
     [[1,0.16],[2.76,0.05],[5.4,0.025]].forEach(([mult,vol])=>{ const o=actx.createOscillator();o.type='sine';o.frequency.value=f*mult;
       const g=accGain(0); g.gain.setValueAtTime(vol,time); g.gain.exponentialRampToValueAtTime(0.001,time+1.1); o.connect(g);o.start(time);o.stop(time+1.2); }); }
-  function startGamelanDrone(){ stopPad(); const t=actx.currentTime;
+  function startGamelanDrone(){ stopPad(); const t0=actx.currentTime;
     [[settings.rootMidi-12,0.05],[settings.rootMidi-5,0.035]].forEach(([m,vol],i)=>{ const o=actx.createOscillator();o.type='sine';o.frequency.value=midiToFreq(m);
-      const g=actx.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+1.5);
+      const g=actx.createGain();g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(vol,t0+1.5);
       const lfo=actx.createOscillator(),lg=actx.createGain();lfo.frequency.value=0.1+i*0.03;lg.gain.value=0.01;lfo.connect(lg);lg.connect(g.gain);
-      o.connect(g);g.connect(accBus);o.start(t);lfo.start(t); padNodes.push({g,stops:[o,lfo]}); }); }
+      o.connect(g);g.connect(accBus);o.start(t0);lfo.start(t0); padNodes.push({g,stops:[o,lfo]}); }); }
   const GMPAT=[0,1,2,3,4,2,3,4];
   function gamelanScheduler(){ const beat=60/settings.bpm, pat=(curBack().id==='pattern');
     while(nextNoteTime<actx.currentTime+0.2){ const s=qStep%16;
@@ -738,26 +885,26 @@
       if(pat){ const idx=GMPAT[qStep%GMPAT.length]; bell(settings.rootMidi+(SCALE[idx%SCALE.length]||0)+12, nextNoteTime); }
       nextNoteTime+=beat/2; qStep++; } }
 
-  /* ============ Джаз: авто-лад по золотой секвенции ============ */
+  /* ============ Jazz: auto-scale over the golden sequence ============ */
   const IONIAN=[0,2,4,5,7,9,11],LYDIAN=[0,2,4,6,7,9,11],MIXO=[0,2,4,5,7,9,10],
         DORIAN=[0,2,3,5,7,9,10],AEOL=[0,2,3,5,7,8,10],LOCR2=[0,2,3,5,6,8,10],LOCR=[0,1,3,5,6,8,10],
         PHRDOM=[0,1,4,5,7,8,10],LYDDOM=[0,2,4,6,7,9,10],ALT=[0,1,3,4,6,8,10],WHOLE=[0,2,4,6,8,10],HW=[0,1,3,4,6,7,9,10];
-  const QUAL={                                       // ivs — комп; calm — диатонично; hot — с альтерациями
-    m7:    {ivs:[0,3,7,10], calm:[[DORIAN,'дорийский']], hot:[[DORIAN,'дорийский'],[AEOL,'эолийский']]},
-    dom:   {ivs:[0,4,7,10], calm:[[MIXO,'миксолидийский']], hot:[[LYDDOM,'лидийский дом.'],[ALT,'альтерированный'],[WHOLE,'целотонный']]},
-    maj7:  {ivs:[0,4,7,11], calm:[[IONIAN,'ионийский']], hot:[[LYDIAN,'лидийский']]},
-    maj7iv:{ivs:[0,4,7,11], calm:[[LYDIAN,'лидийский']], hot:[[LYDIAN,'лидийский']]},
-    m7b5:  {ivs:[0,3,6,10], calm:[[LOCR2,'локрийский ♮2']], hot:[[LOCR,'локрийский']]},
-    domV:  {ivs:[0,4,7,10], calm:[[PHRDOM,'фригийский дом.']], hot:[[ALT,'альтерированный'],[HW,'п/тон-тон']]},   // доминанта в минор
+  const QUAL={                                       // ivs — comping; calm — diatonic; hot — with alterations
+    m7:    {ivs:[0,3,7,10], calm:[[DORIAN,'scale.dorian']], hot:[[DORIAN,'scale.dorian'],[AEOL,'scale.aeolian']]},
+    dom:   {ivs:[0,4,7,10], calm:[[MIXO,'scale.mixo']], hot:[[LYDDOM,'scale.lyddom'],[ALT,'scale.alt'],[WHOLE,'scale.whole']]},
+    maj7:  {ivs:[0,4,7,11], calm:[[IONIAN,'scale.ionian']], hot:[[LYDIAN,'scale.lydian']]},
+    maj7iv:{ivs:[0,4,7,11], calm:[[LYDIAN,'scale.lydian']], hot:[[LYDIAN,'scale.lydian']]},
+    m7b5:  {ivs:[0,3,6,10], calm:[[LOCR2,'scale.locr2']], hot:[[LOCR,'scale.locr']]},
+    domV:  {ivs:[0,4,7,10], calm:[[PHRDOM,'scale.phrdom']], hot:[[ALT,'scale.alt'],[HW,'scale.hw']]},   // dominant into minor
   };
-  // золотая секвенция в C/Am, A7 — turnaround обратно к Dm7
+  // golden sequence in C/Am, A7 — turnaround back to Dm7
   const JAZZ_PROG=[
     {root:2, sfx:'m7',  q:'m7'},  {root:7, sfx:'7',  q:'dom'},
     {root:0, sfx:'maj7',q:'maj7'},{root:5, sfx:'maj7',q:'maj7iv'},
     {root:11,sfx:'m7♭5',q:'m7b5'},{root:4, sfx:'7',  q:'domV'},
     {root:9, sfx:'m7',  q:'m7'},  {root:9, sfx:'7',  q:'domV'},
   ];
-  function nearestRootIndex(targetFreq){      // тоника нового лада в октаве, ближайшей к последней ноте
+  function nearestRootIndex(targetFreq){      // root of the new scale in the octave closest to the last note
     const len=SCALE.length, tm=freqToMidi(targetFreq); let best=0,bestD=Infinity;
     for(let k=-6;k<=6;k++){ const i=k*len, m=indexToMidi(i); if(m<settings.minMidi||m>settings.maxMidi) continue;
       const d=Math.abs(m-tm); if(d<bestD){bestD=d;best=i;} }
@@ -768,7 +915,7 @@
     const oldF=(SCALE&&actx)?pitchFreq(currentIndex):null;
     SCALE=pick[0]; jazzRoot=settings.rootMidi+ch.root;
     if(oldF!=null) currentIndex = (settings.jazzLand==='root') ? nearestRootIndex(oldF) : clampIndex(nearestIndex(oldF));
-    jazzLabel=NOTE_NAMES[(settings.rootMidi+ch.root)%12]+ch.sfx+" · "+pick[1];
+    jazzLabel=NOTE_NAMES[(settings.rootMidi+ch.root)%12]+ch.sfx+" · "+t(pick[1]);
     curChord={r:(settings.rootMidi+ch.root)%12, ivs:QUAL[ch.q].ivs};
     updateDisplay();
   }
@@ -778,21 +925,21 @@
     o.connect(g);o.start(time);o.stop(time+dur+0.05); }
   function ride(time,vel){ const n=actx.createBufferSource();n.buffer=noiseBuf;const f=actx.createBiquadFilter();f.type='highpass';f.frequency.value=8000;
     const g=accGain(0);g.gain.setValueAtTime(vel,time);g.gain.exponentialRampToValueAtTime(.001,time+0.16);n.connect(f);f.connect(g);n.start(time);n.stop(time+0.18); }
-  const RIDE=[1,0,1,1,1,0,1,1];                      // spang-a-lang по восьмым
+  const RIDE=[1,0,1,1,1,0,1,1];                      // spang-a-lang over eighths
   function jazzScheduler(){ const beat=60/settings.bpm, np=JAZZ_PROG.length;
     while(nextNoteTime < actx.currentTime+0.12){
-      const step=eighth%8, off=step%2, t=nextNoteTime+(off?beat*0.16:0);
+      const step=eighth%8, off=step%2, t0=nextNoteTime+(off?beat*0.16:0);
       const bar=Math.floor(eighth/8)%np, ch=JAZZ_PROG[bar], nx=JAZZ_PROG[(bar+1)%np], q=QUAL[ch.q];
       if(step===0){ const c=ch, tt=nextNoteTime; setTimeout(()=>{ if(accOn&&M.id==='jazz') applyJazzChord(c); },Math.max(0,(tt-actx.currentTime)*1000));
-        bChord(ch.root,nextNoteTime,beat*1.6,q.ivs,0.045); }            // комп на 1 долю
-      if(step===3) bChord(ch.root,t,beat*0.5,q.ivs,0.05);                // синкопа на «и» 2-й
-      // ходячий бас по долям: R 5 3 (подход к следующему)
-      if(step===0) jazzBass(ch.root,t);
-      else if(step===2) jazzBass(ch.root+7,t);
-      else if(step===4) jazzBass(ch.root+q.ivs[1],t);
-      else if(step===6) jazzBass(nx.root+12-1,t);                        // хроматический подход снизу к след. корню
-      if(RIDE[step]) ride(t, step%4===0?0.18:0.11);
-      if(step===2||step===6) snare(t,0.18);                             // щётка на 2 и 4
+        bChord(ch.root,nextNoteTime,beat*1.6,q.ivs,0.045); }            // comp on beat 1
+      if(step===3) bChord(ch.root,t0,beat*0.5,q.ivs,0.05);               // syncopation on the "and" of 2
+      // walking bass on the beats: R 5 3 (approach to the next root)
+      if(step===0) jazzBass(ch.root,t0);
+      else if(step===2) jazzBass(ch.root+7,t0);
+      else if(step===4) jazzBass(ch.root+q.ivs[1],t0);
+      else if(step===6) jazzBass(nx.root+12-1,t0);                       // chromatic approach from below to the next root
+      if(RIDE[step]) ride(t0, step%4===0?0.18:0.11);
+      if(step===2||step===6) snare(t0,0.18);                            // brush on 2 and 4
       nextNoteTime+=beat/2; eighth++;
     } }
 
@@ -807,29 +954,30 @@
     else if(M.back==='dream'){ startPadDream(); if(settings.backing==='shimmer'){ qStep=0; nextNoteTime=actx.currentTime+0.12; schedTimer=setInterval(dreamScheduler,40); } }
     else if(M.back==='gamelan'){ startGamelanDrone(); qStep=0; nextNoteTime=actx.currentTime+0.12; schedTimer=setInterval(gamelanScheduler,30); }
     else { startPadFlute(); }
-    accBtn.classList.add("on"); accBtn.textContent="⏸ Фон"; }
+    accBtn.classList.add("on"); accBtn.textContent=t('btn.bgStop'); }
   function stopBacking(){ accOn=false; if(schedTimer){clearInterval(schedTimer);schedTimer=null;} stopPad(); liveChordPcs=null; curChord=null; refreshKeyLabels();
-    accBtn.classList.remove("on"); accBtn.textContent="▶ Фон"; }
+    accBtn.classList.remove("on"); accBtn.textContent=t('btn.bgStart'); }
 
-  /* ============ Тема и сборка UI режима ============ */
+  /* ============ Theme and mode UI assembly ============ */
   function applyTheme(th){ const s=document.documentElement.style; for(const k in th) s.setProperty('--'+k,th[k]); }
   const ladHost=document.getElementById("ladHost"), backSel=document.getElementById("backSel"),
         modeSel=document.getElementById("modeSel"), accBtn=document.getElementById("accBtn");
   function buildLadRow(){ ladHost.innerHTML="";
     if(M.variants.length<2) return;
     M.variants.forEach(vr=>{ const b=document.createElement("button"); b.className="ladbtn"+(vr.id===settings.variant?" active":"");
-      b.dataset.v=vr.id; b.textContent=vr.label;
+      b.dataset.v=vr.id; b.textContent=t(vr.label);
       b.addEventListener("pointerdown",e=>{e.preventDefault();initAudio();resumeAudio();setVariant(vr.id);}); ladHost.appendChild(b); }); }
-  function buildBackingOptions(){ backSel.innerHTML=""; M.backings.forEach(bk=>backSel.appendChild(new Option(bk.label,bk.id))); backSel.value=settings.backing; }
+  function buildBackingOptions(){ backSel.innerHTML=""; M.backings.forEach(bk=>backSel.appendChild(new Option(t(bk.label),bk.id))); backSel.value=settings.backing; }
+  function setHint(){ document.getElementById("hint").innerHTML = t(M.kind==='harmonic'?'hint.harmonic':'hint.scale'); }
 
   function setMode(id){ const was=accOn; if(actx) stopBacking();
     M=MODES[id]; applyTheme(M.theme);
     if(M.kind==='scale' && M.scales){ settings.variant=M.defVariant; SCALE=M.scales[M.defVariant]; }
     if(M.id==='jazz'){ settings.rootMidi=60; document.getElementById("rootSel").value=60; applyJazzChord(JAZZ_PROG[0]); }
-    settings.bpm = M.defBpm||85;                                  // темп по умолчанию режима (джаз — 160)
+    settings.bpm = M.defBpm||85;                                  // mode's default tempo (jazz — 160)
     document.getElementById("bpm").value=settings.bpm; document.getElementById("bpmVal").textContent=settings.bpm;
     buildLadRow();
-    const isBlues=(M.back==='blues'), isJazz=(M.id==='jazz');     // блюз — Гармония×Ритм, джаз — Лады×Заход, прочие — Фон
+    const isBlues=(M.back==='blues'), isJazz=(M.id==='jazz');     // blues — Harmony×Rhythm, jazz — Scales×Approach, others — Backing
     document.getElementById("ctlBack").style.display   = (isBlues||isJazz)?'none':'';
     document.getElementById("ctlHarm").style.display   = isBlues?'':'none';
     document.getElementById("ctlRhythm").style.display = isBlues?'':'none';
@@ -839,18 +987,16 @@
     else { settings.backing=M.defBacking; buildBackingOptions(); }
     if(isJazz){ colorSel.value=settings.jazzColor; landSel.value=settings.jazzLand; }
     if(isBlues){ const c=HARMONY[settings.harmony].bars[0]; curChord={r:(settings.rootMidi+c.root)%12, ivs:c.ivs}; }
-    else if(!isJazz) curChord=null;                  // подсветка тонов — только в джазе/блюзе
+    else if(!isJazz) curChord=null;                  // tone highlight — only in jazz/blues
     applyLadLock();
     currentIndex=clampIndex(0);
-    document.getElementById("h1name").textContent=M.name;
-    document.getElementById("h1sub").textContent=M.sub;
-    document.getElementById("hint").innerHTML = M.kind==='harmonic'
-      ? "Клавиши: <b>S D F G H · Пробел · J K L ; '</b> · Shift — подтяг · [ ] — октава фундаментала · Backspace — сброс"
-      : "Клавиши: <b>S D F G H · Пробел · J K L ; '</b> · Shift — бенд · [ ] — октава · Backspace — тоника · ↑↓ — лад";
+    document.getElementById("h1name").textContent=t(M.name);
+    document.getElementById("h1sub").textContent=t(M.sub);
+    setHint();
     modeSel.value=id; updateDisplay();
     if(was && actx) startBacking(); }
 
-  /* ============ Контролы ============ */
+  /* ============ Controls ============ */
   const rootSel=document.getElementById("rootSel");
   [["A",57],["A#",58],["B",59],["C",60],["C#",61],["D",62],["D#",63],["E",64],["F",53],["F#",54],["G",55],["G#",56]]
     .forEach(([nm,mid])=>rootSel.appendChild(new Option(nm,mid)));
@@ -860,13 +1006,17 @@
   backSel.addEventListener("change",()=>{ settings.backing=backSel.value; if(accOn){stopBacking();startBacking();} });
 
   const harmSel=document.getElementById("harmSel"), rhythmSel=document.getElementById("rhythmSel");
-  HARM_OPTS.forEach(([v,l])=>harmSel.appendChild(new Option(l,v)));
-  RHY_OPTS.forEach(([v,l])=>rhythmSel.appendChild(new Option(l,v)));
-  harmSel.addEventListener("change",()=>{ settings.harmony=harmSel.value; applyLadLock(); if(accOn){stopBacking();startBacking();} });  // лад залочен под гармонию, рестарт с такта I
-  rhythmSel.addEventListener("change",()=>{ settings.rhythm=rhythmSel.value; });   // ритм меняется на лету
+  function populateHarmRhythm(){
+    const hv=harmSel.value, rv=rhythmSel.value;
+    harmSel.innerHTML=""; HARM_OPTS.forEach(([v,k])=>harmSel.appendChild(new Option(t(k),v)));
+    rhythmSel.innerHTML=""; RHY_OPTS.forEach(([v,k])=>rhythmSel.appendChild(new Option(t(k),v)));
+    if(hv) harmSel.value=hv; if(rv) rhythmSel.value=rv;
+  }
+  harmSel.addEventListener("change",()=>{ settings.harmony=harmSel.value; applyLadLock(); if(accOn){stopBacking();startBacking();} });  // scale locked to the harmony, restart from bar I
+  rhythmSel.addEventListener("change",()=>{ settings.rhythm=rhythmSel.value; });   // rhythm changes on the fly
 
   const colorSel=document.getElementById("colorSel"), landSel=document.getElementById("landSel");
-  colorSel.addEventListener("change",()=>{ settings.jazzColor=colorSel.value; });   // лады применяются со следующего аккорда
+  colorSel.addEventListener("change",()=>{ settings.jazzColor=colorSel.value; });   // scales apply from the next chord
   landSel.addEventListener("change",()=>{ settings.jazzLand=landSel.value; });
 
   const loSel=document.getElementById("loSel"), hiSel=document.getElementById("hiSel");
@@ -886,18 +1036,40 @@
   document.getElementById("closeSettings").addEventListener("click",()=>settingsEl.classList.add("hidden"));
   accBtn.addEventListener("click",()=> accOn?stopBacking():startBacking());
 
-  /* ============ Замер задержки ============ */
+  /* ============ Language ============ */
+  function applyStaticI18n(){
+    document.title=t('app.title');
+    document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent=t(el.getAttribute('data-i18n')); });
+  }
+  function refreshLabels(){
+    applyStaticI18n();
+    populateHarmRhythm();
+    document.getElementById("h1name").textContent=t(M.name);
+    document.getElementById("h1sub").textContent=t(M.sub);
+    buildLadRow(); applyLadLock();
+    if(!(M.back==='blues'||M.id==='jazz')) buildBackingOptions();
+    setHint(); setExtraLabels();
+    accBtn.textContent=t(accOn?'btn.bgStop':'btn.bgStart');
+    if(!(mediaRec && mediaRec.state==='recording')) recBtn.textContent=t('btn.rec');
+    updateDisplay();
+  }
+  function setLang(l){ if(!I18N[l]) l='en'; LANG=l; try{localStorage.setItem('jamlab.lang',l);}catch(e){} document.documentElement.lang=l; refreshLabels(); }
+  const langSel=document.getElementById("langSel"); langSel.value=LANG;
+  langSel.addEventListener("change",()=>setLang(langSel.value));
+
+  /* ============ Latency measurement ============ */
   const latov=document.getElementById("latov");
   function showLatInfo(){
     const sr=actx.sampleRate, bl=(actx.baseLatency||0)*1000, ol=(actx.outputLatency!=null?actx.outputLatency*1000:NaN);
     document.getElementById("latInfo").innerHTML =
-      "Частота: <b>"+sr+"</b> Гц<br>baseLatency: <b>"+bl.toFixed(1)+"</b> мс<br>outputLatency: <b>"+(isNaN(ol)?"н/д":ol.toFixed(1)+" мс")+"</b>"+
-      "<br><span style='color:var(--muted);font-size:12px'>outputLatency ≈ задержка «тап → звук» для запланированного аудио (отчёт браузера)</span>";
+      t('lat.sampleRate')+": <b>"+sr+"</b> "+t('lat.hz')+"<br>baseLatency: <b>"+bl.toFixed(1)+"</b> "+t('lat.ms')+
+      "<br>outputLatency: <b>"+(isNaN(ol)?t('lat.na'):ol.toFixed(1)+" "+t('lat.ms'))+"</b>"+
+      "<br><span style='color:var(--muted);font-size:12px'>"+t('lat.outNote')+"</span>";
   }
   document.getElementById("latBtn").addEventListener("click",()=>{ initAudio(); resumeAudio(); showLatInfo(); document.getElementById("latResult").textContent=""; latov.classList.remove("hidden"); });
   document.getElementById("latClose").addEventListener("click",()=>latov.classList.add("hidden"));
   document.getElementById("latMic").addEventListener("click",async()=>{
-    const res=document.getElementById("latResult"); res.textContent="Измеряю… выкрути громкость, тихо вокруг (10 щелчков)…";
+    const res=document.getElementById("latResult"); res.textContent=t('lat.measuring');
     try{
       const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
       const src=actx.createMediaStreamSource(stream), bs=256, sp=actx.createScriptProcessor(bs,1,1), sink=actx.createGain();
@@ -911,76 +1083,78 @@
       src.disconnect(); sp.disconnect(); stream.getTracks().forEach(t=>t.stop());
       results.sort((a,b)=>a-b); const med=results.length?results[Math.floor(results.length/2)]:null;
       res.innerHTML = med!=null
-        ? "Round-trip: медиана <b>"+med.toFixed(0)+" мс</b> (попыток "+results.length+", вкл. путь динамик→микрофон)<br><span style='color:var(--muted);font-size:12px'>«на ощупь» обычно меньше — за вычетом задержки микрофона</span>"
-        : "Не поймал щелчок. Попробуй громче и в тишине.";
-    }catch(err){ res.textContent="Микрофон недоступен: "+(err&&err.message||err); }
+        ? t('lat.rtt',{med:med.toFixed(0),n:results.length})+"<br><span style='color:var(--muted);font-size:12px'>"+t('lat.rttNote')+"</span>"
+        : t('lat.noClick');
+    }catch(err){ res.textContent=t('lat.micErr')+(err&&err.message||err); }
   });
 
-  /* ============ Запись → видео ============ */
+  /* ============ Recording → video ============ */
   let mediaRec=null, recChunks=[], recStart=0, recTimer=null;
   const recBtn=document.getElementById("recBtn");
-  function pickMime(){ const t=['video/mp4;codecs=h264,aac','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
-    for(const m of t) if(window.MediaRecorder && MediaRecorder.isTypeSupported(m)) return m; return ''; }
+  function pickMime(){ const arr=['video/mp4;codecs=h264,aac','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+    for(const m of arr) if(window.MediaRecorder && MediaRecorder.isTypeSupported(m)) return m; return ''; }
   function startRecording(){
     initAudio(); resumeAudio();
-    if(!window.MediaRecorder){ alert('Запись не поддерживается этим браузером'); return; }
+    if(!window.MediaRecorder){ alert(t('rec.noSupport')); return; }
     const vtr = viz.recCanvas.captureStream ? viz.recCanvas.captureStream(30).getVideoTracks() : [];
     const atr = recDest ? recDest.stream.getAudioTracks() : [];
     const stream = new MediaStream([...vtr, ...atr]);
     viz.startRec();
     const mime=pickMime();
     try{ mediaRec = new MediaRecorder(stream, mime?{mimeType:mime}:undefined); }
-    catch(e){ alert('Запись недоступна: '+e.message); viz.stopRec(); return; }
+    catch(e){ alert(t('rec.unavailable')+e.message); viz.stopRec(); return; }
     recChunks=[];
     mediaRec.ondataavailable=e=>{ if(e.data && e.data.size) recChunks.push(e.data); };
     mediaRec.onstop=()=>{ viz.stopRec(); finishRecording(new Blob(recChunks,{type:mediaRec.mimeType||'video/webm'})); };
-    mediaRec.start(500);                              // таймслайс — данные собираются по ходу
+    mediaRec.start(500);                              // timeslice — data is collected as it goes
     recStart=Date.now(); recBtn.classList.add('rec');
-    recTimer=setInterval(()=>{ const s=Math.floor((Date.now()-recStart)/1000); recBtn.textContent='⏹ '+Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); },250);
+    recTimer=setInterval(()=>{ const s=Math.floor((Date.now()-recStart)/1000); recBtn.textContent=t('btn.recStop')+Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); },250);
   }
-  function stopRecording(){ if(mediaRec && mediaRec.state!=='inactive') mediaRec.stop(); clearInterval(recTimer); recBtn.classList.remove('rec'); recBtn.textContent='⏺ Запись'; }
+  function stopRecording(){ if(mediaRec && mediaRec.state!=='inactive') mediaRec.stop(); clearInterval(recTimer); recBtn.classList.remove('rec'); recBtn.textContent=t('btn.rec'); }
   let lastBlob=null, lastFile=null, lastUrl=null;
   function finishRecording(blob){
     lastBlob=blob;
     const ext=(mediaRec && mediaRec.mimeType && mediaRec.mimeType.indexOf('mp4')>=0)?'mp4':'webm';
-    const base = ext==='mp4'?'video/mp4':'video/webm';     // чистый MIME без codecs — иначе share() может ругаться
+    const base = ext==='mp4'?'video/mp4':'video/webm';     // clean MIME without codecs — otherwise share() may complain
     lastFile=new File([blob],'jam.'+ext,{type:base});
     if(lastUrl) URL.revokeObjectURL(lastUrl); lastUrl=URL.createObjectURL(blob);
     const v=document.getElementById('recVid'); v.src=lastUrl;
     document.getElementById('recInfo').textContent = blob.size
-      ? ('Размер: '+(blob.size/1024).toFixed(0)+' КБ · '+(blob.type||'').split(';')[0])
-      : 'Пусто: видео не записалось (формат не поддержан устройством?)';
+      ? t('rec.size',{kb:(blob.size/1024).toFixed(0),type:(blob.type||'').split(';')[0]})
+      : t('rec.empty');
     const sh=document.getElementById('recShare');
     sh.style.display = (navigator.canShare && navigator.canShare({files:[lastFile]})) ? '' : 'none';
     document.getElementById('recov').classList.remove('hidden');
   }
-  document.getElementById('recShare').addEventListener('click',()=>{   // строго синхронный вызов в жесте
+  document.getElementById('recShare').addEventListener('click',()=>{   // strictly synchronous call inside the gesture
     if(!lastFile) return;
     const info=document.getElementById('recInfo');
-    if(!(navigator.canShare && navigator.canShare({files:[lastFile]}))){ info.textContent='Шеринг файлов не поддерживается — жми «Скачать».'; return; }
+    if(!(navigator.canShare && navigator.canShare({files:[lastFile]}))){ info.textContent=t('rec.shareUnsupported'); return; }
     navigator.share({files:[lastFile]}).catch(e=>{ if(e && e.name!=='AbortError')
       info.textContent = (e.name==='NotAllowedError')
-        ? 'Браузер не разрешил шеринг. Открой страницу в обычном Safari/Chrome (не во встроенном браузере мессенджера) или жми «Скачать».'
-        : 'Шеринг: '+(e.name||'')+' — '+(e.message||''); });
+        ? t('rec.shareDenied')
+        : t('rec.shareErr',{name:e.name||'',msg:e.message||''}); });
   });
   document.getElementById('recSave').addEventListener('click',()=>{ if(!lastBlob) return; const a=document.createElement('a'); a.href=lastUrl; a.download=lastFile.name; document.body.appendChild(a); a.click(); a.remove(); });
   document.getElementById('recClose').addEventListener('click',()=>{ const v=document.getElementById('recVid'); v.pause(); document.getElementById('recov').classList.add('hidden'); });
   recBtn.addEventListener('click',()=>{ if(mediaRec && mediaRec.state==='recording') stopRecording(); else startRecording(); });
 
-  /* ============ Выбор инструмента и старт ============ */
+  /* ============ Instrument picker and start ============ */
   const overlay=document.getElementById("overlay");
   document.querySelectorAll(".pick").forEach(p=>p.addEventListener("click",()=>{
     initAudio(); resumeAudio();
-    if(accOn) stopBacking();              // чтобы фон не задвоился при повторном выборе
+    if(accOn) stopBacking();              // so the backing doesn't double up on a repeat pick
     setMode(p.dataset.mode);
     overlay.style.display="none";
     updateDisplay(); startBacking();
   }));
-  // возврат на стартовый экран выбора стиля
+  // back to the style-picker start screen
   document.getElementById("homeBtn").addEventListener("click",()=>{ if(accOn) stopBacking(); overlay.style.display="flex"; });
 
-  // начальная сборка (под оверлеем)
+  // initial build (under the overlay)
+  populateHarmRhythm();
   setMode('blues');
+  refreshLabels();
   document.addEventListener("gesturestart",e=>e.preventDefault());
   document.addEventListener("contextmenu",e=>e.preventDefault());
   document.addEventListener("touchend",resumeAudio,{passive:true});
