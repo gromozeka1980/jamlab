@@ -1,0 +1,11 @@
+# Capacitor / Node
+node_modules/
+www/
+android/
+ios/
+package-lock.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log
