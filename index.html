@@ -93,7 +93,7 @@
   .hint{color:var(--muted); font-size:11px; text-align:center; padding:0 12px max(8px,env(safe-area-inset-bottom));}
   #viz{position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:3;}
 
-  #overlay,#settings,#latov,#recov{position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:22px; z-index:10;}
+  #overlay,#settings,#latov,#recov,#help{position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:22px; z-index:10;}
   #overlay{background:rgba(7,8,16,.95); gap:14px; text-align:center;}
   #overlay h2{font-size:22px; margin:0 0 6px;}
   #overlay p{color:var(--muted); max-width:460px; line-height:1.5; margin:0; font-size:14px;}
@@ -101,14 +101,31 @@
   .pick{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 18px; text-align:left; cursor:pointer;}
   .pick b{font-size:17px;} .pick span{display:block; color:var(--muted); font-size:12px; margin-top:2px;}
   .pick:active{transform:translateY(1px);}
-  #settings,#latov,#recov{background:rgba(7,8,16,.82); z-index:9;}
-  #latov,#recov{z-index:11;}
-  #settings.hidden,#latov.hidden,#recov.hidden{display:none;}
+  #settings,#latov,#recov,#help{background:rgba(7,8,16,.82); z-index:9;}
+  #latov,#recov,#help{z-index:11;}
+  #settings.hidden,#latov.hidden,#recov.hidden,#help.hidden{display:none;}
   .sheet{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px 20px; width:min(440px,100%); display:flex; flex-direction:column; gap:14px;}
   .sheet h3{margin:0 0 4px; font-size:18px;}
   .srow{display:flex; align-items:center; justify-content:space-between; gap:14px; font-size:13px;}
   .srow label{color:var(--muted);} .srow .val{color:var(--text); min-width:42px; text-align:right;}
-  #closeSettings{align-self:flex-end; background:var(--zero); border-color:var(--zero); color:#04140a; font-weight:700; padding:9px 22px;}
+  #closeSettings,#closeHelp{align-self:flex-end; background:var(--zero); border-color:var(--zero); color:#04140a; font-weight:700; padding:9px 22px;}
+
+  /* short viewport (phone landscape): one key row, compact chrome */
+  @media (max-height:520px){
+    header{padding:2px 12px 0;}
+    h1{font-size:12px;}
+    .controls{padding:3px 10px; gap:4px 10px;}
+    .display{padding:2px 12px 3px; min-height:0;}
+    .note{font-size:20px;}
+    .role{font-size:12px;}
+    .stage{padding:2px 8px 6px; gap:4px;}
+    .row.bottom{min-height:0;}
+    .row.bottom .key .off{font-size:clamp(16px,3.2vw,30px);}
+    .row.bottom .key .lead{font-size:clamp(9px,2vw,12px);}
+    .extra{padding:0 12px 4px;}
+    .extra .key{height:32px; min-width:72px;}
+    .hint{display:none;}
+  }
 </style>
 </head>
 <body>
@@ -134,7 +151,6 @@
     <div class="srow"><label data-i18n="set.lang">Language</label><select id="langSel"><option value="en">English</option><option value="ru">Русский</option></select></div>
     <div class="srow"><label data-i18n="set.lo">Lowest note</label><select id="loSel"></select></div>
     <div class="srow"><label data-i18n="set.hi">Highest note</label><select id="hiSel"></select></div>
-    <div class="srow"><label data-i18n="set.bpm">Backing tempo</label><input id="bpm" type="range" min="40" max="160" value="85"><span class="val" id="bpmVal">85</span></div>
     <div class="srow"><label data-i18n="set.tone">Tone (brightness)</label><input id="tone" type="range" min="600" max="6000" value="2600"></div>
     <div class="srow"><label data-i18n="set.volSolo">Lead volume</label><input id="volSolo" type="range" min="0" max="100" value="80"></div>
     <div class="srow"><label data-i18n="set.volAcc">Backing volume</label><input id="volAcc" type="range" min="0" max="100" value="55"></div>
@@ -142,6 +158,23 @@
     <div class="srow"><label data-i18n="set.gyro">Gyroscope (phone)</label><select id="gyroSel"><option value="off" data-i18n="opt.off">Off</option><option value="vibrato" data-i18n="gyro.vibrato">Vibrato</option><option value="volume" data-i18n="gyro.volume">Volume</option><option value="tone" data-i18n="gyro.tone">Brightness</option></select></div>
     <div class="srow"><label data-i18n="set.lat">Audio latency</label><button id="latBtn" data-i18n="btn.measure">🔬 Measure</button></div>
     <button id="closeSettings" data-i18n="btn.done">Done</button>
+  </div>
+</div>
+
+<div id="help" class="hidden">
+  <div class="sheet">
+    <h3 data-i18n="help.title">How to play</h3>
+    <div style="font-size:13px; line-height:1.55;">
+      <p data-i18n="help.p1" style="margin:0 0 8px;"></p>
+      <ul style="margin:0; padding-left:18px; color:var(--muted); display:flex; flex-direction:column; gap:5px;">
+        <li data-i18n="help.li1"></li>
+        <li data-i18n="help.li2"></li>
+        <li data-i18n="help.li3"></li>
+        <li data-i18n="help.li4"></li>
+        <li data-i18n="help.li5"></li>
+      </ul>
+    </div>
+    <button id="closeHelp" data-i18n="btn.gotit">Got it</button>
   </div>
 </div>
 
@@ -189,7 +222,11 @@
   <div class="ctl" id="ctlRhythm"><label data-i18n="ctl.rhythm">Rhythm</label><select id="rhythmSel"></select></div>
   <div class="ctl" id="ctlColor"><label data-i18n="ctl.scale">Scales</label><select id="colorSel"><option value="calm" data-i18n="color.calm">Calmer</option><option value="hot" data-i18n="color.hot">Edgier</option></select></div>
   <div class="ctl" id="ctlLand"><label data-i18n="ctl.land">Approach</label><select id="landSel"><option value="line" data-i18n="land.line">Lead the line</option><option value="root" data-i18n="land.root">To the root</option></select></div>
+  <div class="ctl" id="ctlTempo"><label data-i18n="ctl.tempo">Tempo</label>
+    <div style="display:flex; align-items:center; gap:6px"><input id="bpm" type="range" min="40" max="160" value="85" style="width:90px"><span class="val" id="bpmVal" style="min-width:22px; font-size:11px; color:var(--muted)">85</span></div>
+  </div>
   <div class="ctl"><label>&nbsp;</label><button id="accBtn" class="toggle" data-i18n="btn.bgStart">▶ Backing</button></div>
+  <div class="ctl"><label>&nbsp;</label><button id="helpBtn" data-i18n="btn.help">❔ Help</button></div>
   <div class="ctl"><label>&nbsp;</label><button id="settingsBtn" data-i18n="btn.settings">⚙ Settings</button></div>
   <div class="ctl"><label>&nbsp;</label><button id="recBtn" data-i18n="btn.rec">⏺ Record</button></div>
 </div>
@@ -235,6 +272,14 @@
       'ctl.harm':'Harmony','ctl.rhythm':'Rhythm','ctl.scale':'Scales',
       'color.calm':'Calmer','color.hot':'Edgier','ctl.land':'Approach','land.line':'Lead the line','land.root':'To the root',
       'btn.bgStart':'▶ Backing','btn.bgStop':'⏸ Backing','btn.settings':'⚙ Settings','btn.rec':'⏺ Record','btn.recStop':'⏹ ',
+      'btn.help':'❔ Help','btn.gotit':'Got it','ctl.tempo':'Tempo',
+      'help.title':'How to play',
+      'help.p1':"Each key plays a step along the scale relative to the last note — so you can't hit a wrong note. Just play.",
+      'help.li1':'Big center keys are small steps; the edge keys leap further — up to a full octave (±7).',
+      'help.li2':'Hold and drag a key up or down to bend the note.',
+      'help.li3':'▶ Backing starts the jam; the bottom “root” key snaps to the nearest root; [ ] shift octaves.',
+      'help.li4':'Tempo and root sit in the top bar. ⌂ Styles switches instrument; ⏺ records a clip.',
+      'help.li5':'Range, volumes, visualizer and tilt live in ⚙ Settings.',
       'mode.blues.name':'Blues','mode.blues.sub':'· scale steps + bends',
       'mode.jazz.name':'Jazz','mode.jazz.sub':'· auto-scale on chords',
       'mode.gamelan.name':'Gamelan','mode.gamelan.sub':'· pelog / slendro',
@@ -264,8 +309,8 @@
       'scale.dorian':'dorian','scale.aeolian':'aeolian','scale.mixo':'mixolydian','scale.lyddom':'lydian dom.','scale.alt':'altered','scale.whole':'whole-tone','scale.ionian':'ionian','scale.lydian':'lydian','scale.locr2':'locrian ♮2','scale.locr':'locrian','scale.phrdom':'phrygian dom.','scale.hw':'half-whole dim.',
       'role.harmonicWord':'harmonic','role.oct':'oct','ord':'{n}th','tip.bend':'bend',
       'extra.octDown':'Octave ↓','extra.toRoot':'To root','extra.octUp':'Octave ↑',
-      'hint.harmonic':"Keys: <b>S D F G H · Space · J K L ; '</b> · Shift — bend · [ ] — fundamental octave · Backspace — reset",
-      'hint.scale':"Keys: <b>S D F G H · Space · J K L ; '</b> · Shift — bend · [ ] — octave · Backspace — root · ↑↓ — scale",
+      'hint.harmonic':"Drag a key up/down to bend · <b>Shift</b> bends · <b>[ ]</b> fundamental octave · <b>Backspace</b> reset",
+      'hint.scale':"Drag a key up/down to bend · edge keys leap an octave (±7) · <b>[ ]</b> octave · <b>Backspace</b> nearest root · <b>↑↓</b> scale",
       'lat.sampleRate':'Sample rate','lat.hz':'Hz','lat.ms':'ms','lat.na':'n/a',
       'lat.outNote':'outputLatency ≈ tap→sound delay for scheduled audio (browser report)',
       'lat.measuring':'Measuring… turn up the volume, keep quiet (10 clicks)…',
@@ -302,6 +347,14 @@
       'ctl.harm':'Гармония','ctl.rhythm':'Ритм','ctl.scale':'Лады',
       'color.calm':'Спокойнее','color.hot':'Острее','ctl.land':'Заход','land.line':'Веди линию','land.root':'К тонике',
       'btn.bgStart':'▶ Фон','btn.bgStop':'⏸ Фон','btn.settings':'⚙ Настройки','btn.rec':'⏺ Запись','btn.recStop':'⏹ ',
+      'btn.help':'❔ Помощь','btn.gotit':'Понятно','ctl.tempo':'Темп',
+      'help.title':'Как играть',
+      'help.p1':'Каждая клавиша берёт шаг по гамме относительно последней ноты — промахнуться нельзя. Просто играй.',
+      'help.li1':'Большие центральные клавиши — маленькие шаги; крайние прыгают дальше, вплоть до октавы (±7).',
+      'help.li2':'Зажми и потяни клавишу вверх или вниз — нота подтянется (бенд).',
+      'help.li3':'▶ Фон запускает аккомпанемент; нижняя клавиша «тоника» прыгает к ближайшей тонике; [ ] меняют октаву.',
+      'help.li4':'Темп и тоника — в верхней панели. ⌂ Стили меняет инструмент; ⏺ записывает клип.',
+      'help.li5':'Диапазон, громкости, визуализатор и наклон — в ⚙ Настройках.',
       'mode.blues.name':'Блюз','mode.blues.sub':'· шаги по гамме + бенды',
       'mode.jazz.name':'Джаз','mode.jazz.sub':'· авто-лад по аккордам',
       'mode.gamelan.name':'Гамелан','mode.gamelan.sub':'· пелог / слендро',
@@ -331,8 +384,8 @@
       'scale.dorian':'дорийский','scale.aeolian':'эолийский','scale.mixo':'миксолидийский','scale.lyddom':'лидийский дом.','scale.alt':'альтерированный','scale.whole':'целотонный','scale.ionian':'ионийский','scale.lydian':'лидийский','scale.locr2':'локрийский ♮2','scale.locr':'локрийский','scale.phrdom':'фригийский дом.','scale.hw':'п/тон-тон',
       'role.harmonicWord':'гармоника','role.oct':'окт','ord':'{n}-я','tip.bend':'тяни',
       'extra.octDown':'Октава ↓','extra.toRoot':'К тонике','extra.octUp':'Октава ↑',
-      'hint.harmonic':"Клавиши: <b>S D F G H · Пробел · J K L ; '</b> · Shift — подтяг · [ ] — октава фундаментала · Backspace — сброс",
-      'hint.scale':"Клавиши: <b>S D F G H · Пробел · J K L ; '</b> · Shift — бенд · [ ] — октава · Backspace — тоника · ↑↓ — лад",
+      'hint.harmonic':"Тяни клавишу вверх/вниз для бенда · <b>Shift</b> — бенд · <b>[ ]</b> — октава фундаментала · <b>Backspace</b> — сброс",
+      'hint.scale':"Тяни клавишу вверх/вниз для бенда · крайние прыгают на октаву (±7) · <b>[ ]</b> — октава · <b>Backspace</b> — ближайшая тоника · <b>↑↓</b> — лад",
       'lat.sampleRate':'Частота','lat.hz':'Гц','lat.ms':'мс','lat.na':'н/д',
       'lat.outNote':'outputLatency ≈ задержка «тап → звук» для запланированного аудио (отчёт браузера)',
       'lat.measuring':'Измеряю… выкрути громкость, тихо вокруг (10 щелчков)…',
@@ -660,7 +713,7 @@
     updateDisplay(); return v; }
   function noteOff(id,el){ stopVoice(id); if(el){el.classList.remove("active","bending","bent","nobend","down"); el.style.setProperty("--bend",0); const a=el.querySelector(".arrow"); if(a)a.textContent="↑";} }
   function shiftOctave(dir){ if(M.kind==='harmonic'){ settings.rootMidi+=dir*12; currentIndex=clampIndex(currentIndex); } else currentIndex=clampIndex(currentIndex+dir*SCALE.length); updateDisplay(); }
-  function resetToRoot(){ currentIndex=clampIndex(0); updateDisplay(); }
+  function resetToRoot(){ currentIndex = (M.kind==='harmonic') ? clampIndex(0) : nearestRootIndex(pitchFreq(currentIndex)); updateDisplay(); }
 
   function setVariant(id){ if(M.kind!=='scale'||!M.scales||!M.scales[id]) return;
     const oldF=pitchFreq(currentIndex); SCALE=M.scales[id]; settings.variant=id;
@@ -702,17 +755,32 @@
     } }
 
   /* ============ Keys ============ */
-  const TOP=[{off:-5,code:"KeyS",lbl:"S",w:1.0},{off:-4,code:"KeyD",lbl:"D",w:1.3},{off:-3,code:"KeyF",lbl:"F",w:1.7},
-             {off:3,code:"KeyL",lbl:"L",w:1.7},{off:4,code:"Semicolon",lbl:";",w:1.3},{off:5,code:"Quote",lbl:"'",w:1.0}];
-  const BOTTOM=[{off:-2,code:"KeyG",lbl:"G",w:2.4},{off:-1,code:"KeyH",lbl:"H",w:3.2},{off:0,code:"Space",lbl:"␣",w:3.8},
-                {off:1,code:"KeyJ",lbl:"J",w:3.2},{off:2,code:"KeyK",lbl:"K",w:2.4}];
-  const codeMap={}, noteKeys=[];
+  // weight by distance from the current note: small steps big & central, octave leaps small at the edges
+  const KW={0:3.8,1:3.2,2:2.4,3:1.7,4:1.3,5:1.0,6:0.85,7:0.7};
+  const KEYS=[
+    {off:-7,code:"KeyQ",lbl:"Q"},{off:-6,code:"KeyA",lbl:"A"},{off:-5,code:"KeyS",lbl:"S"},{off:-4,code:"KeyD",lbl:"D"},{off:-3,code:"KeyF",lbl:"F"},
+    {off:-2,code:"KeyG",lbl:"G"},{off:-1,code:"KeyH",lbl:"H"},{off:0,code:"Space",lbl:"␣"},{off:1,code:"KeyJ",lbl:"J"},{off:2,code:"KeyK",lbl:"K"},
+    {off:3,code:"KeyL",lbl:"L"},{off:4,code:"Semicolon",lbl:";"},{off:5,code:"Quote",lbl:"'"},{off:6,code:"KeyP",lbl:"P"},{off:7,code:"Backslash",lbl:"\\"}
+  ];
+  const codeMap={}, noteKeys=[], noteCodes=[];
   function buildRow(list,host){ list.forEach(k=>{ const el=document.createElement("div");
-    el.className="key "+(k.off<0?"neg":k.off>0?"pos":"zero")+" canbend"; el.style.flexGrow=k.w;
+    el.className="key "+(k.off<0?"neg":k.off>0?"pos":"zero")+" canbend"; el.style.flexGrow=KW[Math.abs(k.off)];
     el.innerHTML=`<span class="kb">${k.lbl}</span><span class="off">${k.off>0?"+":""}${k.off}</span><span class="lead"></span><span class="dot"></span><span class="bendfill"></span><span class="arrow">↑</span>`;
-    bindPointer(el,k.off); host.appendChild(el); codeMap[k.code]={el,off:k.off};
+    bindPointer(el,k.off); host.appendChild(el); codeMap[k.code]={el,off:k.off}; noteCodes.push(k.code);
     noteKeys.push({off:k.off, el, lead:el.querySelector(".lead")}); }); }
-  buildRow(TOP,document.getElementById("rowTop")); buildRow(BOTTOM,document.getElementById("rowBottom"));
+  const rowTopEl=document.getElementById("rowTop"), rowBottomEl=document.getElementById("rowBottom");
+  const SHORT=matchMedia('(max-height: 520px)');
+  function buildKeys(){
+    rowTopEl.innerHTML=""; rowBottomEl.innerHTML="";
+    noteKeys.length=0; noteCodes.forEach(c=>delete codeMap[c]); noteCodes.length=0;
+    if(SHORT.matches){ rowTopEl.style.display="none"; buildRow(KEYS,rowBottomEl); }                 // short/landscape: single row
+    else { rowTopEl.style.display=""; buildRow(KEYS.filter(k=>Math.abs(k.off)>=3),rowTopEl); buildRow(KEYS.filter(k=>Math.abs(k.off)<=2),rowBottomEl); }
+  }
+  let builtShort=null;
+  function relayoutKeys(){ if(SHORT.matches===builtShort) return; builtShort=SHORT.matches; buildKeys(); updateDisplay(); }
+  builtShort=SHORT.matches; buildKeys();
+  SHORT.addEventListener("change",relayoutKeys);
+  addEventListener("resize",relayoutKeys);                 // fallback: some webviews don't emit matchMedia 'change'
 
   const EXTRA=[{key:'extra.octDown',code:"BracketLeft",act:()=>shiftOctave(-1)},
                {key:'extra.toRoot',code:"Backspace",act:resetToRoot},
@@ -875,8 +943,8 @@
   const DREAMARP=[0,4,8,12,8,4];
   function dreamScheduler(){ const beat=60/settings.bpm; while(nextNoteTime<actx.currentTime+0.2){ kotoPluck(DREAMARP[qStep%DREAMARP.length],nextNoteTime); nextNoteTime+=beat; qStep++; } }
   // "Gamelan": gong, bell pattern (metallophone), soft drone
-  function gong(time){ vizBeat(time,0.9); const f=midiToFreq(settings.rootMidi-24);
-    [[1,0.5],[2.0,0.16],[2.7,0.1]].forEach(([mult,vol])=>{ const o=actx.createOscillator();o.type='sine';o.frequency.value=f*mult;
+  function gong(time){ vizBeat(time,0.9); const f=midiToFreq(settings.rootMidi-12);   // an octave higher — phone speakers roll off below ~110 Hz
+    [[1,0.34],[2.0,0.3],[2.76,0.24],[4.1,0.16],[5.4,0.09]].forEach(([mult,vol])=>{ const o=actx.createOscillator();o.type='sine';o.frequency.value=f*mult;
       const g=accGain(0); g.gain.setValueAtTime(vol,time); g.gain.exponentialRampToValueAtTime(0.001,time+3.2); o.connect(g);o.start(time);o.stop(time+3.3); }); }
   function bell(midi,time){ const f=midiToFreq(midi);
     [[1,0.16],[2.76,0.05],[5.4,0.025]].forEach(([mult,vol])=>{ const o=actx.createOscillator();o.type='sine';o.frequency.value=f*mult;
@@ -1049,6 +1117,9 @@
   const settingsEl=document.getElementById("settings");
   document.getElementById("settingsBtn").addEventListener("click",()=>settingsEl.classList.remove("hidden"));
   document.getElementById("closeSettings").addEventListener("click",()=>settingsEl.classList.add("hidden"));
+  const helpEl=document.getElementById("help");
+  document.getElementById("helpBtn").addEventListener("click",()=>helpEl.classList.remove("hidden"));
+  document.getElementById("closeHelp").addEventListener("click",()=>helpEl.classList.add("hidden"));
   accBtn.addEventListener("click",()=> accOn?stopBacking():startBacking());
 
   /* ============ Language ============ */
@@ -1163,6 +1234,7 @@
     setMode(p.dataset.mode);
     overlay.style.display="none";
     updateDisplay(); startBacking();
+    try{ if(!localStorage.getItem('jamlab.helpSeen')){ localStorage.setItem('jamlab.helpSeen','1'); helpEl.classList.remove('hidden'); } }catch(e){}  // first-run tutorial
   }));
   // back to the style-picker start screen
   document.getElementById("homeBtn").addEventListener("click",()=>{ if(accOn) stopBacking(); overlay.style.display="flex"; });
