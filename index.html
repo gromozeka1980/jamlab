@@ -44,10 +44,12 @@
   .role{font-size:14px; color:var(--muted); text-align:left; line-height:1.3;}
   .role .tip{color:var(--accent); font-weight:600;}
 
-  .stage{flex:1; display:flex; flex-direction:column; gap:6px; padding:4px 10px clamp(28px,4vh,48px);}  /* bottom gutter = room to drag a down-bend */
+  .playfield{flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 10px; min-height:0;}  /* centers the keys → drag gutters above & below */
+  .keys{display:flex; flex-direction:column; gap:6px; width:100%; height:clamp(150px,42vh,300px);}
   .row{display:flex; gap:6px;}
-  .row.top{height:clamp(74px,16vh,128px); flex:none;}
-  .row.bottom{flex:1; min-height:clamp(120px,30vh,230px);}
+  .row.top{height:38%; flex:none;}
+  .row.bottom{flex:1; min-height:0;}
+  .actions{padding:6px 12px max(8px,env(safe-area-inset-bottom));}
 
   .key{flex:1 1 0; min-width:0; border-radius:14px; border:1px solid var(--line);
     background:linear-gradient(180deg,#212640,#13162a);
@@ -118,12 +120,12 @@
     .display{padding:1px 12px 2px; min-height:0;}
     .note{font-size:18px;}
     .role{font-size:11px;}
-    .stage{padding:2px 8px 16px; gap:4px;}
-    .row.top{height:clamp(44px,17vh,72px);}
-    .row.bottom{min-height:0;}
+    .playfield{padding:0 8px;}
+    .keys{height:clamp(118px,54vh,220px); gap:4px;}
     .row.bottom .key .off{font-size:clamp(22px,5vw,40px);}
     .extra{padding:0 12px 3px;}
-    .extra .key{height:30px; min-width:64px;}
+    .extra .key{height:28px; min-width:60px;}
+    .actions{padding:3px 12px;}
     .hint{display:none;}
   }
 </style>
@@ -203,8 +205,8 @@
 
 <header><h1><span id="h1name">—</span> <small id="h1sub"></small></h1></header>
 
-<div class="controls">
-  <div class="ctl"><label>&nbsp;</label><button id="homeBtn" data-i18n="ctl.styles">⌂ Styles</button></div>
+<!-- top bar: things you set up (configure) -->
+<div class="controls" id="topbar">
   <div class="ctl"><label data-i18n="ctl.instrument">Instrument</label>
     <select id="modeSel">
       <option value="blues" data-i18n="mode.blues.name">Blues</option>
@@ -225,10 +227,6 @@
   <div class="ctl" id="ctlTempo"><label data-i18n="ctl.tempo">Tempo</label>
     <div style="display:flex; align-items:center; gap:6px"><input id="bpm" type="range" min="40" max="160" value="85" style="width:90px"><span class="val" id="bpmVal" style="min-width:22px; font-size:11px; color:var(--muted)">85</span></div>
   </div>
-  <div class="ctl"><label>&nbsp;</label><button id="accBtn" class="toggle" data-i18n="btn.bgStart">▶ Backing</button></div>
-  <div class="ctl"><label>&nbsp;</label><button id="helpBtn" data-i18n="btn.help">❔ Help</button></div>
-  <div class="ctl"><label>&nbsp;</label><button id="settingsBtn" data-i18n="btn.settings">⚙ Settings</button></div>
-  <div class="ctl"><label>&nbsp;</label><button id="recBtn" data-i18n="btn.rec">⏺ Record</button></div>
 </div>
 
 <div class="display">
@@ -236,13 +234,25 @@
   <div class="role"><b id="roleName"></b><br><span class="tip" id="tip"></span></div>
 </div>
 
-<div class="stage">
-  <div class="ladrow" id="ladHost"></div>
-  <div class="row top" id="rowTop"></div>
-  <div class="row bottom" id="rowBottom"></div>
+<div class="ladrow" id="ladHost"></div>
+
+<!-- centered playfield: empty gutters above & below give bend room both ways -->
+<div class="playfield">
+  <div class="keys">
+    <div class="row top" id="rowTop"></div>
+    <div class="row bottom" id="rowBottom"></div>
+  </div>
 </div>
 
+<!-- bottom bar: things you reach for while playing (perform) -->
 <div class="extra" id="extra"></div>
+<div class="controls actions" id="bottombar">
+  <div class="ctl"><button id="homeBtn" data-i18n="ctl.styles">⌂ Styles</button></div>
+  <div class="ctl"><button id="accBtn" class="toggle" data-i18n="btn.bgStart">▶ Backing</button></div>
+  <div class="ctl"><button id="recBtn" data-i18n="btn.rec">⏺ Record</button></div>
+  <div class="ctl"><button id="helpBtn" data-i18n="btn.help">❔ Help</button></div>
+  <div class="ctl"><button id="settingsBtn" data-i18n="btn.settings">⚙ Settings</button></div>
+</div>
 <div class="hint" id="hint"></div>
 
 <script>
