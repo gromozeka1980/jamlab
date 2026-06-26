@@ -110,20 +110,20 @@
   .srow label{color:var(--muted);} .srow .val{color:var(--text); min-width:42px; text-align:right;}
   #closeSettings,#closeHelp{align-self:flex-end; background:var(--zero); border-color:var(--zero); color:#04140a; font-weight:700; padding:9px 22px;}
 
-  /* short viewport (phone landscape): one key row, compact chrome */
+  /* short viewport (phone landscape): keep two rows, just compact the chrome */
   @media (max-height:520px){
-    header{padding:2px 12px 0;}
-    h1{font-size:12px;}
-    .controls{padding:3px 10px; gap:4px 10px;}
-    .display{padding:2px 12px 3px; min-height:0;}
-    .note{font-size:20px;}
-    .role{font-size:12px;}
-    .stage{padding:2px 8px 6px; gap:4px;}
+    header{padding:1px 12px 0;}
+    h1{font-size:11px;}
+    .controls{padding:2px 8px; gap:3px 8px;}
+    .display{padding:1px 12px 2px; min-height:0;}
+    .note{font-size:18px;}
+    .role{font-size:11px;}
+    .stage{padding:2px 8px 5px; gap:4px;}
+    .row.top{height:clamp(44px,17vh,72px);}
     .row.bottom{min-height:0;}
-    .row.bottom .key .off{font-size:clamp(16px,3.2vw,30px);}
-    .row.bottom .key .lead{font-size:clamp(9px,2vw,12px);}
-    .extra{padding:0 12px 4px;}
-    .extra .key{height:32px; min-width:72px;}
+    .row.bottom .key .off{font-size:clamp(22px,5vw,40px);}
+    .extra{padding:0 12px 3px;}
+    .extra .key{height:30px; min-width:64px;}
     .hint{display:none;}
   }
 </style>
@@ -719,6 +719,7 @@
     const oldF=pitchFreq(currentIndex); SCALE=M.scales[id]; settings.variant=id;
     currentIndex=clampIndex(nearestIndex(oldF));
     [...ladHost.querySelectorAll('button')].forEach(b=>b.classList.toggle('active', b.dataset.v===id));
+    buildKeys();
     updateDisplay(); }
   function allowedVariants(){ return (M.id==='blues' && HARM_LADS[settings.harmony]) || M.variants.map(v=>v.id); }
   function cycleVariant(dir){ const ids=allowedVariants(); if(ids.length<2) return false;
@@ -769,18 +770,16 @@
     bindPointer(el,k.off); host.appendChild(el); codeMap[k.code]={el,off:k.off}; noteCodes.push(k.code);
     noteKeys.push({off:k.off, el, lead:el.querySelector(".lead")}); }); }
   const rowTopEl=document.getElementById("rowTop"), rowBottomEl=document.getElementById("rowBottom");
-  const SHORT=matchMedia('(max-height: 520px)');
+  // an octave = one scale length; cap the reach there (jazz scale length changes per chord, so fix it at 7)
+  function maxReach(){ return (M.kind==='harmonic'||M.id==='jazz') ? 7 : SCALE.length; }
   function buildKeys(){
+    const set=KEYS.filter(k=>Math.abs(k.off)<=maxReach());
     rowTopEl.innerHTML=""; rowBottomEl.innerHTML="";
     noteKeys.length=0; noteCodes.forEach(c=>delete codeMap[c]); noteCodes.length=0;
-    if(SHORT.matches){ rowTopEl.style.display="none"; buildRow(KEYS,rowBottomEl); }                 // short/landscape: single row
-    else { rowTopEl.style.display=""; buildRow(KEYS.filter(k=>Math.abs(k.off)>=3),rowTopEl); buildRow(KEYS.filter(k=>Math.abs(k.off)<=2),rowBottomEl); }
+    buildRow(set.filter(k=>Math.abs(k.off)>=3),rowTopEl);     // rare leaps — small, top row
+    buildRow(set.filter(k=>Math.abs(k.off)<=2),rowBottomEl);  // frequent steps — big, bottom row
   }
-  let builtShort=null;
-  function relayoutKeys(){ if(SHORT.matches===builtShort) return; builtShort=SHORT.matches; buildKeys(); updateDisplay(); }
-  builtShort=SHORT.matches; buildKeys();
-  SHORT.addEventListener("change",relayoutKeys);
-  addEventListener("resize",relayoutKeys);                 // fallback: some webviews don't emit matchMedia 'change'
+  buildKeys();
 
   const EXTRA=[{key:'extra.octDown',code:"BracketLeft",act:()=>shiftOctave(-1)},
                {key:'extra.toRoot',code:"Backspace",act:resetToRoot},
@@ -1065,6 +1064,7 @@
     if(isBlues){ const c=HARMONY[settings.harmony].bars[0]; curChord={r:(settings.rootMidi+c.root)%12, ivs:c.ivs}; }
     else if(!isJazz) curChord=null;                  // tone highlight — only in jazz/blues
     applyLadLock();
+    buildKeys();
     currentIndex=clampIndex(0);
     document.getElementById("h1name").textContent=t(M.name);
     document.getElementById("h1sub").textContent=t(M.sub);
