@@ -526,7 +526,8 @@
 
   function initAudio(){
     if (actx) return;
-    actx = new (window.AudioContext||window.webkitAudioContext)();
+    const AC=window.AudioContext||window.webkitAudioContext;
+    try{ actx=new AC({latencyHint:'balanced'}); }catch(e){ actx=new AC(); }   // bigger audio buffer → fewer underruns (anti-crackle)
     comp = actx.createDynamicsCompressor(); comp.threshold.value=-12; comp.ratio.value=3; comp.release.value=.25;
     master = actx.createGain(); master.gain.value=1; master.connect(comp); comp.connect(actx.destination);
     try{ recDest=actx.createMediaStreamDestination(); comp.connect(recDest); }catch(e){}   // tap for recording
