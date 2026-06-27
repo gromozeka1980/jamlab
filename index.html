@@ -728,14 +728,24 @@
     let best=tones[0],bd=Infinity; for(const tn of tones){ const d=Math.abs(tn-midi); if(d<bd){bd=d;best=tn;} }
     if(prev!=null && best===prev && dir!==0){ const i=tones.indexOf(best); best=tones[Math.max(0,Math.min(tones.length-1,i+(dir>0?1:-1)))]; }  // always move on a step
     return best; }
-  let lastJazzMidi=null;
+  let lastJazzMidi=null, jazzBeatRef=0, jazzBeatLen=0;
+  function jazzStrongBeat(){ if(!jazzBeatLen) return false;     // true near beat 1 or 3 of the bar
+    const p=(actx.currentTime-jazzBeatRef)/jazzBeatLen, near=Math.round(p), b=((near%4)+4)%4;
+    return Math.abs(p-near)<0.22 && (b===0||b===2); }
+  function glideVoice(v,tf){ v.baseFreq=tf; const t0=actx.currentTime; let b=v.dragBend; if(kbBend>0) b=Math.max(b,kbBend);
+    const semis=Math.max(-v.maxDown,Math.min(v.maxUp,b)), r=Math.pow(2,semis/12);
+    for(const fn of v.freqNodes) fn.osc.frequency.setTargetAtTime(tf*fn.mult*r,t0,0.09); }   // settle held note to a chord tone
   function noteOn(id,offset,el){ initAudio(); resumeAudio(); if(activeVoices.has(id)) return null;
     currentIndex=clampIndex(currentIndex+offset);
     const bt=bendTargets(currentIndex); let freq=pitchFreq(currentIndex), approach=0, playedMidi=null;
     if(M.id==='jazz' && settings.jazzPhrase==='bebop' && curChord){
       const dir=offset>0?1:offset<0?-1:0;
-      playedMidi=snapJazz(indexToMidi(currentIndex),dir,lastJazzMidi); lastJazzMidi=playedMidi;
-      freq=midiToFreq(playedMidi); approach=dir<0?1:-1;        // approach from above when descending, below when ascending
+      if(jazzStrongBeat()){                                     // land on a chord tone, with a chromatic enclosure
+        playedMidi=snapJazz(indexToMidi(currentIndex),dir,lastJazzMidi); approach=dir<0?1:-1;
+      } else {                                                  // off the beat: let scale tensions / passing tones sing
+        playedMidi=indexToMidi(currentIndex);
+      }
+      lastJazzMidi=playedMidi; freq=midiToFreq(playedMidi);
     } else lastJazzMidi=null;
     const v=makeVoice(freq, bt.up?bt.up.amt:0, bt.down?bt.down.amt:0, approach);
     activeVoices.set(id,v); el.classList.add("active"); el.classList.toggle("nobend", !(bt.up||bt.down));
@@ -1023,6 +1033,8 @@
     if(oldF!=null) currentIndex = (settings.jazzLand==='root') ? nearestRootIndex(oldF) : clampIndex(nearestIndex(oldF));
     jazzLabel=NOTE_NAMES[(settings.rootMidi+ch.root)%12]+ch.sfx+" · "+t(pick[1]);
     curChord={r:(settings.rootMidi+ch.root)%12, ivs:QUAL[ch.q].ivs};
+    if(settings.jazzPhrase==='bebop' && actx)               // resolve any held notes/bends to the new chord
+      for(const v of activeVoices.values()) glideVoice(v, midiToFreq(snapJazz(Math.round(freqToMidi(v.baseFreq)),0,null)));
     updateDisplay();
   }
   function jazzBass(off,time){                       // upright-ish: round body, soft attack, sustained walking quarter
@@ -1064,6 +1076,7 @@
       const step=eighth%8, off=step%2, t0=nextNoteTime+(off?beat*0.16:0);
       const bar=Math.floor(eighth/8)%np, ch=JAZZ_PROG[bar], nx=JAZZ_PROG[(bar+1)%np], q=QUAL[ch.q];
       const ext=(ch.q==='m7'||ch.q==='dom'||ch.q==='maj7'||ch.q==='maj7iv')?14:null;   // add the 9th only where it won't clash
+      if(step%2===0){ jazzBeatRef=nextNoteTime-(step/2)*beat; jazzBeatLen=beat; }       // anchor the beat grid for strong-beat detection
       if(step===0){ const c=ch, tt=nextNoteTime; setTimeout(()=>{ if(accOn&&M.id==='jazz') applyJazzChord(c); },Math.max(0,(tt-actx.currentTime)*1000));
         jazzComp(ch.root,nextNoteTime,q.ivs,0.12,ext); }                // comp on beat 1
       if(step===3) jazzComp(ch.root,t0,q.ivs,0.1,ext);                   // Charleston: the "and" of 2
@@ -1089,7 +1102,7 @@
     else if(M.back==='gamelan'){ startGamelanDrone(); qStep=0; nextNoteTime=actx.currentTime+0.12; schedTimer=setInterval(gamelanScheduler,30); }
     else { startPadFlute(); }
     accBtn.classList.add("on"); accBtn.textContent=t('btn.bgStop'); }
-  function stopBacking(){ accOn=false; if(schedTimer){clearInterval(schedTimer);schedTimer=null;} stopPad(); liveChordPcs=null; curChord=null; refreshKeyLabels();
+  function stopBacking(){ accOn=false; if(schedTimer){clearInterval(schedTimer);schedTimer=null;} stopPad(); liveChordPcs=null; curChord=null; jazzBeatLen=0; refreshKeyLabels();
     accBtn.classList.remove("on"); accBtn.textContent=t('btn.bgStart'); }
 
   /* ============ Theme and mode UI assembly ============ */
