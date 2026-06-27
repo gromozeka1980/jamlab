@@ -729,9 +729,10 @@
     if(prev!=null && best===prev && dir!==0){ const i=tones.indexOf(best); best=tones[Math.max(0,Math.min(tones.length-1,i+(dir>0?1:-1)))]; }  // always move on a step
     return best; }
   let lastJazzMidi=null, jazzBeatRef=0, jazzBeatLen=0;
-  function jazzStrongBeat(){ if(!jazzBeatLen) return false;     // true near beat 1 or 3 of the bar
-    const p=(actx.currentTime-jazzBeatRef)/jazzBeatLen, near=Math.round(p), b=((near%4)+4)%4;
-    return Math.abs(p-near)<0.22 && (b===0||b===2); }
+  function jazzStrongBeat(){ if(!jazzBeatLen) return false;     // true near beat 1 or 3 (modulo bar — robust to lookahead)
+    const bar=4*jazzBeatLen; let d=(actx.currentTime-jazzBeatRef)%bar; if(d<0)d+=bar;
+    const p=d/jazzBeatLen, near=Math.round(p)%4;
+    return Math.abs(p-Math.round(p))<0.22 && (near===0||near===2); }
   function glideVoice(v,tf){ v.baseFreq=tf; const t0=actx.currentTime; let b=v.dragBend; if(kbBend>0) b=Math.max(b,kbBend);
     const semis=Math.max(-v.maxDown,Math.min(v.maxUp,b)), r=Math.pow(2,semis/12);
     for(const fn of v.freqNodes) fn.osc.frequency.setTargetAtTime(tf*fn.mult*r,t0,0.09); }   // settle held note to a chord tone
@@ -862,6 +863,7 @@
 
   /* ============ Backing ============ */
   let accOn=false, schedTimer=null, padNodes=[], nextNoteTime=0, eighth=0, qStep=0, mStep=0;
+  const LOOKAHEAD=0.25;                               // schedule this far ahead → survives main-thread jank (anti-crackle)
   const accGain=l=>{const g=actx.createGain();g.gain.value=l;g.connect(accBus);return g;};
 
   // --- blues: 12 bars ---
@@ -910,7 +912,7 @@
     else if(style==='rhumba'){ hat(t0,false,0.5); if(step===0||step===3||step===6)kick(t0,0.9); if(step===2||step===5)snare(t0,0.3); }
   }
   function bluesScheduler(){ const H=HARMONY[settings.harmony]||HARMONY.major, R=RHYTHM[settings.rhythm]||RHYTHM.shuffle, nb=H.bars.length;
-    while(nextNoteTime < actx.currentTime+0.12){ const beat=60/settings.bpm, step=eighth%8, off=step%2, t0=nextNoteTime+(off?beat*(R.swing||0):0);
+    while(nextNoteTime < actx.currentTime+LOOKAHEAD){ const beat=60/settings.bpm, step=eighth%8, off=step%2, t0=nextNoteTime+(off?beat*(R.swing||0):0);
       const chord=H.bars[Math.floor(eighth/8)%nb];
       drumPat(R.drum,step,t0);
       const role=R.bass[step], bo=role?bassRole(role,chord.ivs):null; if(bo!=null) bBass(chord.root,t0,bo);
@@ -950,7 +952,7 @@
     else { shaker(time, step%2?0.18:0.1); }
   }
   function modalScheduler(){ const b=curBack(), beat=60/settings.bpm, vamp=M.vamp||[0];
-    while(nextNoteTime < actx.currentTime+0.15){
+    while(nextNoteTime < actx.currentTime+LOOKAHEAD){
       const step=mStep%8, bar=Math.floor(mStep/8), vroot = b.vamp ? (vamp[bar%vamp.length]||0) : 0;
       if(b.perc) percHit(M.perc, step, nextNoteTime);
       if(b.bass && (step===0||step===4)) modalBass(vroot + (step===4?7:0), nextNoteTime);
@@ -981,7 +983,7 @@
       const lfo=actx.createOscillator(),lg=actx.createGain();lfo.frequency.value=0.08+i*0.04;lg.gain.value=0.014;lfo.connect(lg);lg.connect(g.gain);
       o.connect(g);g.connect(accBus);o.start(t0);lfo.start(t0); padNodes.push({g,stops:[o,lfo]}); }); }
   const DREAMARP=[0,4,8,12,8,4];
-  function dreamScheduler(){ const beat=60/settings.bpm; while(nextNoteTime<actx.currentTime+0.2){ kotoPluck(DREAMARP[qStep%DREAMARP.length],nextNoteTime); nextNoteTime+=beat; qStep++; } }
+  function dreamScheduler(){ const beat=60/settings.bpm; while(nextNoteTime<actx.currentTime+LOOKAHEAD){ kotoPluck(DREAMARP[qStep%DREAMARP.length],nextNoteTime); nextNoteTime+=beat; qStep++; } }
   // "Gamelan": gong, bell pattern (metallophone), soft drone
   function gong(time){ vizBeat(time,0.9); const f=midiToFreq(settings.rootMidi-12);   // an octave higher — phone speakers roll off below ~110 Hz
     [[1,0.34],[2.0,0.3],[2.76,0.24],[4.1,0.16],[5.4,0.09]].forEach(([mult,vol])=>{ const o=actx.createOscillator();o.type='sine';o.frequency.value=f*mult;
@@ -996,7 +998,7 @@
       o.connect(g);g.connect(accBus);o.start(t0);lfo.start(t0); padNodes.push({g,stops:[o,lfo]}); }); }
   const GMPAT=[0,1,2,3,4,2,3,4];
   function gamelanScheduler(){ const beat=60/settings.bpm, pat=(curBack().id==='pattern');
-    while(nextNoteTime<actx.currentTime+0.2){ const s=qStep%16;
+    while(nextNoteTime<actx.currentTime+LOOKAHEAD){ const s=qStep%16;
       if(s===0) gong(nextNoteTime);
       if(pat){ const idx=GMPAT[qStep%GMPAT.length]; bell(settings.rootMidi+(SCALE[idx%SCALE.length]||0)+12, nextNoteTime); }
       nextNoteTime+=beat/2; qStep++; } }
@@ -1050,19 +1052,16 @@
   function jazzComp(rootSemi,time,ivs,vel,ext){
     const base=settings.rootMidi-12+rootSemi, dur=(60/settings.bpm)*1.4;
     const tones=[ivs[1],ivs[2],ivs[3]]; if(ext!=null) tones.push(ext);
-    tones.forEach(iv=>{ const fr=midiToFreq(base+iv);
-      const o=actx.createOscillator();o.type='triangle';o.frequency.value=fr;
-      const o2=actx.createOscillator();o2.type='sine';o2.frequency.value=fr*2; const o2g=actx.createGain();o2g.gain.value=0.14;
+    tones.forEach(iv=>{ const o=actx.createOscillator();o.type='triangle';o.frequency.value=midiToFreq(base+iv);
       const f=actx.createBiquadFilter();f.type='lowpass';f.frequency.setValueAtTime(3200,time);f.frequency.exponentialRampToValueAtTime(1200,time+dur*0.6);
       const g=actx.createGain();g.gain.setValueAtTime(0,time);g.gain.linearRampToValueAtTime(vel,time+0.006);g.gain.exponentialRampToValueAtTime(0.0008,time+dur);
-      o.connect(f);o2.connect(o2g);o2g.connect(f);f.connect(g);g.connect(accBus);
-      o.start(time);o2.start(time);o.stop(time+dur+0.05);o2.stop(time+dur+0.05); }); }
+      o.connect(f);f.connect(g);g.connect(accBus);o.start(time);o.stop(time+dur+0.05); }); }
   function ride(time,vel,bell){                       // jazz ride: metallic wash + pitched ding, bell-accented on 1 & 3
     const n=actx.createBufferSource();n.buffer=noiseBuf;n.loop=true;
     const bp=actx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=7200;bp.Q.value=0.7;
     const g=actx.createGain();g.gain.setValueAtTime(0,time);g.gain.linearRampToValueAtTime(vel*0.3,time+0.004);g.gain.exponentialRampToValueAtTime(0.0006,time+(bell?0.7:0.34));
     n.connect(bp);bp.connect(g);g.connect(accBus);n.start(time);n.stop(time+(bell?0.8:0.45));
-    const parts=bell?[[1,0.12],[2.76,0.07],[5.4,0.03]]:[[1,0.06],[2.76,0.035]];
+    const parts=bell?[[1,0.12],[2.76,0.06]]:[[1,0.06]];        // fewer partials = lighter
     parts.forEach(([m,v])=>{ const o=actx.createOscillator();o.type='sine';o.frequency.value=(bell?700:920)*m;
       const og=actx.createGain();og.gain.setValueAtTime(0,time);og.gain.linearRampToValueAtTime(v*vel,time+0.003);og.gain.exponentialRampToValueAtTime(0.001,time+(bell?0.6:0.22));
       o.connect(og);og.connect(accBus);o.start(time);o.stop(time+0.7); }); }
@@ -1072,7 +1071,7 @@
     n.connect(hp);hp.connect(g);g.connect(accBus);n.start(time);n.stop(time+0.08); }
   const RIDE=[1,0,1,1,1,0,1,1];                      // spang-a-lang over eighths
   function jazzScheduler(){ const beat=60/settings.bpm, np=JAZZ_PROG.length;
-    while(nextNoteTime < actx.currentTime+0.12){
+    while(nextNoteTime < actx.currentTime+LOOKAHEAD){
       const step=eighth%8, off=step%2, t0=nextNoteTime+(off?beat*0.16:0);
       const bar=Math.floor(eighth/8)%np, ch=JAZZ_PROG[bar], nx=JAZZ_PROG[(bar+1)%np], q=QUAL[ch.q];
       const ext=(ch.q==='m7'||ch.q==='dom'||ch.q==='maj7'||ch.q==='maj7iv')?14:null;   // add the 9th only where it won't clash
