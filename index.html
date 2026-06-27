@@ -530,11 +530,16 @@
     comp = actx.createDynamicsCompressor(); comp.threshold.value=-12; comp.ratio.value=3; comp.release.value=.25;
     master = actx.createGain(); master.gain.value=1; master.connect(comp); comp.connect(actx.destination);
     try{ recDest=actx.createMediaStreamDestination(); comp.connect(recDest); }catch(e){}   // tap for recording
-    reverb = actx.createConvolver(); reverb.buffer=makeImpulse(2.8,2.4);
-    const rg=actx.createGain(); rg.gain.value=.36; reverb.connect(rg); rg.connect(master);
+    // cheap feedback-delay reverb (replaces a 2.8s convolution that overloaded the audio thread on phones)
+    reverb = actx.createGain();                        // send target
+    const revWet=actx.createGain(); revWet.gain.value=.22;
+    [0.0233,0.0297,0.0371,0.0431].forEach(dt=>{ const d=actx.createDelay(0.1); d.delayTime.value=dt;
+      const fb=actx.createGain(); fb.gain.value=.6; const lp=actx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=3000;
+      reverb.connect(d); d.connect(lp); lp.connect(fb); fb.connect(d); d.connect(revWet); });
+    revWet.connect(master);
     leadBus = actx.createGain(); leadBus.gain.value=.9;
     leadFilter = actx.createBiquadFilter(); leadFilter.type="lowpass"; leadFilter.frequency.value=settings.tone; leadFilter.Q.value=.7;
-    shaper = actx.createWaveShaper(); shaper.curve=makeDriveCurve(1.0); shaper.oversample="2x";
+    shaper = actx.createWaveShaper(); shaper.curve=makeDriveCurve(1.0); shaper.oversample="none";
     leadOut = actx.createGain(); leadOut.gain.value=settings.volSolo;
     leadBus.connect(leadFilter); leadFilter.connect(shaper); shaper.connect(leadOut);
     leadOut.connect(master); leadOut.connect(reverb);
@@ -565,12 +570,12 @@
   const viz=(()=>{
     const cv=document.getElementById('viz'), ctx=cv.getContext('2d'); let W=1,H=1,dpr=1;
     const rec=document.createElement('canvas'), rctx=rec.getContext('2d'); let recording=false;
-    function size(){ dpr=Math.min(2,window.devicePixelRatio||1); const w=Math.max(1,Math.round(innerWidth*dpr)), h=Math.max(1,Math.round(innerHeight*dpr));
+    function size(){ dpr=Math.min(1.5,window.devicePixelRatio||1); const w=Math.max(1,Math.round(innerWidth*dpr)), h=Math.max(1,Math.round(innerHeight*dpr));
       if(w!==W||h!==H){ cv.width=W=w; cv.height=H=h; rec.width=w; rec.height=h; } }
     size(); addEventListener('resize',size);
     const P=[]; let beat=0;
-    function note(x,y,rgb){ if(P.length>120) return; P.push({x:x*dpr,y:y*dpr,r:8*dpr,vr:3.0*dpr,vy:-0.6*dpr,life:1,dl:0.018,rgb,ring:1}); }
-    function spark(x,y,rgb){ if(P.length>170) return; P.push({x:(x+(Math.random()*16-8))*dpr,y:y*dpr,r:2.5*dpr,vr:0.4*dpr,vy:-2.6*dpr,life:1,dl:0.03,rgb,ring:0}); }
+    function note(x,y,rgb){ if(P.length>70) return; P.push({x:x*dpr,y:y*dpr,r:8*dpr,vr:3.0*dpr,vy:-0.6*dpr,life:1,dl:0.018,rgb,ring:1}); }
+    function spark(x,y,rgb){ if(P.length>100) return; P.push({x:(x+(Math.random()*16-8))*dpr,y:y*dpr,r:2.5*dpr,vr:0.4*dpr,vy:-2.6*dpr,life:1,dl:0.03,rgb,ring:0}); }
     function pulse(s){ if(s>beat) beat=s; }
     function drawScene(c,opaque){
       if(opaque){ const a=cssRgb('--bg1'),b=cssRgb('--bg'),g=c.createLinearGradient(0,0,0,H);
