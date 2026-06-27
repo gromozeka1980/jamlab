@@ -1011,7 +1011,7 @@
     const o2=actx.createOscillator();o2.type='triangle';o2.frequency.value=f; const o2g=actx.createGain();o2g.gain.value=0.3;
     const beat=60/settings.bpm,dur=beat*0.92, lp=actx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;
     const g=actx.createGain();
-    g.gain.setValueAtTime(0,time);g.gain.linearRampToValueAtTime(0.5,time+0.025);g.gain.setValueAtTime(0.5,time+dur*0.55);g.gain.exponentialRampToValueAtTime(0.001,time+dur);
+    g.gain.setValueAtTime(0,time);g.gain.linearRampToValueAtTime(0.38,time+0.025);g.gain.setValueAtTime(0.38,time+dur*0.55);g.gain.exponentialRampToValueAtTime(0.001,time+dur);
     o.connect(g);o2.connect(o2g);o2g.connect(g);g.connect(lp);lp.connect(accBus);
     o.start(time);o2.start(time);o.stop(time+dur+0.05);o2.stop(time+dur+0.05); }
   // rootless mid-register piano comp: 3rd / 5th / 7th (+9th where safe), root omitted (the bass has it)
@@ -1045,8 +1045,8 @@
       const bar=Math.floor(eighth/8)%np, ch=JAZZ_PROG[bar], nx=JAZZ_PROG[(bar+1)%np], q=QUAL[ch.q];
       const ext=(ch.q==='m7'||ch.q==='dom'||ch.q==='maj7'||ch.q==='maj7iv')?14:null;   // add the 9th only where it won't clash
       if(step===0){ const c=ch, tt=nextNoteTime; setTimeout(()=>{ if(accOn&&M.id==='jazz') applyJazzChord(c); },Math.max(0,(tt-actx.currentTime)*1000));
-        jazzComp(ch.root,nextNoteTime,q.ivs,0.055,ext); }               // comp on beat 1
-      if(step===3) jazzComp(ch.root,t0,q.ivs,0.05,ext);                  // Charleston: the "and" of 2
+        jazzComp(ch.root,nextNoteTime,q.ivs,0.12,ext); }                // comp on beat 1
+      if(step===3) jazzComp(ch.root,t0,q.ivs,0.1,ext);                   // Charleston: the "and" of 2
       // walking bass — quarter notes, smooth approach to the next root
       if(step===0) jazzBass(ch.root,t0);
       else if(step===2) jazzBass(ch.root+7,t0);
