@@ -225,7 +225,7 @@
   <div class="ctl" id="ctlColor"><label data-i18n="ctl.scale">Scales</label><select id="colorSel"><option value="calm" data-i18n="color.calm">Calmer</option><option value="hot" data-i18n="color.hot">Edgier</option></select></div>
   <div class="ctl" id="ctlLand"><label data-i18n="ctl.land">Approach</label><select id="landSel"><option value="line" data-i18n="land.line">Lead the line</option><option value="root" data-i18n="land.root">To the root</option></select></div>
   <div class="ctl" id="ctlPhrase"><label data-i18n="ctl.phrase">Phrasing</label><select id="phraseSel"><option value="free" data-i18n="phrase.free">Free</option><option value="inside" data-i18n="phrase.inside">Inside</option><option value="bebop" data-i18n="phrase.bebop">Bebop</option><option value="outside" data-i18n="phrase.outside">Outside</option></select></div>
-  <div class="ctl" id="ctlTiming"><label data-i18n="ctl.timing">Timing</label><select id="timingSel"><option value="free" data-i18n="timing.free">Free</option><option value="pocket" data-i18n="timing.pocket">In-pocket</option></select></div>
+  <div class="ctl" id="ctlTiming"><label data-i18n="ctl.timing">Timing</label><select id="timingSel"><option value="free" data-i18n="timing.off">Off</option><option value="8">1/8</option><option value="16">1/16</option><option value="32">1/32</option></select></div>
   <div class="ctl" id="ctlTempo"><label data-i18n="ctl.tempo">Tempo</label>
     <div style="display:flex; align-items:center; gap:6px"><input id="bpm" type="range" min="40" max="160" value="85" style="width:90px"><span class="val" id="bpmVal" style="min-width:22px; font-size:11px; color:var(--muted)">85</span></div>
   </div>
@@ -284,7 +284,7 @@
       'ctl.harm':'Harmony','ctl.rhythm':'Rhythm','ctl.scale':'Scales',
       'color.calm':'Calmer','color.hot':'Edgier','ctl.land':'Approach','land.line':'Lead the line','land.root':'To the root',
       'ctl.phrase':'Phrasing','phrase.free':'Free','phrase.inside':'Inside','phrase.bebop':'Bebop','phrase.outside':'Outside',
-      'ctl.timing':'Timing','timing.free':'Free','timing.pocket':'In-pocket',
+      'ctl.timing':'Timing','timing.off':'Off',
       'btn.bgStart':'▶ Backing','btn.bgStop':'⏸ Backing','btn.settings':'⚙ Settings','btn.rec':'⏺ Record','btn.recStop':'⏹ ',
       'btn.help':'❔ Help','btn.gotit':'Got it','ctl.tempo':'Tempo',
       'help.title':'How to play',
@@ -361,7 +361,7 @@
       'ctl.harm':'Гармония','ctl.rhythm':'Ритм','ctl.scale':'Лады',
       'color.calm':'Спокойнее','color.hot':'Острее','ctl.land':'Заход','land.line':'Веди линию','land.root':'К тонике',
       'ctl.phrase':'Фразировка','phrase.free':'Свободно','phrase.inside':'Внутри','phrase.bebop':'Бибоп','phrase.outside':'Снаружи',
-      'ctl.timing':'Тайминг','timing.free':'Свободно','timing.pocket':'В долю',
+      'ctl.timing':'Тайминг','timing.off':'Выкл',
       'btn.bgStart':'▶ Фон','btn.bgStop':'⏸ Фон','btn.settings':'⚙ Настройки','btn.rec':'⏺ Запись','btn.recStop':'⏹ ',
       'btn.help':'❔ Помощь','btn.gotit':'Понятно','ctl.tempo':'Темп',
       'help.title':'Как играть',
@@ -518,7 +518,8 @@
   const PERSIST_KEYS=['tone','volSolo','volAcc','minMidi','maxMidi','viz','gyro','jazzColor','jazzLand','jazzPhrase','jazzTiming'];
   function loadSettings(){ try{ const raw=localStorage.getItem('jamlab.settings'); if(!raw) return;
     const s=JSON.parse(raw); PERSIST_KEYS.forEach(k=>{ if(s[k]!=null) settings[k]=s[k]; });
-    if(settings.jazzPhrase==='plain') settings.jazzPhrase='free'; }catch(e){} }   // migrate old value
+    if(settings.jazzPhrase==='plain') settings.jazzPhrase='free';
+    if(settings.jazzTiming==='pocket') settings.jazzTiming='8'; }catch(e){} }   // migrate old values
   function saveSettings(){ try{ const o={}; PERSIST_KEYS.forEach(k=>o[k]=settings[k]); localStorage.setItem('jamlab.settings',JSON.stringify(o)); }catch(e){} }
   loadSettings();
 
@@ -745,10 +746,15 @@
     const bar=4*jazzBeatLen; let d=(actx.currentTime-jazzBeatRef)%bar; if(d<0)d+=bar;
     const p=d/jazzBeatLen, near=Math.round(p)%4;
     return Math.abs(p-Math.round(p))<cfg.win && cfg.beats.includes(near); }
-  function quantizeToPocket(now){ if(!jazzBeatLen) return now;           // snap onset to the nearest swung-eighth grid time
-    const bar=4*jazzBeatLen, offs=[0,0.66,1,1.66,2,2.66,3,3.66], base=jazzBeatRef+Math.floor((now-jazzBeatRef)/bar)*bar;
+  function pocketOffsets(notesPerBeat){ const sw=0.16, sub=notesPerBeat/2, offs=[];   // subdivide each swung eighth evenly → chosen grid
+    for(let b=0;b<4;b++){ const e0=b, e1=b+0.5+sw, e2=b+1;
+      for(let s=0;s<sub;s++) offs.push(e0+(e1-e0)*s/sub);
+      for(let s=0;s<sub;s++) offs.push(e1+(e2-e1)*s/sub); }
+    return offs; }
+  function quantizeToPocket(now,notesPerBeat){ if(!jazzBeatLen) return now;   // snap onset to nearest grid point at the chosen resolution
+    const bar=4*jazzBeatLen, offs=pocketOffsets(notesPerBeat), base=jazzBeatRef+Math.floor((now-jazzBeatRef)/bar)*bar;
     let best=now, bd=Infinity;
-    for(let b=0;b<=1;b++) for(const o of offs){ const tg=base+b*bar+o*jazzBeatLen; if(tg>=now-0.05){ const s=Math.abs(tg-now); if(s<bd){bd=s;best=tg;} } }
+    for(let k=0;k<=1;k++) for(const o of offs){ const tg=base+k*bar+o*jazzBeatLen; if(tg>=now-0.05){ const s=Math.abs(tg-now); if(s<bd){bd=s;best=tg;} } }
     return Math.max(best,now); }
   function glideVoice(v,tf){ v.baseFreq=tf; const t0=actx.currentTime; let b=v.dragBend; if(kbBend>0) b=Math.max(b,kbBend);
     const semis=Math.max(-v.maxDown,Math.min(v.maxUp,b)), r=Math.pow(2,semis/12);
@@ -765,7 +771,7 @@
       }
       lastJazzMidi=playedMidi; freq=midiToFreq(playedMidi);
     } else lastJazzMidi=null;
-    const when=(M.id==='jazz' && settings.jazzTiming==='pocket' && jazzBeatLen) ? quantizeToPocket(actx.currentTime) : undefined;
+    const when=(M.id==='jazz' && settings.jazzTiming!=='free' && jazzBeatLen) ? quantizeToPocket(actx.currentTime, +settings.jazzTiming) : undefined;
     const v=makeVoice(freq, bt.up?bt.up.amt:0, bt.down?bt.down.amt:0, approach, when);
     activeVoices.set(id,v); el.classList.add("active"); el.classList.toggle("nobend", !(bt.up||bt.down));
     if(settings.viz){ const r=el.getBoundingClientRect(); const cv=el.classList.contains('neg')?'--neg':el.classList.contains('pos')?'--pos':'--zero'; viz.note(r.left+r.width/2, r.top+10, cssRgb(cv)); }
