@@ -224,7 +224,8 @@
   <div class="ctl" id="ctlRhythm"><label data-i18n="ctl.rhythm">Rhythm</label><select id="rhythmSel"></select></div>
   <div class="ctl" id="ctlColor"><label data-i18n="ctl.scale">Scales</label><select id="colorSel"><option value="calm" data-i18n="color.calm">Calmer</option><option value="hot" data-i18n="color.hot">Edgier</option></select></div>
   <div class="ctl" id="ctlLand"><label data-i18n="ctl.land">Approach</label><select id="landSel"><option value="line" data-i18n="land.line">Lead the line</option><option value="root" data-i18n="land.root">To the root</option></select></div>
-  <div class="ctl" id="ctlPhrase"><label data-i18n="ctl.phrase">Phrasing</label><select id="phraseSel"><option value="plain" data-i18n="phrase.plain">Plain</option><option value="bebop" data-i18n="phrase.bebop">Bebop</option></select></div>
+  <div class="ctl" id="ctlPhrase"><label data-i18n="ctl.phrase">Phrasing</label><select id="phraseSel"><option value="free" data-i18n="phrase.free">Free</option><option value="inside" data-i18n="phrase.inside">Inside</option><option value="bebop" data-i18n="phrase.bebop">Bebop</option><option value="outside" data-i18n="phrase.outside">Outside</option></select></div>
+  <div class="ctl" id="ctlTiming"><label data-i18n="ctl.timing">Timing</label><select id="timingSel"><option value="free" data-i18n="timing.free">Free</option><option value="pocket" data-i18n="timing.pocket">In-pocket</option></select></div>
   <div class="ctl" id="ctlTempo"><label data-i18n="ctl.tempo">Tempo</label>
     <div style="display:flex; align-items:center; gap:6px"><input id="bpm" type="range" min="40" max="160" value="85" style="width:90px"><span class="val" id="bpmVal" style="min-width:22px; font-size:11px; color:var(--muted)">85</span></div>
   </div>
@@ -282,7 +283,8 @@
       'ctl.styles':'⌂ Styles','ctl.instrument':'Instrument','ctl.root':'Root','ctl.back':'Backing',
       'ctl.harm':'Harmony','ctl.rhythm':'Rhythm','ctl.scale':'Scales',
       'color.calm':'Calmer','color.hot':'Edgier','ctl.land':'Approach','land.line':'Lead the line','land.root':'To the root',
-      'ctl.phrase':'Phrasing','phrase.plain':'Plain','phrase.bebop':'Bebop',
+      'ctl.phrase':'Phrasing','phrase.free':'Free','phrase.inside':'Inside','phrase.bebop':'Bebop','phrase.outside':'Outside',
+      'ctl.timing':'Timing','timing.free':'Free','timing.pocket':'In-pocket',
       'btn.bgStart':'▶ Backing','btn.bgStop':'⏸ Backing','btn.settings':'⚙ Settings','btn.rec':'⏺ Record','btn.recStop':'⏹ ',
       'btn.help':'❔ Help','btn.gotit':'Got it','ctl.tempo':'Tempo',
       'help.title':'How to play',
@@ -358,7 +360,8 @@
       'ctl.styles':'⌂ Стили','ctl.instrument':'Инструмент','ctl.root':'Тоника','ctl.back':'Фон',
       'ctl.harm':'Гармония','ctl.rhythm':'Ритм','ctl.scale':'Лады',
       'color.calm':'Спокойнее','color.hot':'Острее','ctl.land':'Заход','land.line':'Веди линию','land.root':'К тонике',
-      'ctl.phrase':'Фразировка','phrase.plain':'Простая','phrase.bebop':'Бибоп',
+      'ctl.phrase':'Фразировка','phrase.free':'Свободно','phrase.inside':'Внутри','phrase.bebop':'Бибоп','phrase.outside':'Снаружи',
+      'ctl.timing':'Тайминг','timing.free':'Свободно','timing.pocket':'В долю',
       'btn.bgStart':'▶ Фон','btn.bgStop':'⏸ Фон','btn.settings':'⚙ Настройки','btn.rec':'⏺ Запись','btn.recStop':'⏹ ',
       'btn.help':'❔ Помощь','btn.gotit':'Понятно','ctl.tempo':'Темп',
       'help.title':'Как играть',
@@ -505,16 +508,17 @@
   let M = MODES.blues;
   let SCALE = MODES.blues.scales.minor;
   const settings = { rootMidi:57, bpm:85, tone:2600, variant:'minor', backing:'major',
-                     harmony:'major', rhythm:'shuffle', jazzColor:'calm', jazzLand:'line', jazzPhrase:'bebop',
+                     harmony:'major', rhythm:'shuffle', jazzColor:'calm', jazzLand:'line', jazzPhrase:'bebop', jazzTiming:'free',
                      volSolo:0.8, volAcc:0.55, minMidi:33, maxMidi:93, viz:true, gyro:'off' };
   let gyroV=0;                                       // current tilt value (0..1)
   let currentIndex = 0;
 
   /* ============ Settings persistence ============ */
   // only mode-independent user preferences (variant/backing/harmony/rhythm/bpm are reset per mode)
-  const PERSIST_KEYS=['tone','volSolo','volAcc','minMidi','maxMidi','viz','gyro','jazzColor','jazzLand','jazzPhrase'];
+  const PERSIST_KEYS=['tone','volSolo','volAcc','minMidi','maxMidi','viz','gyro','jazzColor','jazzLand','jazzPhrase','jazzTiming'];
   function loadSettings(){ try{ const raw=localStorage.getItem('jamlab.settings'); if(!raw) return;
-    const s=JSON.parse(raw); PERSIST_KEYS.forEach(k=>{ if(s[k]!=null) settings[k]=s[k]; }); }catch(e){} }
+    const s=JSON.parse(raw); PERSIST_KEYS.forEach(k=>{ if(s[k]!=null) settings[k]=s[k]; });
+    if(settings.jazzPhrase==='plain') settings.jazzPhrase='free'; }catch(e){} }   // migrate old value
   function saveSettings(){ try{ const o={}; PERSIST_KEYS.forEach(k=>o[k]=settings[k]); localStorage.setItem('jamlab.settings',JSON.stringify(o)); }catch(e){} }
   loadSettings();
 
@@ -676,8 +680,8 @@
   }
 
   /* ============ Voice (timbre depends on mode) ============ */
-  function makeVoice(freq,maxUp,maxDown,approach){
-    const t0=actx.currentTime, g=actx.createGain();
+  function makeVoice(freq,maxUp,maxDown,approach,when){
+    const t0=when||actx.currentTime, g=actx.createGain();
     const v={g,baseFreq:freq,dragBend:0,maxUp:maxUp||0,maxDown:maxDown||0,freqNodes:[],stops:[]};
     const vib=actx.createOscillator(), vibG=actx.createGain();
     vib.frequency.value = (M.voice==='flute'?4.5:M.voice==='pad'?4.2:5.0);
@@ -735,26 +739,34 @@
     if(prev!=null && best===prev && dir!==0){ const i=tones.indexOf(best); best=tones[Math.max(0,Math.min(tones.length-1,i+(dir>0?1:-1)))]; }  // always move on a step
     return best; }
   let lastJazzMidi=null, jazzBeatRef=0, jazzBeatLen=0;
-  function jazzStrongBeat(){ if(!jazzBeatLen) return false;     // true near beat 1 or 3 (modulo bar — robust to lookahead)
+  // daring levels: which beats snap to a chord tone, and how wide the window — inside (all beats) → outside (beat 1 only)
+  const DARING={ inside:{beats:[0,1,2,3],win:0.28}, bebop:{beats:[0,2],win:0.22}, outside:{beats:[0],win:0.16} };
+  function jazzStrongBeat(cfg){ if(!jazzBeatLen||!cfg) return false;     // near an allowed beat (modulo bar, robust to lookahead)
     const bar=4*jazzBeatLen; let d=(actx.currentTime-jazzBeatRef)%bar; if(d<0)d+=bar;
     const p=d/jazzBeatLen, near=Math.round(p)%4;
-    return Math.abs(p-Math.round(p))<0.22 && (near===0||near===2); }
+    return Math.abs(p-Math.round(p))<cfg.win && cfg.beats.includes(near); }
+  function quantizeToPocket(now){ if(!jazzBeatLen) return now;           // snap onset to the nearest swung-eighth grid time
+    const bar=4*jazzBeatLen, offs=[0,0.66,1,1.66,2,2.66,3,3.66], base=jazzBeatRef+Math.floor((now-jazzBeatRef)/bar)*bar;
+    let best=now, bd=Infinity;
+    for(let b=0;b<=1;b++) for(const o of offs){ const tg=base+b*bar+o*jazzBeatLen; if(tg>=now-0.05){ const s=Math.abs(tg-now); if(s<bd){bd=s;best=tg;} } }
+    return Math.max(best,now); }
   function glideVoice(v,tf){ v.baseFreq=tf; const t0=actx.currentTime; let b=v.dragBend; if(kbBend>0) b=Math.max(b,kbBend);
     const semis=Math.max(-v.maxDown,Math.min(v.maxUp,b)), r=Math.pow(2,semis/12);
     for(const fn of v.freqNodes) fn.osc.frequency.setTargetAtTime(tf*fn.mult*r,t0,0.09); }   // settle held note to a chord tone
   function noteOn(id,offset,el){ initAudio(); resumeAudio(); if(activeVoices.has(id)) return null;
     currentIndex=clampIndex(currentIndex+offset);
     const bt=bendTargets(currentIndex); let freq=pitchFreq(currentIndex), approach=0, playedMidi=null;
-    if(M.id==='jazz' && settings.jazzPhrase==='bebop' && curChord){
-      const dir=offset>0?1:offset<0?-1:0;
-      if(jazzStrongBeat()){                                     // land on a chord tone, with a chromatic enclosure
+    if(M.id==='jazz' && curChord && settings.jazzPhrase!=='free'){
+      const dir=offset>0?1:offset<0?-1:0, cfg=DARING[settings.jazzPhrase];
+      if(jazzStrongBeat(cfg)){                                  // land on a chord tone, with a chromatic enclosure
         playedMidi=snapJazz(indexToMidi(currentIndex),dir,lastJazzMidi); approach=dir<0?1:-1;
       } else {                                                  // off the beat: let scale tensions / passing tones sing
         playedMidi=indexToMidi(currentIndex);
       }
       lastJazzMidi=playedMidi; freq=midiToFreq(playedMidi);
     } else lastJazzMidi=null;
-    const v=makeVoice(freq, bt.up?bt.up.amt:0, bt.down?bt.down.amt:0, approach);
+    const when=(M.id==='jazz' && settings.jazzTiming==='pocket' && jazzBeatLen) ? quantizeToPocket(actx.currentTime) : undefined;
+    const v=makeVoice(freq, bt.up?bt.up.amt:0, bt.down?bt.down.amt:0, approach, when);
     activeVoices.set(id,v); el.classList.add("active"); el.classList.toggle("nobend", !(bt.up||bt.down));
     if(settings.viz){ const r=el.getBoundingClientRect(); const cv=el.classList.contains('neg')?'--neg':el.classList.contains('pos')?'--pos':'--zero'; viz.note(r.left+r.width/2, r.top+10, cssRgb(cv)); }
     updateDisplay(); if(playedMidi!=null) elNote.textContent=midiToName(playedMidi); return v; }
@@ -1041,7 +1053,7 @@
     if(oldF!=null) currentIndex = (settings.jazzLand==='root') ? nearestRootIndex(oldF) : clampIndex(nearestIndex(oldF));
     jazzLabel=NOTE_NAMES[(settings.rootMidi+ch.root)%12]+ch.sfx+" · "+t(pick[1]);
     curChord={r:(settings.rootMidi+ch.root)%12, ivs:QUAL[ch.q].ivs};
-    if(settings.jazzPhrase==='bebop' && actx)               // resolve any held notes/bends to the new chord
+    if(settings.jazzPhrase!=='free' && actx)               // resolve any held notes/bends to the new chord
       for(const v of activeVoices.values()) glideVoice(v, midiToFreq(snapJazz(Math.round(freqToMidi(v.baseFreq)),0,null)));
     updateDisplay();
   }
@@ -1136,9 +1148,10 @@
     document.getElementById("ctlColor").style.display  = isJazz?'':'none';
     document.getElementById("ctlLand").style.display   = isJazz?'':'none';
     document.getElementById("ctlPhrase").style.display = isJazz?'':'none';
+    document.getElementById("ctlTiming").style.display = isJazz?'':'none';
     if(isBlues){ settings.harmony='major'; settings.rhythm='shuffle'; harmSel.value='major'; rhythmSel.value='shuffle'; }
     else { settings.backing=M.defBacking; buildBackingOptions(); }
-    if(isJazz){ colorSel.value=settings.jazzColor; landSel.value=settings.jazzLand; phraseSel.value=settings.jazzPhrase; }
+    if(isJazz){ colorSel.value=settings.jazzColor; landSel.value=settings.jazzLand; phraseSel.value=settings.jazzPhrase; timingSel.value=settings.jazzTiming; }
     if(isBlues){ const c=HARMONY[settings.harmony].bars[0]; curChord={r:(settings.rootMidi+c.root)%12, ivs:c.ivs}; }
     else if(!isJazz) curChord=null;                  // tone highlight — only in jazz/blues
     applyLadLock();
@@ -1169,10 +1182,11 @@
   harmSel.addEventListener("change",()=>{ settings.harmony=harmSel.value; applyLadLock(); if(accOn){stopBacking();startBacking();} });  // scale locked to the harmony, restart from bar I
   rhythmSel.addEventListener("change",()=>{ settings.rhythm=rhythmSel.value; });   // rhythm changes on the fly
 
-  const colorSel=document.getElementById("colorSel"), landSel=document.getElementById("landSel"), phraseSel=document.getElementById("phraseSel");
+  const colorSel=document.getElementById("colorSel"), landSel=document.getElementById("landSel"), phraseSel=document.getElementById("phraseSel"), timingSel=document.getElementById("timingSel");
   colorSel.addEventListener("change",()=>{ settings.jazzColor=colorSel.value; saveSettings(); });   // scales apply from the next chord
   landSel.addEventListener("change",()=>{ settings.jazzLand=landSel.value; saveSettings(); });
   phraseSel.addEventListener("change",()=>{ settings.jazzPhrase=phraseSel.value; saveSettings(); });
+  timingSel.addEventListener("change",()=>{ settings.jazzTiming=timingSel.value; saveSettings(); });
 
   const loSel=document.getElementById("loSel"), hiSel=document.getElementById("hiSel");
   for(let m=24;m<=96;m++){ loSel.appendChild(new Option(midiToName(m),m)); hiSel.appendChild(new Option(midiToName(m),m)); }
@@ -1191,7 +1205,7 @@
     tone.value=settings.tone;
     volSolo.value=Math.round(settings.volSolo*100); volAcc.value=Math.round(settings.volAcc*100);
     vizSel.value=settings.viz?'on':'off'; gyroSel.value=settings.gyro;
-    colorSel.value=settings.jazzColor; landSel.value=settings.jazzLand; phraseSel.value=settings.jazzPhrase;
+    colorSel.value=settings.jazzColor; landSel.value=settings.jazzLand; phraseSel.value=settings.jazzPhrase; timingSel.value=settings.jazzTiming;
   }
   const settingsEl=document.getElementById("settings");
   document.getElementById("settingsBtn").addEventListener("click",()=>settingsEl.classList.remove("hidden"));
