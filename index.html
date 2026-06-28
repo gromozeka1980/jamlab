@@ -915,17 +915,23 @@
   const RHY_OPTS=[['shuffle','rhy.shuffle'],['rock','rhy.rock'],['slow','rhy.slow'],['train','rhy.train'],['rhumba','rhy.rhumba'],['honky','rhy.honky'],['funk','rhy.funk']];
   function bassRole(role,ivs){ if(role==='R')return 0; if(role==='5')return 7; if(role==='8')return 12;
     if(role==='b7')return 10; if(role==='6')return 9; if(role==='3')return ivs.includes(3)?3:4; return null; }
-  function bChord(rootSemi,time,dur,ivs,lvl){ const base=settings.rootMidi-12+rootSemi; lvl=lvl||0.05;
+  function bChord(rootSemi,time,dur,ivs,lvl){ const base=settings.rootMidi-12+rootSemi; lvl=lvl||0.1;   // plucky guitar/piano-style chord (not a sustained pad)
     ivs.forEach(iv=>{ const o=actx.createOscillator();o.type="sawtooth";o.frequency.value=midiToFreq(base+iv);
-      const f=actx.createBiquadFilter();f.type="lowpass";f.frequency.value=1300; const g=actx.createGain();
-      g.gain.setValueAtTime(0,time);g.gain.linearRampToValueAtTime(lvl,time+0.03);g.gain.setValueAtTime(lvl,time+dur*0.7);g.gain.exponentialRampToValueAtTime(.001,time+dur);
+      const f=actx.createBiquadFilter();f.type="lowpass";f.frequency.setValueAtTime(2600,time);f.frequency.exponentialRampToValueAtTime(900,time+dur*0.6);
+      const g=actx.createGain();g.gain.setValueAtTime(0,time);g.gain.linearRampToValueAtTime(lvl,time+0.005);g.gain.exponentialRampToValueAtTime(.0008,time+dur);
       o.connect(f);f.connect(g);g.connect(accBus);o.start(time);o.stop(time+dur+0.05); }); }
-  function bBass(rootSemi,time,off){
-    const o=actx.createOscillator();o.type="triangle";o.frequency.value=midiToFreq(settings.rootMidi-24+rootSemi+off);
-    const beat=60/settings.bpm,dur=beat*0.42,g=accGain(0); g.gain.setValueAtTime(0,time);g.gain.linearRampToValueAtTime(.5,time+0.01);g.gain.exponentialRampToValueAtTime(.001,time+dur);
-    o.connect(g);o.start(time);o.stop(time+dur+0.05); }
+  function bBass(rootSemi,time,off){                       // rounder bass with body (sine + triangle through a lowpass)
+    const fr=midiToFreq(settings.rootMidi-24+rootSemi+off);
+    const o=actx.createOscillator();o.type="sine";o.frequency.value=fr;
+    const o2=actx.createOscillator();o2.type="triangle";o2.frequency.value=fr; const o2g=actx.createGain();o2g.gain.value=0.4;
+    const beat=60/settings.bpm,dur=beat*0.5, lp=actx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=820;
+    const g=actx.createGain(); g.gain.setValueAtTime(0,time);g.gain.linearRampToValueAtTime(.55,time+0.012);g.gain.exponentialRampToValueAtTime(.001,time+dur);
+    o.connect(g);o2.connect(o2g);o2g.connect(g);g.connect(lp);lp.connect(accBus);
+    o.start(time);o2.start(time);o.stop(time+dur+0.05);o2.stop(time+dur+0.05); }
   function kick(time,vel){vizBeat(time,0.9*(vel||1));const o=actx.createOscillator();o.type="sine";const g=accGain(0);o.frequency.setValueAtTime(150,time);o.frequency.exponentialRampToValueAtTime(48,time+0.12);g.gain.setValueAtTime(.9*(vel||1),time);g.gain.exponentialRampToValueAtTime(.001,time+0.18);o.connect(g);o.start(time);o.stop(time+0.2);}
-  function snare(time,vel){const n=actx.createBufferSource();n.buffer=noiseBuf;const f=actx.createBiquadFilter();f.type="bandpass";f.frequency.value=1800;const g=accGain(0);g.gain.setValueAtTime(.45*(vel||1),time);g.gain.exponentialRampToValueAtTime(.001,time+0.18);n.connect(f);f.connect(g);n.start(time);n.stop(time+0.2);}
+  function snare(time,vel){ vel=vel||1;   // tonal body + bright snap = a real backbeat snare
+    const n=actx.createBufferSource();n.buffer=noiseBuf;const f=actx.createBiquadFilter();f.type="highpass";f.frequency.value=1700;const g=accGain(0);g.gain.setValueAtTime(.5*vel,time);g.gain.exponentialRampToValueAtTime(.001,time+0.15);n.connect(f);f.connect(g);n.start(time);n.stop(time+0.17);
+    const o=actx.createOscillator();o.type="triangle";o.frequency.setValueAtTime(190,time);o.frequency.exponentialRampToValueAtTime(140,time+0.08);const og=accGain(0);og.gain.setValueAtTime(.3*vel,time);og.gain.exponentialRampToValueAtTime(.001,time+0.12);o.connect(og);o.start(time);o.stop(time+0.14);}
   function hat(time,open,vel){const n=actx.createBufferSource();n.buffer=noiseBuf;const f=actx.createBiquadFilter();f.type="highpass";f.frequency.value=7000;const g=accGain(0);const dur=open?0.12:0.04;g.gain.setValueAtTime(.16*(vel||1),time);g.gain.exponentialRampToValueAtTime(.001,time+dur);n.connect(f);f.connect(g);n.start(time);n.stop(time+dur+0.02);}
   function drumPat(style,step,t0){
     if(style==='shuffle'){ hat(t0,step%2); if(step===0||step===4)kick(t0); if(step===2||step===6)snare(t0); }
@@ -940,9 +946,10 @@
       const chord=H.bars[Math.floor(eighth/8)%nb];
       drumPat(R.drum,step,t0);
       const role=R.bass[step], bo=role?bassRole(role,chord.ivs):null; if(bo!=null) bBass(chord.root,t0,bo);
-      if(R.comp==='stab'){ if(step===2||step===6) bChord(chord.root,t0,beat*0.5,chord.ivs,0.07); }
-      else if(R.comp==='offbeat'){ if(step%2===1) bChord(chord.root,t0,beat*0.45,chord.ivs,0.06); }
-      else if(step===0){ bChord(chord.root,nextNoteTime,beat*4*0.95,chord.ivs,0.05); }
+      if(R.comp==='stab'){ if(step===2||step===6) bChord(chord.root,t0,beat*0.45,chord.ivs,0.12); }
+      else if(R.comp==='offbeat'){ if(step%2===1) bChord(chord.root,t0,beat*0.4,chord.ivs,0.09); }     // shuffle "chuck" on the &s
+      else { if(step===2||step===6) bChord(chord.root,t0,beat*0.7,chord.ivs,0.12);                     // backbeat chord chop (was a bar-long drone)
+             else if(step===0) bChord(chord.root,nextNoteTime,beat*0.5,chord.ivs,0.05); }              // light downbeat for body
       if(step===0){ const pcs=new Set(chord.ivs.map(iv=>(chord.root+iv)%12)), cc={r:(settings.rootMidi+chord.root)%12, ivs:chord.ivs}; setTimeout(()=>{ if(!accOn||M.back!=='blues')return; liveChordPcs=pcs; curChord=cc; updateDisplay();}, Math.max(0,(nextNoteTime-actx.currentTime)*1000)); }
       nextNoteTime+=beat/2; eighth++; } }
 
