@@ -1101,8 +1101,8 @@
       const ext=(ch.q==='m7'||ch.q==='dom'||ch.q==='maj7'||ch.q==='maj7iv')?14:null;   // add the 9th only where it won't clash
       if(step%2===0){ jazzBeatRef=nextNoteTime-(step/2)*beat; jazzBeatLen=beat; }       // anchor the beat grid for strong-beat detection
       if(step===0){ const c=ch, tt=nextNoteTime; setTimeout(()=>{ if(accOn&&M.id==='jazz') applyJazzChord(c); },Math.max(0,(tt-actx.currentTime)*1000));
-        jazzComp(ch.root,nextNoteTime,q.ivs,0.12,ext); }                // comp on beat 1
-      if(step===3) jazzComp(ch.root,t0,q.ivs,0.1,ext);                   // Charleston: the "and" of 2
+        jazzComp(ch.root,nextNoteTime,q.ivs,0.17,ext); }                // comp on beat 1
+      if(step===3) jazzComp(ch.root,t0,q.ivs,0.14,ext);                  // Charleston: the "and" of 2
       // walking bass — quarter notes, smooth approach to the next root
       if(step===0) jazzBass(ch.root,t0);
       else if(step===2) jazzBass(ch.root+7,t0);
