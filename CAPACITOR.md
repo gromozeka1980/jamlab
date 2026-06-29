@@ -18,8 +18,18 @@ cd jamlab
 npm install                 # installs Capacitor core + CLI + platform packages
 
 npm run add:android         # builds www/ then `cap add android`
+npm run assets              # generate app icon + splash from assets/logo.svg (run after add:android)
 npm run add:ios             # macOS + Xcode only
 ```
+
+## App icon & splash
+
+- Source art lives in `assets/` — `logo.svg` (icon) and `splash.svg` / `splash-dark.svg`.
+- `npm run assets` (via `@capacitor/assets`) rasterizes them into every Android
+  density and writes the launcher icon + splash into the native project.
+- Re-run `npm run assets` after editing the SVGs or after a fresh `cap add android`.
+- To control splash behavior (duration/spinner) install `@capacitor/splash-screen`;
+  the config block is already in `capacitor.config.json`.
 
 ## Day-to-day
 
@@ -46,4 +56,15 @@ projects.
   `viewport-fit=cover` + `env(safe-area-inset-*)` so the UI respects the notch.
 - Audio latency in the WebView measured ~21 ms on Android — acceptable, no native
   audio engine needed (see the 🔬 panel in Settings).
+- The microphone latency test auto-hides in the native build (`NATIVE` flag in
+  `index.html`), so the app needs **no permissions** — Data Safety = "no data".
+- **Privacy policy** is published at https://gromozeka1980.github.io/jamlab/privacy.html
+  (use this URL in the Play Console listing & Data Safety form).
 - Capacitor pinned to `^7.0.0`; bump in `package.json` when upgrading.
+
+## TODO before release
+
+- Pro unlock via Google Play Billing (RevenueCat recommended).
+- Verify the in-app clip **share** works in the WebView; if `navigator.share`
+  is flaky on Android WebView, add the `@capacitor/share` plugin.
+- Wire `@capacitor/haptics` to key presses for tactile feedback.

@@ -2,6 +2,7 @@
   "appId": "app.gromozeka.jamlab",
   "appName": "Jamlab",
   "webDir": "www",
+  "backgroundColor": "#0e1020",
   "server": {
     "androidScheme": "https"
   },
@@ -9,6 +10,12 @@
     "StatusBar": {
       "overlaysWebView": true,
       "style": "DARK"
+    },
+    "SplashScreen": {
+      "backgroundColor": "#0e1020",
+      "launchShowDuration": 800,
+      "launchAutoHide": true,
+      "showSpinner": false
     }
   }
 }
