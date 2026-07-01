@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='14'%20fill='%230e1020'/%3E%3Cpath%20d='M10%2046%20L24%2038%20L38%2024%20L54%2016'%20stroke='%23ffd43b'%20stroke-width='5'%20fill='none'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='10'%20cy='46'%20r='5.5'%20fill='%234dd0e1'/%3E%3Ccircle%20cx='24'%20cy='38'%20r='5.5'%20fill='%232f9e44'/%3E%3Ccircle%20cx='38'%20cy='24'%20r='5.5'%20fill='%23ffd43b'/%3E%3Ccircle%20cx='54'%20cy='16'%20r='5.5'%20fill='%23e8590c'/%3E%3C/svg%3E">
-<title>Relational Instruments</title>
+<title>Jamlab</title>
 <style>
   :root{
     --bg:#0e1020; --bg1:#18324f; --panel:#171a2b; --line:#272b40;
@@ -139,7 +139,8 @@
 <body>
 <canvas id="viz"></canvas>
 <div id="overlay">
-  <h2 data-i18n="app.title">Relational Instruments</h2>
+  <h2 data-i18n="app.title" style="font-size:30px; letter-spacing:.5px;">Jamlab</h2>
+  <div data-i18n="app.tagline" style="color:var(--muted); font-size:12px; letter-spacing:2.5px; text-transform:uppercase; margin:-8px 0 2px;">Relational instruments</div>
   <p data-i18n="intro.p">Keys are steps along a scale, not separate notes — you can't play a wrong one. Pick an instrument:</p>
   <div class="pickers">
     <div class="pick" data-mode="blues"><b data-i18n="pick.blues.t">🎸 Blues</b><span data-i18n="pick.blues.d">blues scale, bends, 12-bar backing</span></div>
@@ -278,7 +279,7 @@
   /* ============ I18N ============ */
   const I18N = {
     en: {
-      'app.title':'Relational Instruments',
+      'app.title':'Jamlab','app.tagline':'Relational instruments',
       'intro.p':"Keys are steps along a scale, not separate notes — you can't play a wrong one. Pick an instrument:",
       'pick.blues.t':'🎸 Blues','pick.blues.d':'blues scale, bends, 12-bar backing',
       'pick.jazz.t':'🎷 Jazz','pick.jazz.d':'the scale follows the chords (golden sequence)',
@@ -357,7 +358,7 @@
       'rec.shareErr':'Share: {name} — {msg}',
     },
     ru: {
-      'app.title':'Реляционные инструменты',
+      'app.title':'Jamlab','app.tagline':'Реляционные инструменты',
       'intro.p':'Клавиши — это шаги по гамме, а не отдельные ноты. Промахнуться нельзя. Выбери инструмент:',
       'pick.blues.t':'🎸 Блюз','pick.blues.d':'блюзовая гамма, бенды, 12-тактовый бэк',
       'pick.jazz.t':'🎷 Джаз','pick.jazz.d':'лад сам едет по аккордам (золотая секвенция)',
