@@ -20,14 +20,18 @@
     background:radial-gradient(1200px 600px at 50% -10%, var(--bg1) 0%, var(--bg) 62%);
     color:var(--text); font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
     display:flex; flex-direction:column; min-height:100%; overflow:hidden;
-    touch-action:none; user-select:none; -webkit-user-select:none;
+    user-select:none; -webkit-user-select:none;
     transition:background .4s;
   }
+  /* block scroll/zoom only on the play surfaces — leave sheets/pickers scrollable */
+  .playfield,.row,.ladrow,.key,.extra{touch-action:none;}
   header{padding:max(8px,env(safe-area-inset-top)) 14px 2px; text-align:center;}
   h1{font-size:14px; margin:0; font-weight:600; letter-spacing:.3px;}
   h1 small{color:var(--muted); font-weight:400;}
 
   .controls{display:flex; flex-wrap:wrap; gap:6px 14px; justify-content:center; align-items:flex-end; padding:6px 12px;}
+  #setupRow{display:none; border-top:1px solid var(--line); background:rgba(0,0,0,.15);}
+  #setupRow.open{display:flex;}
   .ctl{display:flex; flex-direction:column; gap:2px;}
   .ctl label{color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.5px;}
   select,button{background:var(--panel); color:var(--text); border:1px solid var(--line);
@@ -111,7 +115,7 @@
   #settings,#latov,#recov,#help{background:rgba(7,8,16,.82); z-index:9;}
   #latov,#recov,#help{z-index:11;}
   #settings.hidden,#latov.hidden,#recov.hidden,#help.hidden{display:none;}
-  .sheet{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px 20px; width:min(440px,100%); display:flex; flex-direction:column; gap:14px;}
+  .sheet{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px 20px; width:min(440px,100%); max-height:88vh; overflow-y:auto; display:flex; flex-direction:column; gap:14px;}
   .sheet h3{margin:0 0 4px; font-size:18px;}
   .srow{display:flex; align-items:center; justify-content:space-between; gap:14px; font-size:13px;}
   .srow label{color:var(--muted);} .srow .val{color:var(--text); min-width:42px; text-align:right;}
@@ -154,7 +158,7 @@
   </div>
 </div>
 
-<div id="settings" class="hidden">
+<div id="settings" class="hidden" role="dialog" aria-modal="true">
   <div class="sheet">
     <h3 data-i18n="set.title">⚙ Settings</h3>
     <div class="srow"><label data-i18n="set.lang">Language</label><select id="langSel"><option value="en">English</option><option value="ru">Русский</option></select></div>
@@ -173,7 +177,7 @@
   </div>
 </div>
 
-<div id="help" class="hidden">
+<div id="help" class="hidden" role="dialog" aria-modal="true">
   <div class="sheet">
     <h3 data-i18n="help.title">How to play</h3>
     <div style="font-size:13px; line-height:1.55;">
@@ -190,7 +194,7 @@
   </div>
 </div>
 
-<div id="recov" class="hidden">
+<div id="recov" class="hidden" role="dialog" aria-modal="true">
   <div class="sheet">
     <h3 data-i18n="rec.title">🎬 Recording</h3>
     <video id="recVid" playsinline controls style="width:100%; max-height:46vh; border-radius:10px; background:#000;"></video>
@@ -203,7 +207,7 @@
   </div>
 </div>
 
-<div id="latov" class="hidden">
+<div id="latov" class="hidden" role="dialog" aria-modal="true">
   <div class="sheet">
     <h3 data-i18n="lat.title">🔬 Audio latency</h3>
     <div id="latInfo" style="font-size:13px; line-height:1.5;">…</div>
@@ -215,8 +219,17 @@
 
 <header><h1><span id="h1name">—</span> <small id="h1sub"></small></h1></header>
 
-<!-- top bar: things you set up (configure) -->
+<!-- top bar: perform essentials always on screen -->
 <div class="controls" id="topbar">
+  <div class="ctl"><label data-i18n="ctl.root">Root</label><select id="rootSel"></select></div>
+  <div class="ctl" id="ctlTempo"><label data-i18n="ctl.tempo">Tempo</label>
+    <div style="display:flex; align-items:center; gap:6px"><input id="bpm" type="range" min="40" max="160" value="85" style="width:90px"><span class="val" id="bpmVal" style="min-width:22px; font-size:11px; color:var(--muted)">85</span></div>
+  </div>
+  <div class="ctl"><label>&nbsp;</label><button id="setupBtn" class="toggle" data-i18n="btn.style">🎛 Style</button></div>
+</div>
+
+<!-- collapsible setup: instrument + per-mode config (hidden until 🎛 Style) -->
+<div class="controls" id="setupRow">
   <div class="ctl"><label data-i18n="ctl.instrument">Instrument</label>
     <select id="modeSel">
       <option value="blues" data-i18n="mode.blues.name">Blues</option>
@@ -228,7 +241,6 @@
       <option value="light" data-i18n="mode.light.name">Bright</option>
     </select>
   </div>
-  <div class="ctl"><label data-i18n="ctl.root">Root</label><select id="rootSel"></select></div>
   <div class="ctl" id="ctlBack"><label data-i18n="ctl.back">Backing</label><select id="backSel"></select></div>
   <div class="ctl" id="ctlHarm"><label data-i18n="ctl.harm">Harmony</label><select id="harmSel"></select></div>
   <div class="ctl" id="ctlRhythm"><label data-i18n="ctl.rhythm">Rhythm</label><select id="rhythmSel"></select></div>
@@ -236,9 +248,6 @@
   <div class="ctl" id="ctlLand"><label data-i18n="ctl.land">Approach</label><select id="landSel"><option value="line" data-i18n="land.line">Lead the line</option><option value="root" data-i18n="land.root">To the root</option></select></div>
   <div class="ctl" id="ctlPhrase"><label data-i18n="ctl.phrase">Phrasing</label><select id="phraseSel"><option value="free" data-i18n="phrase.free">Free</option><option value="inside" data-i18n="phrase.inside">Inside</option><option value="bebop" data-i18n="phrase.bebop">Bebop</option><option value="outside" data-i18n="phrase.outside">Outside</option></select></div>
   <div class="ctl" id="ctlTiming"><label data-i18n="ctl.timing">Timing</label><select id="timingSel"><option value="free" data-i18n="timing.off">Off</option><option value="8">1/8</option><option value="16">1/16</option><option value="32">1/32</option></select></div>
-  <div class="ctl" id="ctlTempo"><label data-i18n="ctl.tempo">Tempo</label>
-    <div style="display:flex; align-items:center; gap:6px"><input id="bpm" type="range" min="40" max="160" value="85" style="width:90px"><span class="val" id="bpmVal" style="min-width:22px; font-size:11px; color:var(--muted)">85</span></div>
-  </div>
 </div>
 
 <div class="display">
@@ -302,7 +311,7 @@
       'ctl.phrase':'Phrasing','phrase.free':'Free','phrase.inside':'Inside','phrase.bebop':'Bebop','phrase.outside':'Outside',
       'ctl.timing':'Timing','timing.off':'Off',
       'btn.bgStart':'▶ Backing','btn.bgStop':'⏸ Backing','btn.settings':'⚙ Settings','btn.rec':'⏺ Record','btn.recStop':'⏹ ',
-      'btn.help':'❔ Help','btn.gotit':'Got it','ctl.tempo':'Tempo',
+      'btn.help':'❔ Help','btn.gotit':'Got it','ctl.tempo':'Tempo','btn.style':'🎛 Style',
       'help.title':'How to play',
       'help.p1':"Each key plays a step along the scale relative to the last note — so you can't hit a wrong note. Just play.",
       'help.li1':'Big center keys are small steps; the edge keys leap further — up to a full octave (±7).',
@@ -381,7 +390,7 @@
       'ctl.phrase':'Фразировка','phrase.free':'Свободно','phrase.inside':'Внутри','phrase.bebop':'Бибоп','phrase.outside':'Снаружи',
       'ctl.timing':'Тайминг','timing.off':'Выкл',
       'btn.bgStart':'▶ Фон','btn.bgStop':'⏸ Фон','btn.settings':'⚙ Настройки','btn.rec':'⏺ Запись','btn.recStop':'⏹ ',
-      'btn.help':'❔ Помощь','btn.gotit':'Понятно','ctl.tempo':'Темп',
+      'btn.help':'❔ Помощь','btn.gotit':'Понятно','ctl.tempo':'Темп','btn.style':'🎛 Стиль',
       'help.title':'Как играть',
       'help.p1':'Каждая клавиша берёт шаг по гамме относительно последней ноты — промахнуться нельзя. Просто играй.',
       'help.li1':'Большие центральные клавиши — маленькие шаги; крайние прыгают дальше, вплоть до октавы (±7).',
@@ -1257,6 +1266,13 @@
   document.getElementById("helpBtn").addEventListener("click",()=>helpEl.classList.remove("hidden"));
   document.getElementById("closeHelp").addEventListener("click",()=>helpEl.classList.add("hidden"));
   accBtn.addEventListener("click",()=> accOn?stopBacking():startBacking());
+  // collapsible setup panel (declutter the play screen)
+  const setupRow=document.getElementById("setupRow"), setupBtn=document.getElementById("setupBtn");
+  setupBtn.addEventListener("click",()=>{ const open=setupRow.classList.toggle("open"); setupBtn.classList.toggle("on",open); });
+  // close any open sheet with Escape or a tap on the backdrop
+  const SHEETS=["settings","help","latov","recov"];
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape") SHEETS.forEach(id=>document.getElementById(id).classList.add("hidden")); });
+  SHEETS.forEach(id=>{ const el=document.getElementById(id); el.addEventListener("pointerdown",e=>{ if(e.target===el) el.classList.add("hidden"); }); });
 
   /* ============ Language ============ */
   function applyStaticI18n(){
