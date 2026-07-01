@@ -30,8 +30,6 @@
   h1 small{color:var(--muted); font-weight:400;}
 
   .controls{display:flex; flex-wrap:wrap; gap:6px 14px; justify-content:center; align-items:flex-end; padding:6px 12px;}
-  #setupRow{display:none; border-top:1px solid var(--line); background:rgba(0,0,0,.15);}
-  #setupRow.open{display:flex;}
   .ctl{display:flex; flex-direction:column; gap:2px;}
   .ctl label{color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.5px;}
   select,button{background:var(--panel); color:var(--text); border:1px solid var(--line);
@@ -103,6 +101,11 @@
   .extra .key .off{font-size:13px; font-weight:600;}
   .hint{color:var(--muted); font-size:11px; text-align:center; padding:0 12px max(8px,env(safe-area-inset-bottom));}
   #viz{position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:3;}
+  /* landscape is not supported on phones — ask to rotate back to portrait */
+  #rotate{display:none; position:fixed; inset:0; z-index:100; background:var(--bg); color:var(--text);
+    flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:16px; padding:30px; font-size:16px;}
+  #rotate .ico{font-size:48px;}
+  @media (orientation:landscape) and (pointer:coarse){ #rotate{display:flex;} }
 
   #overlay,#settings,#latov,#recov,#help{position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:22px; z-index:10;}
   #overlay{background:rgba(7,8,16,.95); gap:14px; text-align:center;}
@@ -142,6 +145,7 @@
 </head>
 <body>
 <canvas id="viz"></canvas>
+<div id="rotate"><div class="ico">📱↻</div><div data-i18n="rotate.msg">Please rotate your phone upright</div></div>
 <div id="overlay">
   <h2 data-i18n="app.title" style="font-size:30px; letter-spacing:.5px;">Jamlab</h2>
   <div data-i18n="app.tagline" style="color:var(--muted); font-size:12px; letter-spacing:2.5px; text-transform:uppercase; margin:-8px 0 2px;">Relational instruments</div>
@@ -190,6 +194,15 @@
         <li data-i18n="help.li5"></li>
       </ul>
     </div>
+    <div id="helpJazz" style="display:none; border-top:1px solid var(--line); padding-top:10px; font-size:13px; line-height:1.5;">
+      <h3 data-i18n="help.jazzTitle" style="font-size:15px; color:var(--accent); margin:0 0 6px;">Jazz settings (experimental)</h3>
+      <ul style="margin:0; padding-left:18px; color:var(--muted); display:flex; flex-direction:column; gap:5px;">
+        <li data-i18n="help.jz1"></li>
+        <li data-i18n="help.jz2"></li>
+        <li data-i18n="help.jz3"></li>
+        <li data-i18n="help.jz4"></li>
+      </ul>
+    </div>
     <button id="closeHelp" data-i18n="btn.gotit">Got it</button>
   </div>
 </div>
@@ -219,27 +232,11 @@
 
 <header><h1><span id="h1name">—</span> <small id="h1sub"></small></h1></header>
 
-<!-- top bar: perform essentials always on screen -->
+<!-- top bar: perform + per-mode config (instrument is chosen via ⌂ Styles) -->
 <div class="controls" id="topbar">
   <div class="ctl"><label data-i18n="ctl.root">Root</label><select id="rootSel"></select></div>
   <div class="ctl" id="ctlTempo"><label data-i18n="ctl.tempo">Tempo</label>
     <div style="display:flex; align-items:center; gap:6px"><input id="bpm" type="range" min="40" max="160" value="85" style="width:90px"><span class="val" id="bpmVal" style="min-width:22px; font-size:11px; color:var(--muted)">85</span></div>
-  </div>
-  <div class="ctl"><label>&nbsp;</label><button id="setupBtn" class="toggle" data-i18n="btn.style">🎛 Style</button></div>
-</div>
-
-<!-- collapsible setup: instrument + per-mode config (hidden until 🎛 Style) -->
-<div class="controls" id="setupRow">
-  <div class="ctl"><label data-i18n="ctl.instrument">Instrument</label>
-    <select id="modeSel">
-      <option value="blues" data-i18n="mode.blues.name">Blues</option>
-      <option value="jazz" data-i18n="mode.jazz.name">Jazz</option>
-      <option value="koto" data-i18n="mode.koto.name">Koto</option>
-      <option value="dream" data-i18n="mode.dream.name">Dream</option>
-      <option value="gamelan" data-i18n="mode.gamelan.name">Gamelan</option>
-      <option value="vostok" data-i18n="mode.vostok.name">East</option>
-      <option value="light" data-i18n="mode.light.name">Bright</option>
-    </select>
   </div>
   <div class="ctl" id="ctlBack"><label data-i18n="ctl.back">Backing</label><select id="backSel"></select></div>
   <div class="ctl" id="ctlHarm"><label data-i18n="ctl.harm">Harmony</label><select id="harmSel"></select></div>
@@ -290,8 +287,9 @@
     en: {
       'app.title':'Jamlab','app.tagline':'Relational instruments',
       'intro.p':"Keys are steps along a scale, not separate notes — you can't play a wrong one. Pick an instrument:",
+      'rotate.msg':'Please rotate your phone upright',
       'pick.blues.t':'🎸 Blues','pick.blues.d':'blues scale, bends, 12-bar backing',
-      'pick.jazz.t':'🎷 Jazz','pick.jazz.d':'the scale follows the chords (golden sequence)',
+      'pick.jazz.t':'🎷 Jazz','pick.jazz.d':'⚠ experimental · work in progress — the scale follows the chords',
       'pick.koto.t':'🎴 Koto','pick.koto.d':'Japanese pentatonic, drone/ostinato',
       'pick.dream.t':'🌫 Dream','pick.dream.d':'whole-tone scale, floating pad',
       'pick.gamelan.t':'🔔 Gamelan','pick.gamelan.d':'pelog/slendro, gong and metallophone',
@@ -319,8 +317,13 @@
       'help.li3':'▶ Backing starts the jam; the “to root” button jumps to the nearest root; the octave buttons shift octaves.',
       'help.li4':'Tempo and root sit in the top bar. ⌂ Styles switches instrument; ⏺ records a clip.',
       'help.li5':'Range, volumes, visualizer and tilt live in ⚙ Settings.',
+      'help.jazzTitle':'Jazz settings (experimental)',
+      'help.jz1':'Scales: how adventurous the auto-picked scale is over each chord — Calmer (safe) vs Edgier (altered/outside).',
+      'help.jz2':'Approach: on a chord change, keep leading your melodic line, or jump to the new chord’s root.',
+      'help.jz3':'Phrasing: how strongly notes snap to chord tones — Free (raw scale) → Inside → Bebop → Outside. Held notes resolve when the chord changes.',
+      'help.jz4':'Timing: snap your notes onto the swing grid (1/8, 1/16, 1/32), or Off for free timing.',
       'mode.blues.name':'Blues','mode.blues.sub':'· scale steps + bends',
-      'mode.jazz.name':'Jazz','mode.jazz.sub':'· auto-scale on chords',
+      'mode.jazz.name':'Jazz','mode.jazz.sub':'· auto-scale on chords · ⚠ experimental',
       'mode.gamelan.name':'Gamelan','mode.gamelan.sub':'· pelog / slendro',
       'mode.dream.name':'Dream','mode.dream.sub':'· whole-tone',
       'mode.koto.name':'Koto','mode.koto.sub':'· Japanese pentatonic',
@@ -369,8 +372,9 @@
     ru: {
       'app.title':'Jamlab','app.tagline':'Реляционные инструменты',
       'intro.p':'Клавиши — это шаги по гамме, а не отдельные ноты. Промахнуться нельзя. Выбери инструмент:',
+      'rotate.msg':'Поверни телефон вертикально',
       'pick.blues.t':'🎸 Блюз','pick.blues.d':'блюзовая гамма, бенды, 12-тактовый бэк',
-      'pick.jazz.t':'🎷 Джаз','pick.jazz.d':'лад сам едет по аккордам (золотая секвенция)',
+      'pick.jazz.t':'🎷 Джаз','pick.jazz.d':'⚠ экспериментальный · в работе — лад едет по аккордам',
       'pick.koto.t':'🎴 Кото','pick.koto.d':'японская пентатоника, дрон/остинато',
       'pick.dream.t':'🌫 Грёза','pick.dream.d':'целотонная гамма, парящий пэд',
       'pick.gamelan.t':'🔔 Гамелан','pick.gamelan.d':'пелог/слендро, гонг и металлофон',
@@ -398,8 +402,13 @@
       'help.li3':'▶ Фон запускает аккомпанемент; кнопка «к тонике» прыгает к ближайшей тонике; кнопки октав меняют октаву.',
       'help.li4':'Темп и тоника — в верхней панели. ⌂ Стили меняет инструмент; ⏺ записывает клип.',
       'help.li5':'Диапазон, громкости, визуализатор и наклон — в ⚙ Настройках.',
+      'help.jazzTitle':'Джаз-настройки (экспериментально)',
+      'help.jz1':'Лады: насколько дерзкий лад подставляется под аккорд — Спокойнее (безопасно) или Острее (альтерации/снаружи).',
+      'help.jz2':'Заход: при смене аккорда либо продолжать вести линию, либо прыгнуть к тонике нового аккорда.',
+      'help.jz3':'Фразировка: насколько ноты притягиваются к аккордовым тонам — Свободно (чистая гамма) → Внутри → Бибоп → Снаружи. Удержанные ноты разрешаются при смене аккорда.',
+      'help.jz4':'Тайминг: класть ноты на свинговую сетку (1/8, 1/16, 1/32) или Выкл — свободно.',
       'mode.blues.name':'Блюз','mode.blues.sub':'· шаги по гамме + бенды',
-      'mode.jazz.name':'Джаз','mode.jazz.sub':'· авто-лад по аккордам',
+      'mode.jazz.name':'Джаз','mode.jazz.sub':'· авто-лад по аккордам · ⚠ эксперимент',
       'mode.gamelan.name':'Гамелан','mode.gamelan.sub':'· пелог / слендро',
       'mode.dream.name':'Грёза','mode.dream.sub':'· целотонная',
       'mode.koto.name':'Кото','mode.koto.sub':'· японская пентатоника',
@@ -490,7 +499,7 @@
       kind:'scale',
       scales:{hira:[0,2,3,7,8], kumoi:[0,2,3,7,9], insen:[0,1,5,7,10], iwato:[0,1,5,6,10]},
       variants:[{id:'hira',label:'variant.hira'},{id:'kumoi',label:'variant.kumoi'},{id:'insen',label:'variant.insen'},{id:'iwato',label:'variant.iwato'}], defVariant:'hira',
-      backings:[{id:'drone',label:'backing.drone',pad:1},{id:'arp',label:'backing.arp',arp:1},{id:'both',label:'backing.both',pad:1,arp:1},{id:'padperc',label:'backing.koto.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.koto.arpperc',arp:1,perc:1,bass:1}], defBacking:'drone',
+      backings:[{id:'drone',label:'backing.drone',pad:1},{id:'arp',label:'backing.arp',arp:1},{id:'both',label:'backing.both',pad:1,arp:1},{id:'padperc',label:'backing.koto.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.koto.arpperc',arp:1,perc:1,bass:1}], defBacking:'arpperc',
     },
     vostok: {
       id:'vostok', name:'mode.vostok.name', sub:'mode.vostok.sub', voice:'pluck', back:'koto', perc:'darbuka', vamp:[0,1],
@@ -498,7 +507,7 @@
       kind:'scale',
       scales:{freygish:[0,1,4,5,7,8,10], hungarian:[0,2,3,6,7,8,11]},
       variants:[{id:'freygish',label:'variant.freygish'},{id:'hungarian',label:'variant.hungarian'}], defVariant:'freygish',
-      backings:[{id:'drone',label:'backing.drone',pad:1},{id:'padperc',label:'backing.vostok.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.vostok.arpperc',arp:1,perc:1,bass:1},{id:'vamp',label:'backing.vostok.vamp',vamp:1,arp:1,perc:1,bass:1}], defBacking:'drone',
+      backings:[{id:'drone',label:'backing.drone',pad:1},{id:'padperc',label:'backing.vostok.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.vostok.arpperc',arp:1,perc:1,bass:1},{id:'vamp',label:'backing.vostok.vamp',vamp:1,arp:1,perc:1,bass:1}], defBacking:'arpperc',
     },
     light: {
       id:'light', name:'mode.light.name', sub:'mode.light.sub', voice:'pluck', back:'koto', perc:'shaker',
@@ -506,7 +515,7 @@
       kind:'scale',
       scales:{major:[0,2,4,7,9], minor:[0,3,5,7,10]},
       variants:[{id:'major',label:'variant.light.major'},{id:'minor',label:'variant.light.minor'}], defVariant:'major',
-      backings:[{id:'drone',label:'backing.drone',pad:1},{id:'arp',label:'backing.arp',arp:1},{id:'padperc',label:'backing.light.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.light.arpperc',arp:1,perc:1,bass:1}], defBacking:'drone',
+      backings:[{id:'drone',label:'backing.drone',pad:1},{id:'arp',label:'backing.arp',arp:1},{id:'padperc',label:'backing.light.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.light.arpperc',arp:1,perc:1,bass:1}], defBacking:'arpperc',
     },
     dorian: {
       id:'dorian', name:'mode.dorian.name', sub:'mode.dorian.sub', voice:'saw', back:'koto',
@@ -1170,7 +1179,7 @@
   /* ============ Theme and mode UI assembly ============ */
   function applyTheme(th){ const s=document.documentElement.style; for(const k in th) s.setProperty('--'+k,th[k]); }
   const ladHost=document.getElementById("ladHost"), backSel=document.getElementById("backSel"),
-        modeSel=document.getElementById("modeSel"), accBtn=document.getElementById("accBtn");
+        accBtn=document.getElementById("accBtn");
   function buildLadRow(){ ladHost.innerHTML="";
     if(M.variants.length<2) return;
     M.variants.forEach(vr=>{ const b=document.createElement("button"); b.className="ladbtn"+(vr.id===settings.variant?" active":"");
@@ -1205,7 +1214,7 @@
     document.getElementById("h1name").textContent=t(M.name);
     document.getElementById("h1sub").textContent=t(M.sub);
     setHint();
-    modeSel.value=id; updateDisplay();
+    updateDisplay();
     if(was && actx) startBacking(); }
 
   /* ============ Controls ============ */
@@ -1214,7 +1223,6 @@
     .forEach(([nm,mid])=>rootSel.appendChild(new Option(nm,mid)));
   rootSel.value=57;
   rootSel.addEventListener("change",()=>{ settings.rootMidi=+rootSel.value; resetToRoot(); if(accOn){stopBacking();startBacking();} });
-  modeSel.addEventListener("change",()=>setMode(modeSel.value));
   backSel.addEventListener("change",()=>{ settings.backing=backSel.value; if(accOn){stopBacking();startBacking();} });
 
   const harmSel=document.getElementById("harmSel"), rhythmSel=document.getElementById("rhythmSel");
@@ -1263,12 +1271,9 @@
   document.getElementById("settingsBtn").addEventListener("click",()=>settingsEl.classList.remove("hidden"));
   document.getElementById("closeSettings").addEventListener("click",()=>settingsEl.classList.add("hidden"));
   const helpEl=document.getElementById("help");
-  document.getElementById("helpBtn").addEventListener("click",()=>helpEl.classList.remove("hidden"));
+  document.getElementById("helpBtn").addEventListener("click",()=>{ document.getElementById("helpJazz").style.display=(M.id==='jazz')?'block':'none'; helpEl.classList.remove("hidden"); });
   document.getElementById("closeHelp").addEventListener("click",()=>helpEl.classList.add("hidden"));
   accBtn.addEventListener("click",()=> accOn?stopBacking():startBacking());
-  // collapsible setup panel (declutter the play screen)
-  const setupRow=document.getElementById("setupRow"), setupBtn=document.getElementById("setupBtn");
-  setupBtn.addEventListener("click",()=>{ const open=setupRow.classList.toggle("open"); setupBtn.classList.toggle("on",open); });
   // close any open sheet with Escape or a tap on the backdrop
   const SHEETS=["settings","help","latov","recov"];
   document.addEventListener("keydown",e=>{ if(e.key==="Escape") SHEETS.forEach(id=>document.getElementById(id).classList.add("hidden")); });
