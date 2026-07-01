@@ -31,7 +31,8 @@
   .ctl{display:flex; flex-direction:column; gap:2px;}
   .ctl label{color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.5px;}
   select,button{background:var(--panel); color:var(--text); border:1px solid var(--line);
-    border-radius:8px; padding:6px 10px; font-size:13px; cursor:pointer;}
+    border-radius:8px; padding:6px 10px; font-size:13px; cursor:pointer; min-height:44px;}   /* >=44px tap target */
+  .touch .key .kb{display:none;}   /* keyboard letter labels are meaningless on touch/native */
   button.toggle.on{background:var(--zero); border-color:var(--zero); color:#04140a; font-weight:600;}
   button#recBtn.rec{background:#e03131; border-color:#e03131; color:#fff; font-weight:600;}
   input[type=range]{width:150px; accent-color:var(--accent);}
@@ -94,7 +95,7 @@
   .key.down .arrow{opacity:1; color:var(--blue);}
 
   .extra{display:flex; gap:8px; justify-content:center; padding:0 12px 6px; flex-wrap:wrap;}
-  .extra .key{flex:0 0 auto; min-width:88px; max-width:130px; height:40px; border-radius:10px;}
+  .extra .key{flex:0 0 auto; min-width:88px; max-width:130px; height:44px; border-radius:10px;}
   .extra .key .off{font-size:13px; font-weight:600;}
   .hint{color:var(--muted); font-size:11px; text-align:center; padding:0 12px max(8px,env(safe-area-inset-bottom));}
   #viz{position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:3;}
@@ -128,9 +129,10 @@
     .keys{height:clamp(118px,54vh,220px); gap:4px;}
     .row.bottom .key .off{font-size:clamp(22px,5vw,40px);}
     .extra{padding:0 12px 3px;}
-    .extra .key{height:28px; min-width:60px;}
+    .extra .key{height:34px; min-width:60px;}
+    select,button{min-height:36px;}
     .actions{padding:3px 12px;}
-    .hint{display:none;}
+    .hint{font-size:10px; padding:0 10px 2px;}   /* keep the gesture hint visible, just compact */
   }
 </style>
 </head>
@@ -157,12 +159,12 @@
     <div class="srow"><label data-i18n="set.lang">Language</label><select id="langSel"><option value="en">English</option><option value="ru">Русский</option></select></div>
     <div class="srow"><label data-i18n="set.lo">Lowest note</label><select id="loSel"></select></div>
     <div class="srow"><label data-i18n="set.hi">Highest note</label><select id="hiSel"></select></div>
-    <div class="srow"><label data-i18n="set.tone">Tone (brightness)</label><input id="tone" type="range" min="600" max="6000" value="2600"></div>
-    <div class="srow"><label data-i18n="set.volSolo">Lead volume</label><input id="volSolo" type="range" min="0" max="100" value="80"></div>
-    <div class="srow"><label data-i18n="set.volAcc">Backing volume</label><input id="volAcc" type="range" min="0" max="100" value="55"></div>
-    <div class="srow"><label data-i18n="set.bgDrums">· Drums</label><input id="bgDrums" type="range" min="0" max="150" value="100"></div>
-    <div class="srow"><label data-i18n="set.bgBass">· Bass</label><input id="bgBass" type="range" min="0" max="150" value="100"></div>
-    <div class="srow"><label data-i18n="set.bgChord">· Harmony</label><input id="bgChord" type="range" min="0" max="150" value="100"></div>
+    <div class="srow"><label data-i18n="set.tone">Tone (brightness)</label><input id="tone" type="range" min="600" max="6000" value="2600"><span class="val" id="toneVal">2600</span></div>
+    <div class="srow"><label data-i18n="set.volSolo">Lead volume</label><input id="volSolo" type="range" min="0" max="100" value="80"><span class="val" id="volSoloVal">80%</span></div>
+    <div class="srow"><label data-i18n="set.volAcc">Backing volume</label><input id="volAcc" type="range" min="0" max="100" value="55"><span class="val" id="volAccVal">55%</span></div>
+    <div class="srow"><label data-i18n="set.bgDrums">· Drums</label><input id="bgDrums" type="range" min="0" max="150" value="100"><span class="val" id="bgDrumsVal">100%</span></div>
+    <div class="srow"><label data-i18n="set.bgBass">· Bass</label><input id="bgBass" type="range" min="0" max="150" value="100"><span class="val" id="bgBassVal">100%</span></div>
+    <div class="srow"><label data-i18n="set.bgChord">· Harmony</label><input id="bgChord" type="range" min="0" max="150" value="100"><span class="val" id="bgChordVal">100%</span></div>
     <div class="srow"><label data-i18n="set.viz">Visualizer</label><select id="vizSel"><option value="on" data-i18n="opt.on">On</option><option value="off" data-i18n="opt.off">Off</option></select></div>
     <div class="srow"><label data-i18n="set.gyro">Gyroscope (phone)</label><select id="gyroSel"><option value="off" data-i18n="opt.off">Off</option><option value="vibrato" data-i18n="gyro.vibrato">Vibrato</option><option value="volume" data-i18n="gyro.volume">Volume</option><option value="tone" data-i18n="gyro.tone">Brightness</option></select></div>
     <div class="srow"><label data-i18n="set.lat">Audio latency</label><button id="latBtn" data-i18n="btn.measure">🔬 Measure</button></div>
@@ -270,6 +272,8 @@
 
   // true inside the native Capacitor app (vs the plain web build)
   const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  const TOUCH = NATIVE || (window.matchMedia && matchMedia('(pointer:coarse)').matches);
+  if(TOUCH) document.body.classList.add('touch');   // hide keyboard hints/labels on touch
 
   /* ============ I18N ============ */
   const I18N = {
@@ -302,7 +306,7 @@
       'help.p1':"Each key plays a step along the scale relative to the last note — so you can't hit a wrong note. Just play.",
       'help.li1':'Big center keys are small steps; the edge keys leap further — up to a full octave (±7).',
       'help.li2':'Hold and drag a key up or down to bend the note.',
-      'help.li3':'▶ Backing starts the jam; the bottom “root” key snaps to the nearest root; [ ] shift octaves.',
+      'help.li3':'▶ Backing starts the jam; the “to root” button jumps to the nearest root; the octave buttons shift octaves.',
       'help.li4':'Tempo and root sit in the top bar. ⌂ Styles switches instrument; ⏺ records a clip.',
       'help.li5':'Range, volumes, visualizer and tilt live in ⚙ Settings.',
       'mode.blues.name':'Blues','mode.blues.sub':'· scale steps + bends',
@@ -336,6 +340,7 @@
       'extra.octDown':'Octave ↓','extra.toRoot':'To root','extra.octUp':'Octave ↑',
       'hint.harmonic':"Drag a key up/down to bend · <b>Shift</b> bends · <b>[ ]</b> fundamental octave · <b>Backspace</b> reset",
       'hint.scale':"Drag a key up/down to bend · edge keys leap an octave (±7) · <b>[ ]</b> octave · <b>Backspace</b> nearest root · <b>↑↓</b> scale",
+      'hint.touch':"Tap keys to play · drag a key up or down to bend · the edge keys leap an octave",
       'lat.sampleRate':'Sample rate','lat.hz':'Hz','lat.ms':'ms','lat.na':'n/a',
       'lat.outNote':'outputLatency ≈ tap→sound delay for scheduled audio (browser report)',
       'lat.measuring':'Measuring… turn up the volume, keep quiet (10 clicks)…',
@@ -380,7 +385,7 @@
       'help.p1':'Каждая клавиша берёт шаг по гамме относительно последней ноты — промахнуться нельзя. Просто играй.',
       'help.li1':'Большие центральные клавиши — маленькие шаги; крайние прыгают дальше, вплоть до октавы (±7).',
       'help.li2':'Зажми и потяни клавишу вверх или вниз — нота подтянется (бенд).',
-      'help.li3':'▶ Фон запускает аккомпанемент; нижняя клавиша «тоника» прыгает к ближайшей тонике; [ ] меняют октаву.',
+      'help.li3':'▶ Фон запускает аккомпанемент; кнопка «к тонике» прыгает к ближайшей тонике; кнопки октав меняют октаву.',
       'help.li4':'Темп и тоника — в верхней панели. ⌂ Стили меняет инструмент; ⏺ записывает клип.',
       'help.li5':'Диапазон, громкости, визуализатор и наклон — в ⚙ Настройках.',
       'mode.blues.name':'Блюз','mode.blues.sub':'· шаги по гамме + бенды',
@@ -414,6 +419,7 @@
       'extra.octDown':'Октава ↓','extra.toRoot':'К тонике','extra.octUp':'Октава ↑',
       'hint.harmonic':"Тяни клавишу вверх/вниз для бенда · <b>Shift</b> — бенд · <b>[ ]</b> — октава фундаментала · <b>Backspace</b> — сброс",
       'hint.scale':"Тяни клавишу вверх/вниз для бенда · крайние прыгают на октаву (±7) · <b>[ ]</b> — октава · <b>Backspace</b> — ближайшая тоника · <b>↑↓</b> — лад",
+      'hint.touch':"Нажимай клавиши · тяни клавишу вверх или вниз — бенд · крайние прыгают на октаву",
       'lat.sampleRate':'Частота','lat.hz':'Гц','lat.ms':'мс','lat.na':'н/д',
       'lat.outNote':'outputLatency ≈ задержка «тап → звук» для запланированного аудио (отчёт браузера)',
       'lat.measuring':'Измеряю… выкрути громкость, тихо вокруг (10 щелчков)…',
@@ -430,7 +436,8 @@
       'rec.shareErr':'Шеринг: {name} — {msg}',
     },
   };
-  let LANG = (()=>{ try{ const s=localStorage.getItem('jamlab.lang'); if(s==='en'||s==='ru') return s; }catch(e){} return 'en'; })();
+  let LANG = (()=>{ try{ const s=localStorage.getItem('jamlab.lang'); if(s==='en'||s==='ru') return s; }catch(e){}
+    return ((navigator.language||'en').toLowerCase().indexOf('ru')===0) ? 'ru' : 'en'; })();   // first run: follow the device language
   function t(k,vars){
     let s = (I18N[LANG] && I18N[LANG][k]!=null) ? I18N[LANG][k] : (I18N.en[k]!=null ? I18N.en[k] : k);
     if(vars) for(const p in vars) s = s.split('{'+p+'}').join(vars[p]);
@@ -1160,7 +1167,7 @@
       b.dataset.v=vr.id; b.textContent=t(vr.label);
       b.addEventListener("pointerdown",e=>{e.preventDefault();initAudio();resumeAudio();setVariant(vr.id);}); ladHost.appendChild(b); }); }
   function buildBackingOptions(){ backSel.innerHTML=""; M.backings.forEach(bk=>backSel.appendChild(new Option(t(bk.label),bk.id))); backSel.value=settings.backing; }
-  function setHint(){ document.getElementById("hint").innerHTML = t(M.kind==='harmonic'?'hint.harmonic':'hint.scale'); }
+  function setHint(){ document.getElementById("hint").innerHTML = t(TOUCH ? 'hint.touch' : (M.kind==='harmonic'?'hint.harmonic':'hint.scale')); }
 
   function setMode(id){ const was=accOn; if(actx) stopBacking();
     M=MODES[id]; applyTheme(M.theme);
@@ -1223,12 +1230,13 @@
   hiSel.addEventListener("change",()=>{ settings.maxMidi=+hiSel.value; currentIndex=clampIndex(currentIndex); updateDisplay(); saveSettings(); });
   const bpm=document.getElementById("bpm"), bpmVal=document.getElementById("bpmVal");
   bpm.addEventListener("input",()=>{settings.bpm=+bpm.value; bpmVal.textContent=bpm.value;});
-  const tone=document.getElementById("tone"); tone.addEventListener("input",()=>{settings.tone=+tone.value; if(leadFilter) leadFilter.frequency.value=settings.tone; saveSettings();});
-  const volSolo=document.getElementById("volSolo"); volSolo.addEventListener("input",()=>{settings.volSolo=volSolo.value/100; if(leadOut) leadOut.gain.value=settings.volSolo; saveSettings();});
-  const volAcc=document.getElementById("volAcc"); volAcc.addEventListener("input",()=>{settings.volAcc=volAcc.value/100; if(accBus) accBus.gain.value=settings.volAcc; saveSettings();});
-  const bgDrums=document.getElementById("bgDrums"); bgDrums.addEventListener("input",()=>{settings.bgDrums=bgDrums.value/100; if(busPerc) busPerc.gain.value=settings.bgDrums; saveSettings();});
-  const bgBass=document.getElementById("bgBass"); bgBass.addEventListener("input",()=>{settings.bgBass=bgBass.value/100; if(busBass) busBass.gain.value=settings.bgBass; saveSettings();});
-  const bgChord=document.getElementById("bgChord"); bgChord.addEventListener("input",()=>{settings.bgChord=bgChord.value/100; if(busChord) busChord.gain.value=settings.bgChord; saveSettings();});
+  const setVal=(id,txt)=>{ const e=document.getElementById(id); if(e) e.textContent=txt; };
+  const tone=document.getElementById("tone"); tone.addEventListener("input",()=>{settings.tone=+tone.value; if(leadFilter) leadFilter.frequency.value=settings.tone; setVal('toneVal',tone.value); saveSettings();});
+  const volSolo=document.getElementById("volSolo"); volSolo.addEventListener("input",()=>{settings.volSolo=volSolo.value/100; if(leadOut) leadOut.gain.value=settings.volSolo; setVal('volSoloVal',volSolo.value+'%'); saveSettings();});
+  const volAcc=document.getElementById("volAcc"); volAcc.addEventListener("input",()=>{settings.volAcc=volAcc.value/100; if(accBus) accBus.gain.value=settings.volAcc; setVal('volAccVal',volAcc.value+'%'); saveSettings();});
+  const bgDrums=document.getElementById("bgDrums"); bgDrums.addEventListener("input",()=>{settings.bgDrums=bgDrums.value/100; if(busPerc) busPerc.gain.value=settings.bgDrums; setVal('bgDrumsVal',bgDrums.value+'%'); saveSettings();});
+  const bgBass=document.getElementById("bgBass"); bgBass.addEventListener("input",()=>{settings.bgBass=bgBass.value/100; if(busBass) busBass.gain.value=settings.bgBass; setVal('bgBassVal',bgBass.value+'%'); saveSettings();});
+  const bgChord=document.getElementById("bgChord"); bgChord.addEventListener("input",()=>{settings.bgChord=bgChord.value/100; if(busChord) busChord.gain.value=settings.bgChord; setVal('bgChordVal',bgChord.value+'%'); saveSettings();});
   const vizSel=document.getElementById("vizSel"); vizSel.addEventListener("change",()=>{ settings.viz=vizSel.value==='on'; saveSettings(); });
   const gyroSel=document.getElementById("gyroSel"); gyroSel.addEventListener("change",()=>{ resetGyroParams(); settings.gyro=gyroSel.value; if(settings.gyro!=='off') enableGyro(); saveSettings(); });
   function applyPrefsToControls(){
@@ -1236,6 +1244,8 @@
     tone.value=settings.tone;
     volSolo.value=Math.round(settings.volSolo*100); volAcc.value=Math.round(settings.volAcc*100);
     bgDrums.value=Math.round(settings.bgDrums*100); bgBass.value=Math.round(settings.bgBass*100); bgChord.value=Math.round(settings.bgChord*100);
+    setVal('toneVal',Math.round(settings.tone)); setVal('volSoloVal',Math.round(settings.volSolo*100)+'%'); setVal('volAccVal',Math.round(settings.volAcc*100)+'%');
+    setVal('bgDrumsVal',Math.round(settings.bgDrums*100)+'%'); setVal('bgBassVal',Math.round(settings.bgBass*100)+'%'); setVal('bgChordVal',Math.round(settings.bgChord*100)+'%');
     vizSel.value=settings.viz?'on':'off'; gyroSel.value=settings.gyro;
     colorSel.value=settings.jazzColor; landSel.value=settings.jazzLand; phraseSel.value=settings.jazzPhrase; timingSel.value=settings.jazzTiming;
   }
