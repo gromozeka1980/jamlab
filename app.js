@@ -305,8 +305,18 @@ window.addEventListener("keyup",e=>{ if(e.code==="ShiftLeft"||e.code==="ShiftRig
   if(m.momentary) m.el.classList.remove("active"); else noteOff("k"+e.code,m.el); });
 
 /* ============ Backing ============ */
-let accOn=false, schedTimer=null, padNodes=[], nextNoteTime=0, eighth=0, qStep=0, mStep=0;
+let accOn=false, padNodes=[], nextNoteTime=0, eighth=0, qStep=0, mStep=0;
 const LOOKAHEAD=0.25;                               // schedule this far ahead → survives main-thread jank (anti-crackle)
+// Tick source for the schedulers: a Web Worker timer. Main-thread setInterval gets throttled
+// to ≥1s on phones (dimmed screen / background) and the backing would stall; worker timers keep
+// firing. Notes themselves are scheduled on the WebAudio clock — the tick only wakes the planner.
+let tickFn=null, tickFallback=null;
+const ticker=(()=>{ try{
+  const url=URL.createObjectURL(new Blob(["let id=null;onmessage=e=>{clearInterval(id);id=null;if(e.data>0)id=setInterval(()=>postMessage(0),e.data);};"],{type:'application/javascript'}));
+  const w=new Worker(url); w.onmessage=()=>{ if(tickFn) tickFn(); }; return w;
+}catch(e){ return null; } })();                     // falls back to a main-thread interval if Workers are unavailable
+function startTicks(fn,ms){ tickFn=fn; if(ticker) ticker.postMessage(ms); else tickFallback=setInterval(fn,ms); }
+function stopTicks(){ tickFn=null; if(ticker) ticker.postMessage(0); if(tickFallback){ clearInterval(tickFallback); tickFallback=null; } }
 
 function bassRole(role,ivs){ if(role==='R')return 0; if(role==='5')return 7; if(role==='8')return 12;
   if(role==='b7')return 10; if(role==='6')return 9; if(role==='3')return ivs.includes(3)?3:4; return null; }
@@ -545,20 +555,20 @@ function jazzScheduler(){ const beat=60/settings.bpm, np=JAZZ_PROG.length;
   } }
 
 function startBacking(){ initAudio(); resumeAudio(); accOn=true;
-  if(M.back==='jazz'){ eighth=0; nextNoteTime=actx.currentTime+0.1; applyJazzChord(JAZZ_PROG[0]); schedTimer=setInterval(jazzScheduler,25); }
-  else if(M.back==='blues'){ eighth=0; nextNoteTime=actx.currentTime+0.1; schedTimer=setInterval(bluesScheduler,25); }
-  else if(M.back==='synth'){ eighth=0; nextNoteTime=actx.currentTime+0.1; schedTimer=setInterval(synthScheduler,25); }
-  else if(M.back==='lofi'){ eighth=0; nextNoteTime=actx.currentTime+0.1; schedTimer=setInterval(lofiScheduler,25); }
+  if(M.back==='jazz'){ eighth=0; nextNoteTime=actx.currentTime+0.1; applyJazzChord(JAZZ_PROG[0]); startTicks(jazzScheduler,25); }
+  else if(M.back==='blues'){ eighth=0; nextNoteTime=actx.currentTime+0.1; startTicks(bluesScheduler,25); }
+  else if(M.back==='synth'){ eighth=0; nextNoteTime=actx.currentTime+0.1; startTicks(synthScheduler,25); }
+  else if(M.back==='lofi'){ eighth=0; nextNoteTime=actx.currentTime+0.1; startTicks(lofiScheduler,25); }
   else if(M.back==='koto'){
     const b=curBack();
     if(b.pad) startPadKoto();
-    if(b.arp||b.perc||b.bass||b.vamp){ mStep=0; nextNoteTime=actx.currentTime+0.12; schedTimer=setInterval(modalScheduler,30); }
+    if(b.arp||b.perc||b.bass||b.vamp){ mStep=0; nextNoteTime=actx.currentTime+0.12; startTicks(modalScheduler,30); }
   }
-  else if(M.back==='dream'){ startPadDream(); if(settings.backing==='shimmer'){ qStep=0; nextNoteTime=actx.currentTime+0.12; schedTimer=setInterval(dreamScheduler,40); } }
-  else if(M.back==='gamelan'){ startGamelanDrone(); qStep=0; nextNoteTime=actx.currentTime+0.12; schedTimer=setInterval(gamelanScheduler,30); }
+  else if(M.back==='dream'){ startPadDream(); if(settings.backing==='shimmer'){ qStep=0; nextNoteTime=actx.currentTime+0.12; startTicks(dreamScheduler,40); } }
+  else if(M.back==='gamelan'){ startGamelanDrone(); qStep=0; nextNoteTime=actx.currentTime+0.12; startTicks(gamelanScheduler,30); }
   else { startPadFlute(); }
   accBtn.classList.add("on"); accBtn.textContent=t('btn.bgStop'); }
-function stopBacking(){ accOn=false; if(schedTimer){clearInterval(schedTimer);schedTimer=null;} stopPad(); liveChordPcs=null; curChord=null; jazzBeatLen=0; refreshKeyLabels();
+function stopBacking(){ accOn=false; stopTicks(); stopPad(); liveChordPcs=null; curChord=null; jazzBeatLen=0; refreshKeyLabels();
   accBtn.classList.remove("on"); accBtn.textContent=t('btn.bgStart'); }
 
 /* ============ Theme and mode UI assembly ============ */
