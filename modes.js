@@ -51,6 +51,22 @@ export const MODES = {
     variants:[{id:'major',label:'variant.light.major'},{id:'minor',label:'variant.light.minor'}], defVariant:'major',
     backings:[{id:'drone',label:'backing.drone',pad:1},{id:'arp',label:'backing.arp',arp:1},{id:'padperc',label:'backing.light.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.light.arpperc',arp:1,perc:1,bass:1}], defBacking:'arpperc',
   },
+  synth: {
+    id:'synth', name:'mode.synth.name', sub:'mode.synth.sub', voice:'saw', back:'synth', defBpm:108,
+    theme:{bg1:'#2b1055', accent:'#ff6ec7', zero:'#9d4edd', neg:'#4cc9f0', pos:'#f72585', blue:'#4cc9f0'},
+    kind:'scale',
+    scales:{minor:[0,2,3,5,7,8,10], penta:[0,3,5,7,10]},
+    variants:[{id:'minor',label:'variant.minor'},{id:'penta',label:'variant.penta'}], defVariant:'minor',
+    backings:[{id:'drive',label:'backing.synth.drive'}], defBacking:'drive',
+  },
+  lofi: {
+    id:'lofi', name:'mode.lofi.name', sub:'mode.lofi.sub', voice:'keys', back:'lofi', defBpm:74,
+    theme:{bg1:'#3b2f24', accent:'#ffb86b', zero:'#b08968', neg:'#7f9fb8', pos:'#e07a5f', blue:'#89b0ae'},
+    kind:'scale',
+    scales:{dorian:[0,2,3,5,7,9,10], penta:[0,3,5,7,10]},
+    variants:[{id:'dorian',label:'variant.dorian'},{id:'penta',label:'variant.penta'}], defVariant:'dorian',
+    backings:[{id:'tape',label:'backing.lofi.tape'}], defBacking:'tape',
+  },
   dorian: {
     id:'dorian', name:'mode.dorian.name', sub:'mode.dorian.sub', voice:'saw', back:'koto',
     theme:{bg1:'#13392b', accent:'#a9e34b', zero:'#37b24d', neg:'#3bc9db', pos:'#82c91e', blue:'#3bc9db'},
@@ -107,6 +123,10 @@ export const DREAMARP=[0,4,8,12,8,4];
 export const GMPAT=[0,1,2,3,4,2,3,4];
 export const DARBUKA=['D','.','t','.','D','t','.','t'];  // baladi-ish pattern over eighths
 export const RIDE=[1,0,1,1,1,0,1,1];               // spang-a-lang over eighths
+
+/* --- synthwave / lo-fi progressions --- */
+export const SYNTH_PROG=[{root:0,ivs:[0,3,7]},{root:8,ivs:[0,4,7]},{root:3,ivs:[0,4,7]},{root:10,ivs:[0,4,7]}];   // i–VI–III–VII
+export const LOFI_PROG=[{root:0,ivs:[0,3,7,10]},{root:5,ivs:[0,3,7,10]}];                                          // im7 → ivm7
 
 /* --- jazz theory --- */
 // daring levels: which beats snap to a chord tone, and how wide the window — inside (all beats) → outside (beat 1 only)

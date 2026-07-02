@@ -3,7 +3,8 @@
 import { LANG, t, degName, setLangCode } from './i18n.js';
 import { settings, saveSettings } from './settings.js';
 import { MODES, NOTE_NAMES, HARMONY, HARM_OPTS, HARM_LADS, RHYTHM, RHY_OPTS,
-         ARP, DREAMARP, GMPAT, DARBUKA, RIDE, DARING, QUAL, JAZZ_PROG } from './modes.js';
+         ARP, DREAMARP, GMPAT, DARBUKA, RIDE, DARING, QUAL, JAZZ_PROG,
+         SYNTH_PROG, LOFI_PROG } from './modes.js';
 import { actx, comp, leadBus, leadFilter, leadOut, accBus, busPerc, busBass, busChord, noiseBuf,
          initAudio, resumeAudio, accGain } from './audio.js';
 import { viz, cssRgb } from './viz.js';
@@ -121,6 +122,9 @@ function makeVoice(freq,maxUp,maxDown,approach,when){
   } else if(M.voice==='metal'){         // metallophone/gamelan: inharmonic partials, bright decay
     addOsc('triangle',1,0,1); addOsc('sine',2.01,0,0.5); addOsc('sine',3.0,0,0.25); addOsc('sine',5.4,0,0.12);
     g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.4,t0+0.003); g.gain.exponentialRampToValueAtTime(.08,t0+1.8);
+  } else if(M.voice==='keys'){          // soft e-piano (lo-fi)
+    addOsc('sine',1,0,1); addOsc('sine',2,3,0.25); addOsc('triangle',3,0,0.05);
+    g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.38,t0+0.008); g.gain.exponentialRampToValueAtTime(.10,t0+1.1);
   } else if(M.voice==='pad'){           // soft sine pad (lydian "cosmos")
     addOsc('sine',1,0,1); addOsc('sine',2,0,0.22); addOsc('sine',3,0,0.08);
     g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.30,t0+0.12);
@@ -421,6 +425,58 @@ function gamelanScheduler(){ const beat=60/settings.bpm, pat=(curBack().id==='pa
     if(pat){ const idx=GMPAT[qStep%GMPAT.length]; bell(settings.rootMidi+(SCALE[idx%SCALE.length]||0)+12, nextNoteTime); }
     nextNoteTime+=beat/2; qStep++; } }
 
+// --- synthwave: pumping bass arp, four-on-the-floor, gated pads over i–VI–III–VII ---
+function synthBass(off,time){ const fr=midiToFreq(settings.rootMidi-24+off);
+  const o=actx.createOscillator();o.type='sawtooth';o.frequency.value=fr;
+  const lp=actx.createBiquadFilter();lp.type='lowpass';lp.frequency.setValueAtTime(900,time);lp.frequency.exponentialRampToValueAtTime(300,time+0.18);
+  const g=actx.createGain();g.gain.setValueAtTime(0,time);g.gain.linearRampToValueAtTime(0.42,time+0.006);g.gain.exponentialRampToValueAtTime(0.001,time+0.2);
+  o.connect(lp);lp.connect(g);g.connect(busBass);o.start(time);o.stop(time+0.25); }
+function synthScheduler(){ const beat=60/settings.bpm, np=SYNTH_PROG.length;
+  while(nextNoteTime < actx.currentTime+LOOKAHEAD){
+    const step=eighth%8, bar=Math.floor(eighth/8)%np, ch=SYNTH_PROG[bar];
+    if(step%2===0) kick(nextNoteTime,0.9);                               // four on the floor
+    if(step===2||step===6) snare(nextNoteTime,0.55);
+    if(step%2===1) hat(nextNoteTime,false,0.5);                          // offbeat hats
+    synthBass(ch.root + (step%2?12:0), nextNoteTime);                    // octave-pumping eighths
+    if(step===0){ bChord(ch.root, nextNoteTime, beat*3.6, ch.ivs, 0.05); // gated pad once a bar
+      const pcs=new Set(ch.ivs.map(iv=>(ch.root+iv)%12)), cc={r:(settings.rootMidi+ch.root)%12, ivs:ch.ivs};
+      setTimeout(()=>{ if(!accOn||M.back!=='synth')return; liveChordPcs=pcs; curChord=cc; updateDisplay(); }, Math.max(0,(nextNoteTime-actx.currentTime)*1000)); }
+    nextNoteTime+=beat/2; eighth++;
+  } }
+
+// --- lo-fi: lazy swung boom-bap, dusty ep chords, vinyl pops over im7→ivm7 ---
+function lofiKeys(rootSemi,time,ivs,vel){ const base=settings.rootMidi-12+rootSemi, dur=(60/settings.bpm)*2.6;
+  const tones=[ivs[1],ivs[2],ivs[3],14];                                 // rootless + 9th
+  tones.forEach((iv,ix)=>{ const tt=time+ix*0.014;                       // light strum
+    const o=actx.createOscillator();o.type='sine';o.frequency.value=midiToFreq(base+iv);
+    const o2=actx.createOscillator();o2.type='triangle';o2.frequency.value=midiToFreq(base+iv);const o2g=actx.createGain();o2g.gain.value=0.3;
+    const f=actx.createBiquadFilter();f.type='lowpass';f.frequency.setValueAtTime(2200,tt);f.frequency.exponentialRampToValueAtTime(700,tt+dur*0.7);
+    const g=actx.createGain();g.gain.setValueAtTime(0,tt);g.gain.linearRampToValueAtTime(vel,tt+0.01);g.gain.exponentialRampToValueAtTime(0.0008,tt+dur);
+    o.connect(f);o2.connect(o2g);o2g.connect(f);f.connect(g);g.connect(busChord);
+    o.start(tt);o2.start(tt);o.stop(tt+dur+0.05);o2.stop(tt+dur+0.05); }); }
+function lofiBass(off,time){ const o=actx.createOscillator();o.type='sine';o.frequency.value=midiToFreq(settings.rootMidi-24+off);
+  const dur=(60/settings.bpm)*1.8, g=accGain(0,busBass);
+  g.gain.setValueAtTime(0,time);g.gain.linearRampToValueAtTime(0.5,time+0.03);g.gain.exponentialRampToValueAtTime(0.001,time+dur);
+  o.connect(g);o.start(time);o.stop(time+dur+0.05); }
+function vinylPop(time){ const n=actx.createBufferSource();n.buffer=noiseBuf;
+  const bp=actx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=4000+Math.random()*3000;bp.Q.value=8;
+  const g=accGain(0,busPerc);g.gain.setValueAtTime(0.10+Math.random()*0.08,time);g.gain.exponentialRampToValueAtTime(0.001,time+0.03);
+  n.connect(bp);bp.connect(g);n.start(time);n.stop(time+0.05); }
+function lofiScheduler(){ const beat=60/settings.bpm, sw=0.24, np=LOFI_PROG.length;
+  while(nextNoteTime < actx.currentTime+LOOKAHEAD){
+    const step=eighth%8, bar=Math.floor(eighth/8)%np, ch=LOFI_PROG[bar];
+    const t0=nextNoteTime+(step%2?beat*sw:0);                            // lazy swing on the offbeats
+    hat(t0,false, step%2?0.32:0.5);
+    if(step===0) kick(t0,0.85); if(step===5) kick(t0,0.5);               // boom … ba-boom
+    if(step===2||step===6) snare(t0,0.55);
+    if(step===0){ lofiKeys(ch.root,t0,ch.ivs,0.11); lofiBass(ch.root,t0);
+      const pcs=new Set(ch.ivs.map(iv=>(ch.root+iv)%12)), cc={r:(settings.rootMidi+ch.root)%12, ivs:ch.ivs};
+      setTimeout(()=>{ if(!accOn||M.back!=='lofi')return; liveChordPcs=pcs; curChord=cc; updateDisplay(); }, Math.max(0,(nextNoteTime-actx.currentTime)*1000)); }
+    if(step===4) lofiBass(ch.root+7,t0);
+    if(Math.random()<0.10) vinylPop(t0);                                 // vinyl crackle
+    nextNoteTime+=beat/2; eighth++;
+  } }
+
 /* ============ Jazz: auto-scale over the golden sequence ============ */
 function nearestRootIndex(targetFreq){      // root of the new scale in the octave closest to the last note
   const len=SCALE.length, tm=freqToMidi(targetFreq); let best=0,bestD=Infinity;
@@ -491,6 +547,8 @@ function jazzScheduler(){ const beat=60/settings.bpm, np=JAZZ_PROG.length;
 function startBacking(){ initAudio(); resumeAudio(); accOn=true;
   if(M.back==='jazz'){ eighth=0; nextNoteTime=actx.currentTime+0.1; applyJazzChord(JAZZ_PROG[0]); schedTimer=setInterval(jazzScheduler,25); }
   else if(M.back==='blues'){ eighth=0; nextNoteTime=actx.currentTime+0.1; schedTimer=setInterval(bluesScheduler,25); }
+  else if(M.back==='synth'){ eighth=0; nextNoteTime=actx.currentTime+0.1; schedTimer=setInterval(synthScheduler,25); }
+  else if(M.back==='lofi'){ eighth=0; nextNoteTime=actx.currentTime+0.1; schedTimer=setInterval(lofiScheduler,25); }
   else if(M.back==='koto'){
     const b=curBack();
     if(b.pad) startPadKoto();
