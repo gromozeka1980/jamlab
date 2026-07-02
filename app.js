@@ -411,8 +411,9 @@ function startPadFlute(){ stopPad(); const t0=actx.currentTime;
   const nz=actx.createBufferSource();nz.buffer=noiseBuf;nz.loop=true; const bp=actx.createBiquadFilter();bp.type='bandpass';bp.frequency.value=midiToFreq(settings.rootMidi);bp.Q.value=3;
   const g=actx.createGain();g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(0.02,t0+2.0); nz.connect(bp);bp.connect(g);g.connect(busChord);nz.start(t0); padNodes.push({g,stops:[nz]}); }
 // "Dream": augmented pad (root+third+aug.fifth — all from whole-tone) + optional shimmer
+// voiced an octave up + a quiet sub: pure sines around 110 Hz vanish on phone speakers
 function startPadDream(){ stopPad(); const t0=actx.currentTime;
-  [[settings.rootMidi-12,0.06],[settings.rootMidi-12+4,0.04],[settings.rootMidi-12+8,0.035]].forEach(([m,vol],i)=>{
+  [[settings.rootMidi-12,0.045],[settings.rootMidi,0.055],[settings.rootMidi+4,0.04],[settings.rootMidi+8,0.035]].forEach(([m,vol],i)=>{
     const o=actx.createOscillator();o.type='sine';o.frequency.value=midiToFreq(m); const g=actx.createGain();g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(vol,t0+2.5);
     const lfo=actx.createOscillator(),lg=actx.createGain();lfo.frequency.value=0.08+i*0.04;lg.gain.value=0.014;lfo.connect(lg);lg.connect(g.gain);
     o.connect(g);g.connect(busChord);o.start(t0);lfo.start(t0); padNodes.push({g,stops:[o,lfo]}); }); }
@@ -673,6 +674,14 @@ accBtn.addEventListener("click",()=> accOn?stopBacking():startBacking());
 const SHEETS=["settings","help","latov","recov"];
 document.addEventListener("keydown",e=>{ if(e.key==="Escape") SHEETS.forEach(id=>document.getElementById(id).classList.add("hidden")); });
 SHEETS.forEach(id=>{ const el=document.getElementById(id); el.addEventListener("pointerdown",e=>{ if(e.target===el) el.classList.add("hidden"); }); });
+// pause the backing while the recording preview is open — it clashes with the clip's own audio;
+// watching the class covers every close path (button, Escape, backdrop tap)
+let backingHeld=false;
+const recovEl=document.getElementById('recov');
+new MutationObserver(()=>{ const open=!recovEl.classList.contains('hidden');
+  if(open && accOn){ backingHeld=true; stopBacking(); }
+  else if(!open && backingHeld){ backingHeld=false; startBacking(); }
+}).observe(recovEl,{attributes:true,attributeFilter:['class']});
 
 /* ============ Language ============ */
 function applyStaticI18n(){
