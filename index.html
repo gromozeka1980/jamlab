@@ -1407,8 +1407,39 @@
   /* ============ Recording → video ============ */
   let mediaRec=null, recChunks=[], recStart=0, recTimer=null, recTracks=null;
   const recBtn=document.getElementById("recBtn");
-  function pickMime(){ const arr=['video/mp4;codecs=h264,aac','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+  function pickMime(){ const arr=['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4;codecs=h264,aac','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
     for(const m of arr) if(window.MediaRecorder && MediaRecorder.isTypeSupported(m)) return m; return ''; }
+  // MediaRecorder writes fragmented mp4 with duration=0 in moov — some players (Telegram) refuse such files.
+  // Patch mvhd/tkhd/mdhd durations in place (fixed-size fields, no bytes are moved, so offsets stay valid).
+  function patchMp4Duration(ab, durMs){
+    try{
+      const dv=new DataView(ab), u8=new Uint8Array(ab);
+      const rd32=o=>dv.getUint32(o), typ=o=>String.fromCharCode(u8[o+4],u8[o+5],u8[o+6],u8[o+7]);
+      function children(start,end,cb){ let o=start;
+        while(o+8<=end){ let sz=rd32(o); const t=typ(o);
+          if(sz===1) sz=Number(dv.getBigUint64(o+8)); else if(sz===0) sz=end-o;
+          if(sz<8||o+sz>end) break; cb(t,o,o+sz); o+=sz; } }
+      let moovS=-1,moovE=-1;
+      children(0,ab.byteLength,(t,s,e)=>{ if(t==='moov'){moovS=s;moovE=e;} });
+      if(moovS<0) return false;
+      let movTs=0; const patches=[];
+      children(moovS+8,moovE,(t,s,e)=>{
+        if(t==='mvhd'){ const v=u8[s+8];
+          if(v===1){ movTs=rd32(s+28); patches.push({off:s+32,big:true,mov:true}); }
+          else{ movTs=rd32(s+20); patches.push({off:s+24,big:false,mov:true}); } }
+        if(t==='trak') children(s+8,e,(t2,s2,e2)=>{
+          if(t2==='tkhd'){ const v=u8[s2+8];
+            patches.push(v===1?{off:s2+36,big:true,mov:true}:{off:s2+28,big:false,mov:true}); }
+          if(t2==='mdia') children(s2+8,e2,(t3,s3)=>{
+            if(t3==='mdhd'){ const v=u8[s3+8];
+              if(v===1) patches.push({off:s3+32,big:true,ts:rd32(s3+28)});
+              else      patches.push({off:s3+24,big:false,ts:rd32(s3+20)}); } }); }); });
+      if(!movTs) return false;
+      for(const p of patches){ const ticks=Math.round(durMs/1000*(p.mov?movTs:p.ts));
+        if(p.big) dv.setBigUint64(p.off,BigInt(ticks)); else dv.setUint32(p.off,Math.min(ticks,0xffffffff)); }
+      return true;
+    }catch(e){ return false; }
+  }
   function startRecording(){
     initAudio(); resumeAudio();
     if(!window.MediaRecorder){ alert(t('rec.noSupport')); return; }
@@ -1425,7 +1456,13 @@
     recTracks={a:stream.getAudioTracks().length, v:stream.getVideoTracks().length};
     recChunks=[];
     mediaRec.ondataavailable=e=>{ if(e.data && e.data.size) recChunks.push(e.data); };
-    mediaRec.onstop=()=>{ viz.stopRec(); finishRecording(new Blob(recChunks,{type:mediaRec.mimeType||'video/webm'})); };
+    mediaRec.onstop=()=>{ viz.stopRec(); const durMs=Date.now()-recStart;
+      const blob=new Blob(recChunks,{type:mediaRec.mimeType||'video/webm'});
+      if((blob.type||'').indexOf('mp4')>=0 && blob.arrayBuffer)
+        blob.arrayBuffer().then(ab=>finishRecording(patchMp4Duration(ab,durMs)?new Blob([ab],{type:blob.type}):blob))
+          .catch(()=>finishRecording(blob));
+      else finishRecording(blob);
+    };
     mediaRec.start(500);                              // timeslice — data is collected as it goes
     recStart=Date.now(); recBtn.classList.add('rec');
     recTimer=setInterval(()=>{ const s=Math.floor((Date.now()-recStart)/1000); recBtn.textContent=t('btn.recStop')+Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); },250);
