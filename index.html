@@ -698,16 +698,18 @@
       c.fillText(document.getElementById('h1name').textContent||'', RW/2, 30*s);
       c.fillStyle='rgba(230,232,245,0.55)'; c.font='400 '+Math.round(11*s)+'px system-ui,sans-serif';
       c.fillText((document.getElementById('h1sub').textContent||'').replace(/^·\s*/,''), RW/2, 48*s);
-      // watermark: logo motif + wordmark
+      // watermark: note logo + wordmark
       c.globalAlpha=0.78; c.font='700 '+Math.round(16*s)+'px system-ui,sans-serif'; c.textAlign='left'; c.textBaseline='middle';
-      const wmTxt='Jamlab', tw=c.measureText(wmTxt).width, k=1.15*s, lw=22*k, gap=9*s, x0=(RW-(lw+gap+tw))/2, wmY=RH-24*s;
-      const lp=[[0,15],[7,11],[14,4],[22,0]], lc=['#4dd0e1','#2f9e44','#ffd43b','#e8590c'];
-      c.strokeStyle='#ffd43b'; c.lineWidth=2*s; c.lineCap='round'; c.lineJoin='round'; c.beginPath();
-      for(let i=0;i<4;i++){ const X=x0+lp[i][0]*k, Y=wmY-7.5*s+(lp[i][1]-7.5)*k*0.8; if(i) c.lineTo(X,Y); else c.moveTo(X,Y); }
-      c.stroke();
-      for(let i=0;i<4;i++){ c.fillStyle=lc[i]; c.beginPath();
-        c.arc(x0+lp[i][0]*k, wmY-7.5*s+(lp[i][1]-7.5)*k*0.8, 2.4*s, 0, 6.2832); c.fill(); }
-      c.fillStyle='#eceaf3'; c.fillText(wmTxt, x0+lw+gap, wmY-6*s);
+      const wmTxt='Jamlab', tw=c.measureText(wmTxt).width, k=1.15*s, lw=13*k, gap=8*s, x0=(RW-(lw+gap+tw))/2, wmY=RH-24*s;
+      const hx=x0+4.5*k, hy=wmY, stx=hx+4.3*k;
+      const lg=c.createLinearGradient(stx,hy,stx+4*k,hy-16*k);
+      lg.addColorStop(0,'#4dd0e1'); lg.addColorStop(0.6,'#69db7c'); lg.addColorStop(1,'#ffd43b');
+      c.strokeStyle=lg; c.lineWidth=2.6*s; c.lineCap='round';
+      c.beginPath(); c.moveTo(stx, hy-1*k); c.lineTo(stx, hy-15*k); c.stroke();
+      c.beginPath(); c.moveTo(stx, hy-15*k); c.bezierCurveTo(stx+5.5*k, hy-13.2*k, stx+7*k, hy-9*k, stx+5.5*k, hy-4.5*k); c.stroke();
+      c.fillStyle='#ffd43b'; c.beginPath(); c.ellipse(hx, hy, 5.2*k, 4*k, -0.35, 0, 6.2832); c.fill();
+      c.fillStyle='#fff3bf'; c.globalAlpha=0.5; c.beginPath(); c.ellipse(hx-1.6*k, hy-1.4*k, 1.5*k, 1*k, -0.35, 0, 6.2832); c.fill();
+      c.globalAlpha=0.78; c.fillStyle='#eceaf3'; c.fillText(wmTxt, x0+lw+gap, wmY-6*s);
       c.globalAlpha=1;
     }
     function frame(){ size();
