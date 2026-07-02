@@ -1405,7 +1405,7 @@
   });
 
   /* ============ Recording → video ============ */
-  let mediaRec=null, recChunks=[], recStart=0, recTimer=null;
+  let mediaRec=null, recChunks=[], recStart=0, recTimer=null, recTracks=null;
   const recBtn=document.getElementById("recBtn");
   function pickMime(){ const arr=['video/mp4;codecs=h264,aac','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
     for(const m of arr) if(window.MediaRecorder && MediaRecorder.isTypeSupported(m)) return m; return ''; }
@@ -1413,14 +1413,16 @@
     initAudio(); resumeAudio();
     if(!window.MediaRecorder){ alert(t('rec.noSupport')); return; }
     const vtr = viz.recCanvas.captureStream ? viz.recCanvas.captureStream(30).getVideoTracks() : [];
-    const atr = recDest ? recDest.stream.getAudioTracks() : [];
+    let atr = recDest ? recDest.stream.getAudioTracks() : [];
+    if(!atr.length && actx){ try{ recDest=actx.createMediaStreamDestination(); comp.connect(recDest); atr=recDest.stream.getAudioTracks(); }catch(e){} }   // re-tap if the audio feed died
     const stream = new MediaStream([...vtr, ...atr]);
     viz.startRec();
     const mime=pickMime();
-    const opts={videoBitsPerSecond:3000000, audioBitsPerSecond:128000}; if(mime) opts.mimeType=mime;   // ~720p, small share-friendly files
+    const opts={videoBitsPerSecond:3000000}; if(mime) opts.mimeType=mime;   // ~720p, small share-friendly files; audio bitrate left to the encoder default
     try{ mediaRec = new MediaRecorder(stream, opts); }
     catch(e){ try{ mediaRec = new MediaRecorder(stream, mime?{mimeType:mime}:undefined); }             // some WebViews reject bitrate opts
       catch(e2){ alert(t('rec.unavailable')+e2.message); viz.stopRec(); return; } }
+    recTracks={a:stream.getAudioTracks().length, v:stream.getVideoTracks().length};
     recChunks=[];
     mediaRec.ondataavailable=e=>{ if(e.data && e.data.size) recChunks.push(e.data); };
     mediaRec.onstop=()=>{ viz.stopRec(); finishRecording(new Blob(recChunks,{type:mediaRec.mimeType||'video/webm'})); };
@@ -1437,9 +1439,11 @@
     lastFile=new File([blob],'jam.'+ext,{type:base});
     if(lastUrl) URL.revokeObjectURL(lastUrl); lastUrl=URL.createObjectURL(blob);
     const v=document.getElementById('recVid'); v.src=lastUrl;
-    document.getElementById('recInfo').textContent = blob.size
+    document.getElementById('recInfo').textContent = (blob.size
       ? t('rec.size',{kb:(blob.size/1024).toFixed(0),type:(blob.type||'').split(';')[0]})
-      : t('rec.empty');
+      : t('rec.empty'))
+      + (recTracks ? ' · A'+recTracks.a+'/V'+recTracks.v : '')
+      + (recTracks && !recTracks.a ? ' ⚠ no audio track' : '');   // diagnostics: track counts straight in the info line
     const sh=document.getElementById('recShare');
     sh.style.display = (navigator.canShare && navigator.canShare({files:[lastFile]})) ? '' : 'none';
     document.getElementById('recov').classList.remove('hidden');
