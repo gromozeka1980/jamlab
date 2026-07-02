@@ -624,7 +624,7 @@
     function size(){ dpr=Math.min(1.5,window.devicePixelRatio||1); cssW=Math.max(1,innerWidth); cssH=Math.max(1,innerHeight);
       const w=Math.round(cssW*dpr), h=Math.round(cssH*dpr);
       if(w!==W||h!==H){ cv.width=W=w; cv.height=H=h; }
-      if(!recording){ RS=Math.min(2.4,Math.max(1,1920/cssH));                 // don't resize mid-recording — encoders glitch
+      if(!recording){ RS=Math.min(1.6,Math.max(1,1280/cssH));                 // don't resize mid-recording — encoders glitch
         const rw=even(cssW*RS), rh=even(cssH*RS);
         if(rec.width!==rw||rec.height!==rh){ rec.width=rw; rec.height=rh; } RW=rec.width; RH=rec.height; } }
     size(); addEventListener('resize',size);
@@ -1417,7 +1417,7 @@
     const stream = new MediaStream([...vtr, ...atr]);
     viz.startRec();
     const mime=pickMime();
-    const opts={videoBitsPerSecond:8000000, audioBitsPerSecond:192000}; if(mime) opts.mimeType=mime;   // crisp 1080p-ish video
+    const opts={videoBitsPerSecond:3000000, audioBitsPerSecond:128000}; if(mime) opts.mimeType=mime;   // ~720p, small share-friendly files
     try{ mediaRec = new MediaRecorder(stream, opts); }
     catch(e){ try{ mediaRec = new MediaRecorder(stream, mime?{mimeType:mime}:undefined); }             // some WebViews reject bitrate opts
       catch(e2){ alert(t('rec.unavailable')+e2.message); viz.stopRec(); return; } }
