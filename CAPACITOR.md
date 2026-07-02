@@ -1,11 +1,13 @@
 # Jamlab — mobile build (Capacitor)
 
-The app is a single static file (`index.html`, vanilla JS + Web Audio). For the
-native iOS/Android builds we wrap it with [Capacitor](https://capacitorjs.com/)
-— no rewrite, the same web codebase runs inside a WebView.
+The app is a static vanilla-JS site (`index.html` + `style.css` + `app.js` +
+`i18n.js`, Web Audio, ES modules, no build step). For the native iOS/Android
+builds we wrap it with [Capacitor](https://capacitorjs.com/) — no rewrite, the
+same web codebase runs inside a WebView.
 
-- **Source of truth:** `index.html` (also served by GitHub Pages).
-- **Capacitor webDir:** `www/` — *generated* from `index.html` by `scripts/copy-web.mjs`.
+- **Source of truth:** the repo root (also served by GitHub Pages).
+- **Capacitor webDir:** `www/` — *generated* by `scripts/copy-web.mjs`
+  (its `ASSETS` list names every file that ships).
   It is git-ignored; regenerate it with `npm run build:web`.
 - **App id:** `app.gromozeka.jamlab` · **App name:** `Jamlab` (working title).
 - Native projects (`android/`, `ios/`) are generated on demand via `cap add` and
