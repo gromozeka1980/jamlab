@@ -4,20 +4,34 @@
       <stop offset="0" stop-color="#1b3658"/>
       <stop offset="1" stop-color="#0e1020"/>
     </radialGradient>
-    <filter id="sglow" x="-40%" y="-40%" width="180%" height="180%">
-      <feGaussianBlur stdDeviation="26" result="b"/>
+    <linearGradient id="sstem" x1="440" y1="720" x2="620" y2="240" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4dd0e1"/>
+      <stop offset="0.6" stop-color="#69db7c"/>
+      <stop offset="1" stop-color="#ffd43b"/>
+    </linearGradient>
+    <filter id="sglow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="24" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="sbigglow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="42" result="b"/>
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
   <rect width="2732" height="2732" fill="url(#sbg)"/>
-  <g transform="translate(1366 1366) scale(1.7) translate(-512 -512)">
-    <g filter="url(#sglow)" fill="none" stroke="#ffd43b" stroke-width="30" stroke-linecap="round" stroke-linejoin="round" opacity="0.95">
-      <path d="M280 712 L420 624 L540 508 L660 416 L760 312"/>
+  <g transform="translate(1366 1270) scale(1.15) translate(-512 -512)">
+    <g filter="url(#sglow)" fill="none" stroke="url(#sstem)" stroke-width="64" stroke-linecap="round">
+      <path d="M505 676 L505 268"/>
+      <path d="M505 268 C 650 320, 700 430, 655 560"/>
     </g>
-    <circle cx="280" cy="712" r="44" fill="#4dd0e1"/>
-    <circle cx="420" cy="624" r="44" fill="#2f9e44"/>
-    <circle cx="540" cy="508" r="56" fill="#ffd43b"/>
-    <circle cx="660" cy="416" r="44" fill="#e8590c"/>
-    <circle cx="760" cy="312" r="40" fill="#a5d8ff"/>
+    <g filter="url(#sbigglow)">
+      <ellipse cx="400" cy="690" rx="140" ry="108" fill="#ffd43b" transform="rotate(-20 400 690)"/>
+    </g>
+    <ellipse cx="400" cy="690" rx="140" ry="108" fill="#ffd43b" transform="rotate(-20 400 690)"/>
+    <ellipse cx="352" cy="650" rx="40" ry="28" fill="#fff3bf" opacity="0.85" transform="rotate(-20 352 650)"/>
   </g>
+  <text x="1366" y="2010" text-anchor="middle" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif"
+        font-size="190" font-weight="700" letter-spacing="10" fill="#eceaf3">Jamlab</text>
+  <text x="1366" y="2130" text-anchor="middle" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif"
+        font-size="64" font-weight="400" letter-spacing="22" fill="#9aa0bf">RELATIONAL INSTRUMENTS</text>
 </svg>
