@@ -1,4 +1,4 @@
-// UI strings (en/ru). Used via t() in app.js.
+// UI strings (en/ru) + the t() lookup and language state.
 export const I18N = {
   en: {
     'app.title':'Jamlab','app.tagline':'Relational instruments',
@@ -171,3 +171,13 @@ export const I18N = {
     'rec.shareErr':'Шеринг: {name} — {msg}',
   },
 };
+
+export let LANG = (()=>{ try{ const s=localStorage.getItem('jamlab.lang'); if(s==='en'||s==='ru') return s; }catch(e){}
+  return ((navigator.language||'en').toLowerCase().indexOf('ru')===0) ? 'ru' : 'en'; })();   // first run: follow the device language
+export function setLangCode(l){ if(!I18N[l]) l='en'; LANG=l; try{localStorage.setItem('jamlab.lang',l);}catch(e){} return l; }
+export function t(k,vars){
+  let s = (I18N[LANG] && I18N[LANG][k]!=null) ? I18N[LANG][k] : (I18N.en[k]!=null ? I18N.en[k] : k);
+  if(vars) for(const p in vars) s = s.split('{'+p+'}').join(vars[p]);
+  return s;
+}
+export function degName(pc){ return t('deg.'+pc); }
