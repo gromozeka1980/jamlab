@@ -115,7 +115,7 @@ export const RHYTHM={
   honky:  {bass:['R',null,null,null,'5',null,null,null],        swing:0.16, drum:'shuffle', comp:'offbeat'},
   funk:   {bass:['R',null,'5',null,'R',null,null,'b7'],         swing:0,    drum:'funk',    comp:'stab'},
 };
-export const RHY_OPTS=[['shuffle','rhy.shuffle'],['rock','rhy.rock'],['slow','rhy.slow'],['train','rhy.train'],['rhumba','rhy.rhumba'],['honky','rhy.honky'],['funk','rhy.funk']];
+export const RHY_OPTS=[['shuffle','rhy.shuffle'],['rock','rhy.rock'],['slow','rhy.slow']];   // train/rhumba/honky/funk stay in RHYTHM, hidden from the menu
 
 /* --- modal backing patterns --- */
 export const ARP=[0,7,12,7];                       // root-fifth-octave (consonant in any scale)

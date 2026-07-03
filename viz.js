@@ -26,6 +26,11 @@ export const viz=(()=>{
   const MEL=[]; let lastNoteAt=-1e9;
   function melody(p01){ const now=performance.now(); lastNoteAt=now;
     MEL.push({t:now,p:p01,hue:205-160*p01}); if(MEL.length>80) MEL.shift(); }
+  function melodyBend(p01){ if(MEL.length){ const m=MEL[MEL.length-1]; m.p=p01; m.hue=205-160*p01; } }   // bend drags the last ribbon point
+  // live performance state fed by the app — drawn only in the recording scene
+  let liveTxt=null, liveBend=0, heldKeys=[];
+  function liveNote(txt,bend){ liveTxt=txt; liveBend=bend||0; }
+  function keysHeld(a){ heldKeys=a||[]; }
   function drawParticles(c,s){ c.globalCompositeOperation='lighter';
     for(let i=0;i<P.length;i++){ const p=P[i], al=(p.life*(p.ring?0.5:0.85)).toFixed(3), col='rgba('+p.rgb[0]+','+p.rgb[1]+','+p.rgb[2]+','+al+')';
       c.beginPath(); c.arc(p.x*s,p.y*s,p.r*s,0,6.2832);
@@ -77,11 +82,18 @@ export const viz=(()=>{
         c.beginPath(); c.moveTo(cx+Math.cos(ang)*R0,cy+Math.sin(ang)*R0);
         c.lineTo(cx+Math.cos(ang)*(R0+L),cy+Math.sin(ang)*(R0+L)); c.stroke(); } }
     c.globalCompositeOperation='source-over';
-    // note name with a pop on each hit
-    const pop=1+0.22*Math.exp(-(now-lastNoteAt)/160);
-    c.save(); c.translate(cx,cy); c.scale(pop,pop); c.textAlign='center'; c.textBaseline='middle';
-    c.fillStyle='rgba(255,255,255,0.95)'; c.font='800 '+Math.round(40*s)+'px system-ui,sans-serif';
-    c.fillText(document.getElementById('noteName').textContent||'',0,0); c.restore();
+    // sounding note (nothing while silent); bends tint it — up=accent, down=cyan
+    if(liveTxt){
+      const pop=1+0.22*Math.exp(-(now-lastNoteAt)/160);
+      c.save(); c.translate(cx,cy); c.scale(pop,pop); c.textAlign='center'; c.textBaseline='middle';
+      c.fillStyle= liveBend>0?'#ffd43b':liveBend<0?'#4dd0e1':'rgba(255,255,255,0.95)';
+      c.font='800 '+Math.round(40*s)+'px system-ui,sans-serif';
+      c.fillText(liveTxt,0,0); c.restore();
+    }
+    // held key offsets under the ring (+1  −2 …)
+    if(heldKeys.length){ c.textAlign='center'; c.textBaseline='middle';
+      c.fillStyle='rgba(230,232,245,0.6)'; c.font='700 '+Math.round(13*s)+'px system-ui,sans-serif';
+      c.fillText(heldKeys.join('   '), cx, cy+R0*1.45); }
     // titles
     const acc=cssRgb('--accent'); c.textAlign='center'; c.textBaseline='alphabetic';
     c.fillStyle='rgba('+acc[0]+','+acc[1]+','+acc[2]+',0.92)'; c.font='600 '+Math.round(17*s)+'px system-ui,sans-serif';
@@ -110,5 +122,5 @@ export const viz=(()=>{
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
-  return {note,spark,pulse,melody, recCanvas:rec, startRec(){recording=true;}, stopRec(){recording=false;}};
+  return {note,spark,pulse,melody,melodyBend,liveNote,keysHeld, recCanvas:rec, startRec(){recording=true;}, stopRec(){recording=false;}};
 })();

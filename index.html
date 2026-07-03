@@ -18,16 +18,15 @@
   <div data-i18n="app.tagline" style="color:var(--muted); font-size:12px; letter-spacing:2.5px; text-transform:uppercase; margin:-8px 0 2px;">Relational instruments</div>
   <p data-i18n="intro.p">Keys are steps along a scale, not separate notes — you can't play a wrong one. Pick an instrument:</p>
   <div class="pickers">
-    <div class="pick" data-mode="blues"><b data-i18n="pick.blues.t">🎸 Blues</b><span data-i18n="pick.blues.d">blues scale, bends, 12-bar backing</span></div>
-    <div class="pick" data-mode="jazz"><b data-i18n="pick.jazz.t">🎷 Jazz</b><span data-i18n="pick.jazz.d">the scale follows the chords (golden sequence)</span></div>
-    <div class="pick" data-mode="koto"><b data-i18n="pick.koto.t">🎴 Koto</b><span data-i18n="pick.koto.d">Japanese pentatonic, drone/ostinato</span></div>
-    <div class="pick" data-mode="dream"><b data-i18n="pick.dream.t">🌫 Dream</b><span data-i18n="pick.dream.d">whole-tone scale, floating pad</span></div>
-    <div class="pick" data-mode="gamelan"><b data-i18n="pick.gamelan.t">🔔 Gamelan</b><span data-i18n="pick.gamelan.d">pelog/slendro, gong and metallophone</span></div>
-    <div class="pick" data-mode="vostok"><b data-i18n="pick.vostok.t">🏜 East</b><span data-i18n="pick.vostok.d">phrygian dominant, drone</span></div>
-    <div class="pick" data-mode="light"><b data-i18n="pick.light.t">☀️ Bright</b><span data-i18n="pick.light.d">major/minor pentatonic</span></div>
-    <div class="pick" data-mode="synth"><b data-i18n="pick.synth.t">🌆 Synthwave</b><span data-i18n="pick.synth.d">neon minor, pumping bass, four-on-the-floor</span></div>
-    <div class="pick" data-mode="lofi"><b data-i18n="pick.lofi.t">🎧 Lo-fi</b><span data-i18n="pick.lofi.d">dusty chords, lazy beat, vinyl crackle</span></div>
-    <!-- Dorian, Cosmos and flute are hidden (code kept in MODES) -->
+    <div class="pick" data-mode="blues"><b data-i18n="pick.blues.t">Blues</b><span data-i18n="pick.blues.d">blues scale, bends, 12-bar backing</span></div>
+    <div class="pick" data-mode="jazz"><b data-i18n="pick.jazz.t">Jazz</b><span data-i18n="pick.jazz.d">the scale follows the chords (golden sequence)</span></div>
+    <div class="pick" data-mode="koto"><b data-i18n="pick.koto.t">Koto</b><span data-i18n="pick.koto.d">Japanese pentatonic, drone/ostinato</span></div>
+    <div class="pick" data-mode="dream"><b data-i18n="pick.dream.t">Dream</b><span data-i18n="pick.dream.d">whole-tone scale, floating pad</span></div>
+    <div class="pick" data-mode="gamelan"><b data-i18n="pick.gamelan.t">Gamelan</b><span data-i18n="pick.gamelan.d">pelog/slendro, gong and metallophone</span></div>
+    <div class="pick" data-mode="vostok"><b data-i18n="pick.vostok.t">East</b><span data-i18n="pick.vostok.d">phrygian dominant, drone</span></div>
+    <div class="pick" data-mode="light"><b data-i18n="pick.light.t">Bright</b><span data-i18n="pick.light.d">major/minor pentatonic</span></div>
+    <div class="pick" data-mode="synth"><b data-i18n="pick.synth.t">Synthwave</b><span data-i18n="pick.synth.d">neon minor, pumping bass, four-on-the-floor</span></div>
+    <!-- Dorian, Cosmos, flute and Lo-fi are hidden (code kept in MODES) -->
   </div>
 </div>
 
@@ -120,6 +119,7 @@
 <div class="display">
   <div class="note" id="noteName">—</div>
   <div class="role"><b id="roleName"></b><br><span class="tip" id="tip"></span></div>
+  <div class="chords" id="chordBox" style="display:none"><b id="chordNow"></b><span id="chordNext"></span></div>
 </div>
 
 <div class="ladrow" id="ladHost"></div>

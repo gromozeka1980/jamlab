@@ -37,8 +37,13 @@ input[type=range]{width:150px; accent-color:var(--accent);}
 
 .display{display:flex; gap:14px; justify-content:center; align-items:center; padding:4px 12px 8px; min-height:44px;}
 .note{font-size:28px; font-weight:700; min-width:64px; text-align:center; text-shadow:0 0 18px rgba(255,212,59,.3);}
+.note.bup{color:var(--accent);}     /* bending up: the shown note is the bent pitch */
+.note.bdown{color:var(--blue);}     /* bending down */
 .role{font-size:14px; color:var(--muted); text-align:left; line-height:1.3;}
 .role .tip{color:var(--accent); font-weight:600;}
+.chords{text-align:left; line-height:1.15; min-width:56px;}
+.chords b{display:block; font-size:19px; color:var(--accent); font-weight:700;}
+.chords span{font-size:11px; color:var(--muted);}
 
 .playfield{flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 10px; min-height:0;}  /* centers the keys → drag gutters above & below */
 .keys{display:flex; flex-direction:column; gap:6px; width:100%; height:clamp(150px,42vh,300px);}
@@ -100,9 +105,9 @@ input[type=range]{width:150px; accent-color:var(--accent);}
 #overlay{background:rgba(7,8,16,.95); gap:14px; text-align:center;}
 #overlay h2{font-size:22px; margin:0 0 6px;}
 #overlay p{color:var(--muted); max-width:460px; line-height:1.5; margin:0; font-size:14px;}
-.pickers{display:flex; flex-direction:column; gap:8px; width:min(360px,100%); margin-top:8px; max-height:64vh; overflow-y:auto;}
-.pick{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 18px; text-align:left; cursor:pointer;}
-.pick b{font-size:17px;} .pick span{display:block; color:var(--muted); font-size:12px; margin-top:2px;}
+.pickers{display:grid; grid-template-columns:1fr 1fr; gap:8px; width:min(460px,100%); margin-top:8px; max-height:70vh; overflow-y:auto;}
+.pick{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px 14px; text-align:left; cursor:pointer;}
+.pick b{font-size:15px;} .pick span{display:block; color:var(--muted); font-size:11px; margin-top:2px; line-height:1.3;}
 .pick:active{transform:translateY(1px);}
 #settings,#latov,#recov,#help{background:rgba(7,8,16,.82); z-index:9;}
 #latov,#recov,#help{z-index:11;}

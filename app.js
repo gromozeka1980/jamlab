@@ -183,6 +183,7 @@ function glideVoice(v,tf){ v.baseFreq=tf; const t0=actx.currentTime; let b=v.dra
   const semis=Math.max(-v.maxDown,Math.min(v.maxUp,b)), r=Math.pow(2,semis/12);
   for(const fn of v.freqNodes) fn.osc.frequency.setTargetAtTime(tf*fn.mult*r,t0,0.09); }   // settle held note to a chord tone
 const VOICE_CAP=6;                                 // voice stealing: a palm on the screen must not overload the audio thread
+const heldNotes=new Map();                         // id → key offset label ("+2"), shown under the ring in recordings
 function noteOn(id,offset,el){ initAudio(); resumeAudio(); if(activeVoices.has(id)) return null;
   if(activeVoices.size>=VOICE_CAP) stopVoice(activeVoices.keys().next().value);   // steal the oldest voice
   currentIndex=clampIndex(currentIndex+offset);
@@ -200,10 +201,15 @@ function noteOn(id,offset,el){ initAudio(); resumeAudio(); if(activeVoices.has(i
   const v=makeVoice(freq, bt.up?bt.up.amt:0, bt.down?bt.down.amt:0, approach, when);
   activeVoices.set(id,v); el.classList.add("active"); el.classList.toggle("nobend", !(bt.up||bt.down));
   tapHaptic('LIGHT');
+  heldNotes.set(id,(offset>0?'+':'')+offset); viz.keysHeld([...heldNotes.values()]);   // video: pressed keys + sounding note
+  viz.liveNote(midiToName(Math.round(freqToMidi(freq))),0);
   if(settings.viz){ const r=el.getBoundingClientRect(); const cv=el.classList.contains('neg')?'--neg':el.classList.contains('pos')?'--pos':'--zero'; viz.note(r.left+r.width/2, r.top+10, cssRgb(cv));
     const mm=freqToMidi(freq), p01=Math.max(0,Math.min(1,(mm-settings.minMidi)/Math.max(1,settings.maxMidi-settings.minMidi))); viz.melody(p01); }
   updateDisplay(); if(playedMidi!=null) elNote.textContent=midiToName(playedMidi); return v; }
-function noteOff(id,el){ stopVoice(id); if(el){el.classList.remove("active","bending","bent","nobend","down"); el.style.setProperty("--bend",0); const a=el.querySelector(".arrow"); if(a)a.textContent="↑";} }
+function noteOff(id,el){ stopVoice(id);
+  heldNotes.delete(id); viz.keysHeld([...heldNotes.values()]);
+  if(activeVoices.size===0){ viz.liveNote(null,0); elNote.classList.remove('bup','bdown'); }   // silence → no note in the video
+  if(el){el.classList.remove("active","bending","bent","nobend","down"); el.style.setProperty("--bend",0); const a=el.querySelector(".arrow"); if(a)a.textContent="↑";} }
 function shiftOctave(dir){ if(M.kind==='harmonic'){ settings.rootMidi+=dir*12; currentIndex=clampIndex(currentIndex); } else currentIndex=clampIndex(currentIndex+dir*SCALE.length); updateDisplay(); }
 function resetToRoot(){ currentIndex = (M.kind==='harmonic') ? clampIndex(0) : nearestRootIndex(pitchFreq(currentIndex)); updateDisplay(); }
 
@@ -295,6 +301,19 @@ window.addEventListener("pointermove",e=>{ const p=pointers.get(e.pointerId); if
   p.el.classList.toggle("down",down&&mb>0&&frac>0.06); p.el.classList.toggle("bending",frac>0.06); p.el.classList.toggle("bent",mb>0&&mag>=mb);
   const bentNow=mb>0&&mag>=mb;                                      // haptic tick when the bend locks onto its target
   if(bentNow && !p.bentH){ p.bentH=true; tapHaptic('MEDIUM'); } else if(!bentNow && (mb<=0||mag<mb*0.9)) p.bentH=false;
+  // live bent pitch: tint the on-screen note and feed the video (big note + ribbon point)
+  const p01of=m=>Math.max(0,Math.min(1,(m-settings.minMidi)/Math.max(1,settings.maxMidi-settings.minMidi)));
+  if(frac>0.06){
+    const semis=Math.max(-p.voice.maxDown,Math.min(p.voice.maxUp,raw));
+    const bm=freqToMidi(p.voice.baseFreq)+semis, bname=midiToName(Math.round(bm));
+    elNote.textContent=bname; elNote.classList.toggle('bup',!down); elNote.classList.toggle('bdown',down);
+    viz.liveNote(bname, down?-1:1); viz.melodyBend(p01of(bm));
+  } else if(p.wasBending){
+    const bm0=freqToMidi(p.voice.baseFreq), n0=midiToName(Math.round(bm0));
+    elNote.textContent=n0; elNote.classList.remove('bup','bdown');
+    viz.liveNote(n0,0); viz.melodyBend(p01of(bm0));
+  }
+  p.wasBending=frac>0.06;
   const a=p.el.querySelector(".arrow"); if(a) a.textContent=down?"↓":"↑";
   if(settings.viz && frac>0.3 && Math.random()<0.45){ const r=p.el.getBoundingClientRect(); viz.spark(r.left+r.width/2, r.top+(down?r.height-12:12), down?cssRgb('--blue'):cssRgb('--accent')); } });
 function endPointer(e){ const p=pointers.get(e.pointerId); if(!p) return; pointers.delete(e.pointerId); noteOff(p.id,p.el); }
@@ -327,6 +346,15 @@ const ticker=(()=>{ try{
 }catch(e){ return null; } })();                     // falls back to a main-thread interval if Workers are unavailable
 function startTicks(fn,ms){ tickFn=fn; if(ticker) ticker.postMessage(ms); else tickFallback=setInterval(fn,ms); }
 function stopTicks(){ tickFn=null; if(ticker) ticker.postMessage(0); if(tickFallback){ clearInterval(tickFallback); tickFallback=null; } }
+
+// --- chord chip: current + next chord of the running progression ---
+const CHORD_SFX={'0,4,7,10':'7','0,3,7,10':'m7','0,4,7':'','0,3,7':'m','0,4,7,9':'6','0,4,7,11':'maj7','0,3,6,10':'m7♭5'};
+function chordName(rootSemi,ivs,sfx){ const pc=((settings.rootMidi+rootSemi)%12+12)%12;
+  return NOTE_NAMES[pc]+(sfx!=null?sfx:(CHORD_SFX[ivs.join(',')]||'')); }
+function setChordChip(now,next){
+  document.getElementById('chordNow').textContent=now||'';
+  document.getElementById('chordNext').textContent=next?('→ '+next):'';
+  document.getElementById('chordBox').style.display=now?'':'none'; }
 
 function bassRole(role,ivs){ if(role==='R')return 0; if(role==='5')return 7; if(role==='8')return 12;
   if(role==='b7')return 10; if(role==='6')return 9; if(role==='3')return ivs.includes(3)?3:4; return null; }
@@ -365,7 +393,10 @@ function bluesScheduler(){ const H=HARMONY[settings.harmony]||HARMONY.major, R=R
     else if(R.comp==='offbeat'){ if(step%2===1) bChord(chord.root,t0,beat*0.4,chord.ivs,0.09); }     // shuffle "chuck" on the &s
     else { if(step===2||step===6) bChord(chord.root,t0,beat*0.7,chord.ivs,0.12);                     // backbeat chord chop (was a bar-long drone)
            else if(step===0) bChord(chord.root,nextNoteTime,beat*0.5,chord.ivs,0.05); }              // light downbeat for body
-    if(step===0){ const pcs=new Set(chord.ivs.map(iv=>(chord.root+iv)%12)), cc={r:(settings.rootMidi+chord.root)%12, ivs:chord.ivs}; setTimeout(()=>{ if(!accOn||M.back!=='blues')return; liveChordPcs=pcs; curChord=cc; updateDisplay();}, Math.max(0,(nextNoteTime-actx.currentTime)*1000)); }
+    if(step===0){ const pcs=new Set(chord.ivs.map(iv=>(chord.root+iv)%12)), cc={r:(settings.rootMidi+chord.root)%12, ivs:chord.ivs},
+        nxt=H.bars[(Math.floor(eighth/8)+1)%nb];
+      setTimeout(()=>{ if(!accOn||M.back!=='blues')return; liveChordPcs=pcs; curChord=cc;
+        setChordChip(chordName(chord.root,chord.ivs), chordName(nxt.root,nxt.ivs)); updateDisplay();}, Math.max(0,(nextNoteTime-actx.currentTime)*1000)); }
     nextNoteTime+=beat/2; eighth++; } }
 
 // --- modal backing: arpeggio + bass + percussion + vamp ---
@@ -460,8 +491,9 @@ function synthScheduler(){ const beat=60/settings.bpm, np=SYNTH_PROG.length;
     if(step%2===1) hat(nextNoteTime,false,0.5);                          // offbeat hats
     synthBass(ch.root + (step%2?12:0), nextNoteTime);                    // octave-pumping eighths
     if(step===0){ bChord(ch.root, nextNoteTime, beat*3.6, ch.ivs, 0.05); // gated pad once a bar
-      const pcs=new Set(ch.ivs.map(iv=>(ch.root+iv)%12)), cc={r:(settings.rootMidi+ch.root)%12, ivs:ch.ivs};
-      setTimeout(()=>{ if(!accOn||M.back!=='synth')return; liveChordPcs=pcs; curChord=cc; updateDisplay(); }, Math.max(0,(nextNoteTime-actx.currentTime)*1000)); }
+      const pcs=new Set(ch.ivs.map(iv=>(ch.root+iv)%12)), cc={r:(settings.rootMidi+ch.root)%12, ivs:ch.ivs}, nx=SYNTH_PROG[(bar+1)%np];
+      setTimeout(()=>{ if(!accOn||M.back!=='synth')return; liveChordPcs=pcs; curChord=cc;
+        setChordChip(chordName(ch.root,ch.ivs), chordName(nx.root,nx.ivs)); updateDisplay(); }, Math.max(0,(nextNoteTime-actx.currentTime)*1000)); }
     nextNoteTime+=beat/2; eighth++;
   } }
 
@@ -491,8 +523,9 @@ function lofiScheduler(){ const beat=60/settings.bpm, sw=0.24, np=LOFI_PROG.leng
     if(step===0) kick(t0,0.85); if(step===5) kick(t0,0.5);               // boom … ba-boom
     if(step===2||step===6) snare(t0,0.55);
     if(step===0){ lofiKeys(ch.root,t0,ch.ivs,0.11); lofiBass(ch.root,t0);
-      const pcs=new Set(ch.ivs.map(iv=>(ch.root+iv)%12)), cc={r:(settings.rootMidi+ch.root)%12, ivs:ch.ivs};
-      setTimeout(()=>{ if(!accOn||M.back!=='lofi')return; liveChordPcs=pcs; curChord=cc; updateDisplay(); }, Math.max(0,(nextNoteTime-actx.currentTime)*1000)); }
+      const pcs=new Set(ch.ivs.map(iv=>(ch.root+iv)%12)), cc={r:(settings.rootMidi+ch.root)%12, ivs:ch.ivs}, nx=LOFI_PROG[(bar+1)%np];
+      setTimeout(()=>{ if(!accOn||M.back!=='lofi')return; liveChordPcs=pcs; curChord=cc;
+        setChordChip(chordName(ch.root,ch.ivs), chordName(nx.root,nx.ivs)); updateDisplay(); }, Math.max(0,(nextNoteTime-actx.currentTime)*1000)); }
     if(step===4) lofiBass(ch.root+7,t0);
     if(Math.random()<0.10) vinylPop(t0);                                 // vinyl crackle
     nextNoteTime+=beat/2; eighth++;
@@ -552,7 +585,8 @@ function jazzScheduler(){ const beat=60/settings.bpm, np=JAZZ_PROG.length;
     const bar=Math.floor(eighth/8)%np, ch=JAZZ_PROG[bar], nx=JAZZ_PROG[(bar+1)%np], q=QUAL[ch.q];
     const ext=(ch.q==='m7'||ch.q==='dom'||ch.q==='maj7'||ch.q==='maj7iv')?14:null;   // add the 9th only where it won't clash
     if(step%2===0){ jazzBeatRef=nextNoteTime-(step/2)*beat; jazzBeatLen=beat; }       // anchor the beat grid for strong-beat detection
-    if(step===0){ const c=ch, tt=nextNoteTime; setTimeout(()=>{ if(accOn&&M.id==='jazz') applyJazzChord(c); },Math.max(0,(tt-actx.currentTime)*1000));
+    if(step===0){ const c=ch, n2=nx, tt=nextNoteTime; setTimeout(()=>{ if(accOn&&M.id==='jazz'){ applyJazzChord(c);
+        setChordChip(NOTE_NAMES[(settings.rootMidi+c.root)%12]+c.sfx, NOTE_NAMES[(settings.rootMidi+n2.root)%12]+n2.sfx); } },Math.max(0,(tt-actx.currentTime)*1000));
       jazzComp(ch.root,nextNoteTime,q.ivs,0.17,ext); }                // comp on beat 1
     if(step===3) jazzComp(ch.root,t0,q.ivs,0.14,ext);                  // Charleston: the "and" of 2
     // walking bass — quarter notes, smooth approach to the next root
@@ -579,7 +613,7 @@ function startBacking(){ initAudio(); resumeAudio(); accOn=true;
   else if(M.back==='gamelan'){ startGamelanDrone(); qStep=0; nextNoteTime=actx.currentTime+0.12; startTicks(gamelanScheduler,30); }
   else { startPadFlute(); }
   accBtn.classList.add("on"); accBtn.textContent=t('btn.bgStop'); }
-function stopBacking(){ accOn=false; stopTicks(); stopPad(); liveChordPcs=null; curChord=null; jazzBeatLen=0; refreshKeyLabels();
+function stopBacking(){ accOn=false; stopTicks(); stopPad(); liveChordPcs=null; curChord=null; jazzBeatLen=0; setChordChip('',''); refreshKeyLabels();
   accBtn.classList.remove("on"); accBtn.textContent=t('btn.bgStart'); }
 
 /* ============ Theme and mode UI assembly ============ */
