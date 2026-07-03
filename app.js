@@ -60,11 +60,14 @@ let jazzRoot=57, jazzLabel="";                     // scale root in jazz (follow
 let curChord=null;                                 // {r:root pc, ivs} of the current chord (for 1/3/5/7 highlight) — jazz/blues
 function leadRoot(){ return M.id==='jazz' ? jazzRoot : settings.rootMidi; }
 function indexToMidi(i){ const len=SCALE.length,o=Math.floor(i/len),s=((i%len)+len)%len; return leadRoot()+12*o+SCALE[s]; }
-function fluteHarmonic(i){ return Math.max(2, M.base+i); }
-function f0freq(){ return midiToFreq(settings.rootMidi-24); }      // fundamental two octaves below the root
-function pitchFreq(i){ return M.kind==='harmonic' ? f0freq()*fluteHarmonic(i) : midiToFreq(indexToMidi(i)); }
+// Overtone flute: the raw series is unplayable outside harmonics 8–15 (the "clarino" register,
+// a near-major scale). Fold that chunk so every octave repeats it, transposed — just intonation kept.
+const HSER=[8,9,10,11,12,13,14,15];
+function harmFold(i){ const o=Math.floor(i/8), s=((i%8)+8)%8; return {o, h:HSER[s]}; }
+function pitchFreq(i){ if(M.kind==='harmonic'){ const {o,h}=harmFold(i); return midiToFreq(settings.rootMidi)*(h/8)*Math.pow(2,o); }
+  return midiToFreq(indexToMidi(i)); }
 function pitchLabel(i){
-  if(M.kind==='harmonic'){ const n=fluteHarmonic(i); return {deg:n, note:midiToName(freqToMidi(pitchFreq(i)))}; }
+  if(M.kind==='harmonic'){ return {deg:harmFold(i).h, note:midiToName(freqToMidi(pitchFreq(i)))}; }
   const len=SCALE.length, s=((i%len)+len)%len; return {deg:s+1, note:midiToName(indexToMidi(i))};
 }
 
@@ -88,10 +91,10 @@ let liveChordPcs=null;
 function currentChordPcs(){ if(accOn && liveChordPcs) return liveChordPcs;
   return settings.variant==='major' ? new Set([0,4,7,10]) : new Set([0,3,7,10]); }
 function bendTargets(i){
-  if(M.kind==='harmonic'){
-    const n=fluteHarmonic(i);
-    const up={amt:Math.min(2,12*Math.log2((n+1)/n)), name:t('ord',{n:n+1})};
-    const down = n-1>=2 ? {amt:Math.min(2,12*Math.log2(n/(n-1))), name:t('ord',{n:n-1})} : null;
+  if(M.kind==='harmonic'){                          // bend to the neighbouring step of the folded series
+    const f=pitchFreq(i);
+    const up={amt:Math.min(2,12*Math.log2(pitchFreq(i+1)/f)), name:t('ord',{n:harmFold(i+1).h})};
+    const down={amt:Math.min(2,12*Math.log2(f/pitchFreq(i-1))), name:t('ord',{n:harmFold(i-1).h})};
     return {up, down};
   }
   const len=SCALE.length, step=((i%len)+len)%len, pc=SCALE[step];
@@ -210,8 +213,8 @@ function noteOff(id,el){ stopVoice(id);
   heldNotes.delete(id); viz.keysHeld([...heldNotes.values()]);
   if(activeVoices.size===0){ viz.liveNote(null,0); elNote.classList.remove('bup','bdown'); }   // silence → no note in the video
   if(el){el.classList.remove("active","bending","bent","nobend","down"); el.style.setProperty("--bend",0); const a=el.querySelector(".arrow"); if(a)a.textContent="↑";} }
-function shiftOctave(dir){ if(M.kind==='harmonic'){ settings.rootMidi+=dir*12; currentIndex=clampIndex(currentIndex); } else currentIndex=clampIndex(currentIndex+dir*SCALE.length); updateDisplay(); }
-function resetToRoot(){ currentIndex = (M.kind==='harmonic') ? clampIndex(0) : nearestRootIndex(pitchFreq(currentIndex)); updateDisplay(); }
+function shiftOctave(dir){ currentIndex=clampIndex(currentIndex+dir*(M.kind==='harmonic'?8:SCALE.length)); updateDisplay(); }
+function resetToRoot(){ currentIndex = (M.kind==='harmonic') ? clampIndex(Math.round(currentIndex/8)*8) : nearestRootIndex(pitchFreq(currentIndex)); updateDisplay(); }
 
 function setVariant(id){ if(M.kind!=='scale'||!M.scales||!M.scales[id]) return;
   const oldF=pitchFreq(currentIndex); SCALE=M.scales[id]; settings.variant=id;
