@@ -101,7 +101,7 @@ input[type=range]{width:150px; accent-color:var(--accent);}
 #rotate .ico{font-size:48px;}
 @media (orientation:landscape) and (pointer:coarse){ #rotate{display:flex;} }
 
-#overlay,#settings,#latov,#recov,#help,#paywall{position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:22px; z-index:10;}
+#overlay,#settings,#recov,#help,#paywall{position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:22px; z-index:10;}
 #paywall{background:rgba(7,8,16,.88); z-index:12;}
 #paywall.hidden{display:none;}
 #overlay{background:rgba(7,8,16,.95); gap:14px; text-align:center;}
@@ -114,9 +114,9 @@ input[type=range]{width:150px; accent-color:var(--accent);}
   color:#15151f; background:var(--accent); border-radius:5px; padding:2px 6px;}
 .pick b{font-size:15px;} .pick span{display:block; color:var(--muted); font-size:11px; margin-top:2px; line-height:1.3;}
 .pick:active{transform:translateY(1px);}
-#settings,#latov,#recov,#help{background:rgba(7,8,16,.82); z-index:9;}
-#latov,#recov,#help{z-index:11;}
-#settings.hidden,#latov.hidden,#recov.hidden,#help.hidden{display:none;}
+#settings,#recov,#help{background:rgba(7,8,16,.82); z-index:9;}
+#recov,#help{z-index:11;}
+#settings.hidden,#recov.hidden,#help.hidden{display:none;}
 .sheet{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px 20px; width:min(440px,100%); max-height:88vh; overflow-y:auto; display:flex; flex-direction:column; gap:14px;}
 .sheet h3{margin:0 0 4px; font-size:18px;}
 .srow{display:flex; align-items:center; justify-content:space-between; gap:14px; font-size:13px;}

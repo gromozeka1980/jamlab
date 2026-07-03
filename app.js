@@ -719,7 +719,7 @@ document.getElementById("helpBtn").addEventListener("click",()=>{ document.getEl
 document.getElementById("closeHelp").addEventListener("click",()=>helpEl.classList.add("hidden"));
 accBtn.addEventListener("click",()=> accOn?stopBacking():startBacking());
 // close any open sheet with Escape or a tap on the backdrop
-const SHEETS=["settings","help","latov","recov","paywall"];
+const SHEETS=["settings","help","recov","paywall"];
 document.addEventListener("keydown",e=>{ if(e.key==="Escape") SHEETS.forEach(id=>document.getElementById(id).classList.add("hidden")); });
 SHEETS.forEach(id=>{ const el=document.getElementById(id); el.addEventListener("pointerdown",e=>{ if(e.target===el) el.classList.add("hidden"); }); });
 // pause the backing while the recording preview is open — it clashes with the clip's own audio;
@@ -751,39 +751,6 @@ function refreshLabels(){
 function setLang(l){ const v=setLangCode(l); document.documentElement.lang=v; refreshLabels(); }
 const langSel=document.getElementById("langSel"); langSel.value=LANG;
 langSel.addEventListener("change",()=>setLang(langSel.value));
-
-/* ============ Latency measurement ============ */
-const latov=document.getElementById("latov");
-function showLatInfo(){
-  const sr=actx.sampleRate, bl=(actx.baseLatency||0)*1000, ol=(actx.outputLatency!=null?actx.outputLatency*1000:NaN);
-  document.getElementById("latInfo").innerHTML =
-    t('lat.sampleRate')+": <b>"+sr+"</b> "+t('lat.hz')+"<br>baseLatency: <b>"+bl.toFixed(1)+"</b> "+t('lat.ms')+
-    "<br>outputLatency: <b>"+(isNaN(ol)?t('lat.na'):ol.toFixed(1)+" "+t('lat.ms'))+"</b>"+
-    "<br><span style='color:var(--muted);font-size:12px'>"+t('lat.outNote')+"</span>";
-}
-document.getElementById("latBtn").addEventListener("click",()=>{ initAudio(); resumeAudio(); showLatInfo(); document.getElementById("latResult").textContent=""; latov.classList.remove("hidden"); });
-document.getElementById("latClose").addEventListener("click",()=>latov.classList.add("hidden"));
-if(NATIVE) document.getElementById("latMic").style.display="none";   // no microphone use in the store app (avoids the RECORD_AUDIO permission)
-document.getElementById("latMic").addEventListener("click",async()=>{
-  const res=document.getElementById("latResult"); res.textContent=t('lat.measuring');
-  try{
-    const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
-    const src=actx.createMediaStreamSource(stream), bs=256, sp=actx.createScriptProcessor(bs,1,1), sink=actx.createGain();
-    sink.gain.value=0; src.connect(sp); sp.connect(sink); sink.connect(actx.destination);
-    let clickAt=null, armed=false; const results=[];
-    sp.onaudioprocess=(e)=>{ const inp=e.inputBuffer.getChannelData(0), bufStart=actx.currentTime - bs/actx.sampleRate;
-      if(armed && clickAt!=null){ for(let i=0;i<inp.length;i++){ if(Math.abs(inp[i])>0.15){ const lat=(bufStart+i/actx.sampleRate-clickAt)*1000; if(lat>2&&lat<400) results.push(lat); armed=false; break; } } } };
-    for(let k=0;k<10;k++){ clickAt=actx.currentTime+0.06; const o=actx.createOscillator(),g=actx.createGain();
-      o.type="square"; o.frequency.value=2000; g.gain.setValueAtTime(0,clickAt); g.gain.linearRampToValueAtTime(0.9,clickAt+0.001); g.gain.exponentialRampToValueAtTime(0.001,clickAt+0.02);
-      o.connect(g); g.connect(actx.destination); o.start(clickAt); o.stop(clickAt+0.03); armed=true; await new Promise(r=>setTimeout(r,380)); }
-    src.disconnect(); sp.disconnect(); stream.getTracks().forEach(t=>t.stop());
-    results.sort((a,b)=>a-b); const med=results.length?results[Math.floor(results.length/2)]:null;
-    res.innerHTML = med!=null
-      ? t('lat.rtt',{med:med.toFixed(0),n:results.length})+"<br><span style='color:var(--muted);font-size:12px'>"+t('lat.rttNote')+"</span>"
-      : t('lat.noClick');
-  }catch(err){ res.textContent=t('lat.micErr')+(err&&err.message||err); }
-});
-
 
 /* ============ Instrument picker and start ============ */
 const overlay=document.getElementById("overlay");
