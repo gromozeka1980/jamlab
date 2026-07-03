@@ -1,6 +1,5 @@
 // Visualizer: live overlay (transparent, on top of the UI) + the opaque recording scene
-// (spectrum ring, melody ribbon, watermark) rendered on an offscreen ~720p canvas.
-import { anl } from './audio.js';   // live binding — assigned by initAudio()
+// (sounding note, melody ribbon, watermark) rendered on an offscreen ~720p canvas.
 
 export function hexToRgb(h){ h=(h||'').trim().replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join(''); const n=parseInt(h||'888888',16); return [(n>>16)&255,(n>>8)&255,n&255]; }
 export function cssRgb(v){ return hexToRgb(getComputedStyle(document.documentElement).getPropertyValue(v)); }
@@ -40,7 +39,6 @@ export const viz=(()=>{
     if(beat>0.02){ const g=ctx.createRadialGradient(W/2,H*1.05,0,W/2,H*1.05,H*0.9);
       g.addColorStop(0,'rgba(255,255,255,'+(beat*0.05).toFixed(3)+')'); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H); }
     drawParticles(ctx,dpr); }
-  const fd=new Uint8Array(128);
   function drawRec(){ const c=rctx, s=RS, now=performance.now();
     // background gradient + vignette
     const bg1=cssRgb('--bg1'), bg0=cssRgb('--bg'), g=c.createLinearGradient(0,0,0,RH);
@@ -67,21 +65,8 @@ export const viz=(()=>{
       c.fillStyle='hsla('+p.hue+',95%,74%,'+(p.al*0.95).toFixed(3)+')';
       c.beginPath(); c.arc(p.x,p.y,3.4*s,0,6.2832); c.fill(); }
     // touch splashes from the keys
-    drawParticles(c,s); c.globalCompositeOperation='lighter';
-    // audio-reactive ring around the note
-    const cx=RW/2, cy=RH*0.30, R0=Math.min(RW,RH)*0.21;
-    if(anl){ anl.getByteFrequencyData(fd);
-      let lvl=0; for(let i=2;i<90;i++) lvl+=fd[i]; lvl/=(88*255);
-      const glow=c.createRadialGradient(cx,cy,0,cx,cy,R0*2.1);
-      glow.addColorStop(0,'rgba(255,212,59,'+(0.08+lvl*0.22).toFixed(3)+')'); glow.addColorStop(1,'rgba(255,212,59,0)');
-      c.fillStyle=glow; c.beginPath(); c.arc(cx,cy,R0*2.1,0,6.2832); c.fill();
-      const N=56, rot=now*0.00012; c.lineCap='round';
-      for(let i=0;i<N;i++){ const ang=rot+i/N*6.2832, half=(i%(N/2))/(N/2);   // mirrored spectrum looks fuller
-        const v=fd[2+Math.floor(Math.pow(half,1.5)*86)]/255, L=R0*(0.10+Math.pow(v,1.35)*(0.72+beat*0.5));
-        c.strokeStyle='hsla('+(120+95*Math.sin(ang*2+now*0.0004)).toFixed(0)+',85%,62%,0.7)'; c.lineWidth=3.2*s;
-        c.beginPath(); c.moveTo(cx+Math.cos(ang)*R0,cy+Math.sin(ang)*R0);
-        c.lineTo(cx+Math.cos(ang)*(R0+L),cy+Math.sin(ang)*(R0+L)); c.stroke(); } }
-    c.globalCompositeOperation='source-over';
+    drawParticles(c,s);
+    const cx=RW/2, cy=RH*0.30;
     // sounding note (nothing while silent); bends tint it — up=accent, down=cyan
     if(liveTxt){
       const pop=1+0.22*Math.exp(-(now-lastNoteAt)/160);
@@ -90,10 +75,10 @@ export const viz=(()=>{
       c.font='800 '+Math.round(40*s)+'px system-ui,sans-serif';
       c.fillText(liveTxt,0,0); c.restore();
     }
-    // held key offsets under the ring (+1  −2 …)
+    // held key offsets under the note (+1  −2 …)
     if(heldKeys.length){ c.textAlign='center'; c.textBaseline='middle';
-      c.fillStyle='rgba(230,232,245,0.6)'; c.font='700 '+Math.round(13*s)+'px system-ui,sans-serif';
-      c.fillText(heldKeys.join('   '), cx, cy+R0*1.45); }
+      c.fillStyle='rgba(230,232,245,0.75)'; c.font='800 '+Math.round(26*s)+'px system-ui,sans-serif';
+      c.fillText(heldKeys.join('   '), cx, cy+52*s); }
     // titles
     const acc=cssRgb('--accent'); c.textAlign='center'; c.textBaseline='alphabetic';
     c.fillStyle='rgba('+acc[0]+','+acc[1]+','+acc[2]+',0.92)'; c.font='600 '+Math.round(17*s)+'px system-ui,sans-serif';
