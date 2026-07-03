@@ -15,6 +15,11 @@ const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && windo
 const TOUCH = NATIVE || (window.matchMedia && matchMedia('(pointer:coarse)').matches);
 if(TOUCH) document.body.classList.add('touch');   // hide keyboard hints/labels on touch
 
+/* ============ Native niceties (Capacitor bridge, no-ops on the web) ============ */
+const NPLUG = (NATIVE && window.Capacitor.Plugins) ? window.Capacitor.Plugins : null;
+if(NPLUG && NPLUG.KeepAwake){ try{ NPLUG.KeepAwake.keepAwake(); }catch(e){} }   // an instrument must not dim mid-jam
+function tapHaptic(style){ if(NPLUG && NPLUG.Haptics){ try{ NPLUG.Haptics.impact({style}); }catch(e){} } }
+
 /* ============ Mode state ============ */
 
 let M = MODES.blues;
@@ -192,6 +197,7 @@ function noteOn(id,offset,el){ initAudio(); resumeAudio(); if(activeVoices.has(i
   const when=(M.id==='jazz' && settings.jazzTiming!=='free' && jazzBeatLen) ? quantizeToPocket(actx.currentTime, (+settings.jazzTiming)/4) : undefined;
   const v=makeVoice(freq, bt.up?bt.up.amt:0, bt.down?bt.down.amt:0, approach, when);
   activeVoices.set(id,v); el.classList.add("active"); el.classList.toggle("nobend", !(bt.up||bt.down));
+  tapHaptic('LIGHT');
   if(settings.viz){ const r=el.getBoundingClientRect(); const cv=el.classList.contains('neg')?'--neg':el.classList.contains('pos')?'--pos':'--zero'; viz.note(r.left+r.width/2, r.top+10, cssRgb(cv));
     const mm=freqToMidi(freq), p01=Math.max(0,Math.min(1,(mm-settings.minMidi)/Math.max(1,settings.maxMidi-settings.minMidi))); viz.melody(p01); }
   updateDisplay(); if(playedMidi!=null) elNote.textContent=midiToName(playedMidi); return v; }
@@ -271,7 +277,7 @@ const EXTRA=[{key:'extra.octDown',code:"BracketLeft",act:()=>shiftOctave(-1)},
 const extraHost=document.getElementById("extra"), extraLabelEls=[];
 EXTRA.forEach(k=>{ const el=document.createElement("div"); el.className="key zero";
   const sp=document.createElement('span'); sp.className='off'; sp.textContent=t(k.key); el.appendChild(sp);
-  el.addEventListener("pointerdown",e=>{e.preventDefault();initAudio();resumeAudio();k.act();el.classList.add("active");setTimeout(()=>el.classList.remove("active"),120);});
+  el.addEventListener("pointerdown",e=>{e.preventDefault();initAudio();resumeAudio();k.act();tapHaptic('LIGHT');el.classList.add("active");setTimeout(()=>el.classList.remove("active"),120);});
   extraHost.appendChild(el); codeMap[k.code]={el,act:k.act,momentary:true}; extraLabelEls.push({sp,key:k.key}); });
 function setExtraLabels(){ extraLabelEls.forEach(o=>o.sp.textContent=t(o.key)); }
 
@@ -285,6 +291,8 @@ window.addEventListener("pointermove",e=>{ const p=pointers.get(e.pointerId); if
   const down=raw<0, mb=down?p.voice.maxDown:p.voice.maxUp, mag=Math.abs(raw);
   const frac=mb>0?Math.min(mag,mb)/mb:0; p.el.style.setProperty("--bend",frac.toFixed(3));
   p.el.classList.toggle("down",down&&mb>0&&frac>0.06); p.el.classList.toggle("bending",frac>0.06); p.el.classList.toggle("bent",mb>0&&mag>=mb);
+  const bentNow=mb>0&&mag>=mb;                                      // haptic tick when the bend locks onto its target
+  if(bentNow && !p.bentH){ p.bentH=true; tapHaptic('MEDIUM'); } else if(!bentNow && (mb<=0||mag<mb*0.9)) p.bentH=false;
   const a=p.el.querySelector(".arrow"); if(a) a.textContent=down?"↓":"↑";
   if(settings.viz && frac>0.3 && Math.random()<0.45){ const r=p.el.getBoundingClientRect(); viz.spark(r.left+r.width/2, r.top+(down?r.height-12:12), down?cssRgb('--blue'):cssRgb('--accent')); } });
 function endPointer(e){ const p=pointers.get(e.pointerId); if(!p) return; pointers.delete(e.pointerId); noteOff(p.id,p.el); }
@@ -580,7 +588,7 @@ function buildLadRow(){ ladHost.innerHTML="";
   if(M.variants.length<2) return;
   M.variants.forEach(vr=>{ const b=document.createElement("button"); b.className="ladbtn"+(vr.id===settings.variant?" active":"");
     b.dataset.v=vr.id; b.textContent=t(vr.label);
-    b.addEventListener("pointerdown",e=>{e.preventDefault();initAudio();resumeAudio();setVariant(vr.id);}); ladHost.appendChild(b); }); }
+    b.addEventListener("pointerdown",e=>{e.preventDefault();initAudio();resumeAudio();setVariant(vr.id);tapHaptic('LIGHT');}); ladHost.appendChild(b); }); }
 function buildBackingOptions(){ backSel.innerHTML=""; M.backings.forEach(bk=>backSel.appendChild(new Option(t(bk.label),bk.id))); backSel.value=settings.backing; }
 function setHint(){ document.getElementById("hint").innerHTML = t(TOUCH ? 'hint.touch' : (M.kind==='harmonic'?'hint.harmonic':'hint.scale')); }
 
@@ -759,4 +767,9 @@ refreshLabels();
 document.addEventListener("gesturestart",e=>e.preventDefault());
 document.addEventListener("contextmenu",e=>e.preventDefault());
 document.addEventListener("touchend",resumeAudio,{passive:true});
-document.addEventListener("visibilitychange",()=>{ if(!document.hidden) resumeAudio(); });
+// interruptions (call, app switch, screen lock): hold the backing while hidden, resume on return
+let backingHeldBg=false;
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden){ if(accOn){ backingHeldBg=true; stopBacking(); } }
+  else { resumeAudio(); if(backingHeldBg){ backingHeldBg=false; startBacking(); } }
+});

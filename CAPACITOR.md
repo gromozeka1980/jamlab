@@ -53,7 +53,10 @@ projects.
 
 ## Notes / roadmap hooks
 
-- `@capacitor/haptics` is included for tactile feedback on key presses (wire up later).
+- `@capacitor/haptics` is wired to key presses (light) and bend-lock (medium) via
+  `window.Capacitor.Plugins` — no bundler needed; no-ops on the web build.
+- `@capacitor-community/keep-awake` keeps the screen on while the app is open.
+- The backing auto-pauses when the app is hidden (call / app switch) and resumes on return.
 - `@capacitor/status-bar` overlays the WebView; `index.html` already uses
   `viewport-fit=cover` + `env(safe-area-inset-*)` so the UI respects the notch.
 - Audio latency in the WebView measured ~21 ms on Android — acceptable, no native
@@ -69,4 +72,5 @@ projects.
 - Pro unlock via Google Play Billing (RevenueCat recommended).
 - Verify the in-app clip **share** works in the WebView; if `navigator.share`
   is flaky on Android WebView, add the `@capacitor/share` plugin.
-- Wire `@capacitor/haptics` to key presses for tactile feedback.
+- Set `targetSdkVersion = 36` in `android/variables.gradle` (Play requires API 36
+  for new apps from 2026-08-31).
