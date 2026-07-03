@@ -9,6 +9,7 @@ import { actx, comp, leadBus, leadFilter, leadOut, accBus, busPerc, busBass, bus
          initAudio, resumeAudio, accGain } from './audio.js';
 import { viz, cssRgb } from './viz.js';
 import { refreshRecLabel } from './rec.js';
+import { isPro, modeLocked, bluesLocked, showPaywall, onProChange, initBilling } from './paywall.js';
 
 // true inside the native Capacitor app (vs the plain web build)
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
@@ -672,12 +673,16 @@ backSel.addEventListener("change",()=>{ settings.backing=backSel.value; if(accOn
 const harmSel=document.getElementById("harmSel"), rhythmSel=document.getElementById("rhythmSel");
 function populateHarmRhythm(){
   const hv=harmSel.value, rv=rhythmSel.value;
-  harmSel.innerHTML=""; HARM_OPTS.forEach(([v,k])=>harmSel.appendChild(new Option(t(k),v)));
-  rhythmSel.innerHTML=""; RHY_OPTS.forEach(([v,k])=>rhythmSel.appendChild(new Option(t(k),v)));
+  harmSel.innerHTML=""; HARM_OPTS.forEach(([v,k])=>harmSel.appendChild(new Option(t(k)+(bluesLocked('harmony',v)?t('opt.pro'):''),v)));
+  rhythmSel.innerHTML=""; RHY_OPTS.forEach(([v,k])=>rhythmSel.appendChild(new Option(t(k)+(bluesLocked('rhythm',v)?t('opt.pro'):''),v)));
   if(hv) harmSel.value=hv; if(rv) rhythmSel.value=rv;
 }
-harmSel.addEventListener("change",()=>{ settings.harmony=harmSel.value; applyLadLock(); if(accOn){stopBacking();startBacking();} });  // scale locked to the harmony, restart from bar I
-rhythmSel.addEventListener("change",()=>{ settings.rhythm=rhythmSel.value; });   // rhythm changes on the fly
+harmSel.addEventListener("change",()=>{
+  if(bluesLocked('harmony',harmSel.value)){ harmSel.value=settings.harmony; showPaywall(); return; }
+  settings.harmony=harmSel.value; applyLadLock(); if(accOn){stopBacking();startBacking();} });  // scale locked to the harmony, restart from bar I
+rhythmSel.addEventListener("change",()=>{
+  if(bluesLocked('rhythm',rhythmSel.value)){ rhythmSel.value=settings.rhythm; showPaywall(); return; }
+  settings.rhythm=rhythmSel.value; });   // rhythm changes on the fly
 
 const colorSel=document.getElementById("colorSel"), landSel=document.getElementById("landSel"), phraseSel=document.getElementById("phraseSel"), timingSel=document.getElementById("timingSel");
 colorSel.addEventListener("change",()=>{ settings.jazzColor=colorSel.value; saveSettings(); });   // scales apply from the next chord
@@ -719,7 +724,7 @@ document.getElementById("helpBtn").addEventListener("click",()=>{ document.getEl
 document.getElementById("closeHelp").addEventListener("click",()=>helpEl.classList.add("hidden"));
 accBtn.addEventListener("click",()=> accOn?stopBacking():startBacking());
 // close any open sheet with Escape or a tap on the backdrop
-const SHEETS=["settings","help","latov","recov"];
+const SHEETS=["settings","help","latov","recov","paywall"];
 document.addEventListener("keydown",e=>{ if(e.key==="Escape") SHEETS.forEach(id=>document.getElementById(id).classList.add("hidden")); });
 SHEETS.forEach(id=>{ const el=document.getElementById(id); el.addEventListener("pointerdown",e=>{ if(e.target===el) el.classList.add("hidden"); }); });
 // pause the backing while the recording preview is open — it clashes with the clip's own audio;
@@ -787,7 +792,10 @@ document.getElementById("latMic").addEventListener("click",async()=>{
 
 /* ============ Instrument picker and start ============ */
 const overlay=document.getElementById("overlay");
+function refreshLocks(){ document.querySelectorAll('.pick').forEach(p=>p.classList.toggle('locked', modeLocked(p.dataset.mode))); }
+onProChange(()=>{ refreshLocks(); populateHarmRhythm(); });   // a purchase unlocks everything in place
 document.querySelectorAll(".pick").forEach(p=>p.addEventListener("click",()=>{
+  if(modeLocked(p.dataset.mode)){ showPaywall(); return; }
   initAudio(); resumeAudio();
   if(settings.gyro!=='off') enableGyro();   // restored gyro pref needs a user gesture to attach
   if(accOn) stopBacking();              // so the backing doesn't double up on a repeat pick
@@ -804,6 +812,8 @@ applyPrefsToControls();
 populateHarmRhythm();
 setMode('blues');
 refreshLabels();
+refreshLocks();
+initBilling();
 document.addEventListener("gesturestart",e=>e.preventDefault());
 document.addEventListener("contextmenu",e=>e.preventDefault());
 document.addEventListener("touchend",resumeAudio,{passive:true});

@@ -89,6 +89,24 @@
   </div>
 </div>
 
+<div id="paywall" class="hidden" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <h3 data-i18n="pw.title">Unlock everything</h3>
+    <ul style="margin:0; padding-left:18px; color:var(--muted); font-size:13px; line-height:1.55; display:flex; flex-direction:column; gap:5px;">
+      <li data-i18n="pw.li1"></li>
+      <li data-i18n="pw.li2"></li>
+      <li data-i18n="pw.li3"></li>
+      <li data-i18n="pw.li4"></li>
+    </ul>
+    <div id="pwNote" style="color:var(--muted); font-size:12px; min-height:14px;"></div>
+    <button id="pwBuy" style="background:var(--accent); border-color:var(--accent); color:#15151f; font-weight:800; font-size:15px;"></button>
+    <div style="display:flex; gap:8px; justify-content:space-between;">
+      <button id="pwRestore" data-i18n="pw.restore">Restore purchase</button>
+      <button id="pwClose" data-i18n="pw.later">Not now</button>
+    </div>
+  </div>
+</div>
+
 <div id="latov" class="hidden" role="dialog" aria-modal="true">
   <div class="sheet">
     <h3 data-i18n="lat.title">🔬 Audio latency</h3>

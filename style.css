@@ -101,12 +101,17 @@ input[type=range]{width:150px; accent-color:var(--accent);}
 #rotate .ico{font-size:48px;}
 @media (orientation:landscape) and (pointer:coarse){ #rotate{display:flex;} }
 
-#overlay,#settings,#latov,#recov,#help{position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:22px; z-index:10;}
+#overlay,#settings,#latov,#recov,#help,#paywall{position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:22px; z-index:10;}
+#paywall{background:rgba(7,8,16,.88); z-index:12;}
+#paywall.hidden{display:none;}
 #overlay{background:rgba(7,8,16,.95); gap:14px; text-align:center;}
 #overlay h2{font-size:22px; margin:0 0 6px;}
 #overlay p{color:var(--muted); max-width:460px; line-height:1.5; margin:0; font-size:14px;}
 .pickers{display:grid; grid-template-columns:1fr 1fr; gap:8px; width:min(460px,100%); margin-top:8px; max-height:70vh; overflow-y:auto;}
-.pick{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px 14px; text-align:left; cursor:pointer;}
+.pick{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px 14px; text-align:left; cursor:pointer; position:relative;}
+.pick.locked{opacity:.72;}
+.pick.locked::after{content:'PRO'; position:absolute; top:8px; right:8px; font-size:9px; font-weight:800; letter-spacing:.6px;
+  color:#15151f; background:var(--accent); border-radius:5px; padding:2px 6px;}
 .pick b{font-size:15px;} .pick span{display:block; color:var(--muted); font-size:11px; margin-top:2px; line-height:1.3;}
 .pick:active{transform:translateY(1px);}
 #settings,#latov,#recov,#help{background:rgba(7,8,16,.82); z-index:9;}

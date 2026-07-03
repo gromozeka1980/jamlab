@@ -21,7 +21,8 @@
     "@capacitor/core": "^7.0.0",
     "@capacitor/haptics": "^7.0.0",
     "@capacitor/ios": "^7.0.0",
-    "@capacitor/status-bar": "^7.0.0"
+    "@capacitor/status-bar": "^7.0.0",
+    "@revenuecat/purchases-capacitor": "^11.3.2"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
