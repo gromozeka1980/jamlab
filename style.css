@@ -121,6 +121,10 @@ input[type=range]{width:150px; accent-color:var(--accent);}
 .sheet h3{margin:0 0 4px; font-size:18px;}
 .srow{display:flex; align-items:center; justify-content:space-between; gap:14px; font-size:13px;}
 .srow label{color:var(--muted);} .srow .val{color:var(--text); min-width:42px; text-align:right;}
+/* backing mixer: the master fader with its sub-parts visually nested under it */
+.sgroup{background:rgba(255,255,255,.025); border:1px solid var(--line); border-radius:12px; padding:10px 12px; display:flex; flex-direction:column; gap:10px;}
+.sgroup .subs{margin-left:6px; padding-left:12px; border-left:2px solid var(--line); display:flex; flex-direction:column; gap:10px;}
+.sgroup .subs input[type=range]{width:126px;}
 #closeSettings,#closeHelp{align-self:flex-end; background:var(--zero); border-color:var(--zero); color:#04140a; font-weight:700; padding:9px 22px;}
 
 /* short viewport (phone landscape): keep two rows, just compact the chrome */

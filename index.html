@@ -34,16 +34,17 @@
   <div class="sheet">
     <h3 data-i18n="set.title">⚙ Settings</h3>
     <div class="srow"><label data-i18n="set.lang">Language</label><select id="langSel"><option value="en">English</option><option value="ru">Русский</option></select></div>
-    <div class="srow"><label data-i18n="set.lo">Lowest note</label><select id="loSel"></select></div>
-    <div class="srow"><label data-i18n="set.hi">Highest note</label><select id="hiSel"></select></div>
     <div class="srow"><label data-i18n="set.tone">Tone (brightness)</label><input id="tone" type="range" min="600" max="6000" value="2600"><span class="val" id="toneVal">2600</span></div>
     <div class="srow"><label data-i18n="set.volSolo">Lead volume</label><input id="volSolo" type="range" min="0" max="100" value="80"><span class="val" id="volSoloVal">80%</span></div>
-    <div class="srow"><label data-i18n="set.volAcc">Backing volume</label><input id="volAcc" type="range" min="0" max="100" value="55"><span class="val" id="volAccVal">55%</span></div>
-    <div class="srow"><label data-i18n="set.bgDrums">· Drums</label><input id="bgDrums" type="range" min="0" max="150" value="100"><span class="val" id="bgDrumsVal">100%</span></div>
-    <div class="srow"><label data-i18n="set.bgBass">· Bass</label><input id="bgBass" type="range" min="0" max="150" value="100"><span class="val" id="bgBassVal">100%</span></div>
-    <div class="srow"><label data-i18n="set.bgChord">· Harmony</label><input id="bgChord" type="range" min="0" max="150" value="100"><span class="val" id="bgChordVal">100%</span></div>
+    <div class="sgroup">
+      <div class="srow"><label data-i18n="set.volAcc">Backing volume</label><input id="volAcc" type="range" min="0" max="100" value="55"><span class="val" id="volAccVal">55%</span></div>
+      <div class="subs">
+        <div class="srow"><label data-i18n="set.bgDrums">Drums</label><input id="bgDrums" type="range" min="0" max="150" value="100"><span class="val" id="bgDrumsVal">100%</span></div>
+        <div class="srow"><label data-i18n="set.bgBass">Bass</label><input id="bgBass" type="range" min="0" max="150" value="100"><span class="val" id="bgBassVal">100%</span></div>
+        <div class="srow"><label data-i18n="set.bgChord">Harmony</label><input id="bgChord" type="range" min="0" max="150" value="100"><span class="val" id="bgChordVal">100%</span></div>
+      </div>
+    </div>
     <div class="srow"><label data-i18n="set.viz">Visualizer</label><select id="vizSel"><option value="on" data-i18n="opt.on">On</option><option value="off" data-i18n="opt.off">Off</option></select></div>
-    <div class="srow"><label data-i18n="set.gyro">Gyroscope (phone)</label><select id="gyroSel"><option value="off" data-i18n="opt.off">Off</option><option value="vibrato" data-i18n="gyro.vibrato">Vibrato</option><option value="volume" data-i18n="gyro.volume">Volume</option><option value="tone" data-i18n="gyro.tone">Brightness</option></select></div>
     <div class="srow"><label data-i18n="set.lat">Audio latency</label><button id="latBtn" data-i18n="btn.measure">🔬 Measure</button></div>
     <button id="closeSettings" data-i18n="btn.done">Done</button>
   </div>
@@ -125,6 +126,7 @@
   <div class="ctl" id="ctlTempo"><label data-i18n="ctl.tempo">Tempo</label>
     <div style="display:flex; align-items:center; gap:6px"><input id="bpm" type="range" min="40" max="160" value="85" style="width:90px"><span class="val" id="bpmVal" style="min-width:22px; font-size:11px; color:var(--muted)">85</span></div>
   </div>
+  <div class="ctl" id="ctlGyro"><label data-i18n="ctl.gyro">Tilt</label><select id="gyroSel"><option value="off" data-i18n="opt.off">Off</option><option value="vibrato" data-i18n="gyro.vibrato">Vibrato</option><option value="volume" data-i18n="gyro.volume">Volume</option><option value="tone" data-i18n="gyro.tone">Brightness</option></select></div>
   <div class="ctl" id="ctlBack"><label data-i18n="ctl.back">Backing</label><select id="backSel"></select></div>
   <div class="ctl" id="ctlHarm"><label data-i18n="ctl.harm">Harmony</label><select id="harmSel"></select></div>
   <div class="ctl" id="ctlRhythm"><label data-i18n="ctl.rhythm">Rhythm</label><select id="rhythmSel"></select></div>

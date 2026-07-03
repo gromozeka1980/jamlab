@@ -72,5 +72,6 @@ projects.
 - Pro unlock via Google Play Billing (RevenueCat recommended).
 - Verify the in-app clip **share** works in the WebView; if `navigator.share`
   is flaky on Android WebView, add the `@capacitor/share` plugin.
-- Set `targetSdkVersion = 36` in `android/variables.gradle` (Play requires API 36
-  for new apps from 2026-08-31).
+- `targetSdkVersion`/`compileSdkVersion` are set to **36** in `android/variables.gradle`
+  (Play requires API 36 from 2026-08-31). NOTE: `android/` is git-ignored — after a fresh
+  `cap add android` this must be re-applied by hand.

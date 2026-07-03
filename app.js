@@ -690,11 +690,6 @@ landSel.addEventListener("change",()=>{ settings.jazzLand=landSel.value; saveSet
 phraseSel.addEventListener("change",()=>{ settings.jazzPhrase=phraseSel.value; saveSettings(); });
 timingSel.addEventListener("change",()=>{ settings.jazzTiming=timingSel.value; saveSettings(); });
 
-const loSel=document.getElementById("loSel"), hiSel=document.getElementById("hiSel");
-for(let m=24;m<=96;m++){ loSel.appendChild(new Option(midiToName(m),m)); hiSel.appendChild(new Option(midiToName(m),m)); }
-loSel.value=settings.minMidi; hiSel.value=settings.maxMidi;
-loSel.addEventListener("change",()=>{ settings.minMidi=+loSel.value; currentIndex=clampIndex(currentIndex); updateDisplay(); saveSettings(); });
-hiSel.addEventListener("change",()=>{ settings.maxMidi=+hiSel.value; currentIndex=clampIndex(currentIndex); updateDisplay(); saveSettings(); });
 const bpm=document.getElementById("bpm"), bpmVal=document.getElementById("bpmVal");
 bpm.addEventListener("input",()=>{settings.bpm=+bpm.value; bpmVal.textContent=bpm.value;});
 const setVal=(id,txt)=>{ const e=document.getElementById(id); if(e) e.textContent=txt; };
@@ -706,8 +701,8 @@ const bgBass=document.getElementById("bgBass"); bgBass.addEventListener("input",
 const bgChord=document.getElementById("bgChord"); bgChord.addEventListener("input",()=>{settings.bgChord=bgChord.value/100; if(busChord) busChord.gain.value=settings.bgChord; setVal('bgChordVal',bgChord.value+'%'); saveSettings();});
 const vizSel=document.getElementById("vizSel"); vizSel.addEventListener("change",()=>{ settings.viz=vizSel.value==='on'; saveSettings(); });
 const gyroSel=document.getElementById("gyroSel"); gyroSel.addEventListener("change",()=>{ resetGyroParams(); settings.gyro=gyroSel.value; if(settings.gyro!=='off') enableGyro(); saveSettings(); });
+if(!TOUCH) document.getElementById("ctlGyro").style.display="none";   // tilt lives in the top bar; pointless on desktop
 function applyPrefsToControls(){
-  loSel.value=settings.minMidi; hiSel.value=settings.maxMidi;
   tone.value=settings.tone;
   volSolo.value=Math.round(settings.volSolo*100); volAcc.value=Math.round(settings.volAcc*100);
   bgDrums.value=Math.round(settings.bgDrums*100); bgBass.value=Math.round(settings.bgBass*100); bgChord.value=Math.round(settings.bgChord*100);
@@ -806,6 +801,16 @@ document.querySelectorAll(".pick").forEach(p=>p.addEventListener("click",()=>{
 }));
 // back to the style-picker start screen
 document.getElementById("homeBtn").addEventListener("click",()=>{ if(accOn) stopBacking(); overlay.style.display="flex"; });
+// Android back button: open sheet → close it (recording preview acts like Cancel);
+// play screen → style picker; style picker → leave the app
+if(NPLUG && NPLUG.App){
+  NPLUG.App.addListener('backButton', ()=>{
+    const sheet=SHEETS.map(id=>document.getElementById(id)).find(el=>!el.classList.contains('hidden'));
+    if(sheet){ if(sheet.id==='recov') document.getElementById('recVid').pause(); sheet.classList.add('hidden'); return; }
+    if(overlay.style.display==='none'){ if(accOn) stopBacking(); overlay.style.display='flex'; return; }
+    NPLUG.App.exitApp();
+  });
+}
 
 // initial build (under the overlay)
 applyPrefsToControls();
