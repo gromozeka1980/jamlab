@@ -447,8 +447,9 @@ function startPadKoto(){ stopPad(); const t0=actx.currentTime;
     const f=actx.createBiquadFilter();f.type='lowpass';f.frequency.value=850; const g=actx.createGain();g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(vol,t0+1.4);
     const lfo=actx.createOscillator(),lg=actx.createGain();lfo.frequency.value=0.12+i*0.03;lg.gain.value=0.015;lfo.connect(lg);lg.connect(g.gain);
     o1.connect(f);o2.connect(f);f.connect(g);g.connect(busChord);o1.start(t0);o2.start(t0);lfo.start(t0); padNodes.push({g,stops:[o1,o2,lfo]}); }); }
+// voiced up + a quiet sub: pure sines around 110 Hz vanish on phone speakers
 function startPadFlute(){ stopPad(); const t0=actx.currentTime;
-  [[settings.rootMidi-12,0.06],[settings.rootMidi-5,0.04]].forEach(([m,vol],i)=>{
+  [[settings.rootMidi-12,0.045],[settings.rootMidi,0.06],[settings.rootMidi+7,0.038]].forEach(([m,vol],i)=>{
     const o=actx.createOscillator();o.type='sine';o.frequency.value=midiToFreq(m); const g=actx.createGain();g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(vol,t0+2.0);
     const lfo=actx.createOscillator(),lg=actx.createGain();lfo.frequency.value=0.1+i*0.03;lg.gain.value=0.012;lfo.connect(lg);lg.connect(g.gain);
     o.connect(g);g.connect(busChord);o.start(t0);lfo.start(t0); padNodes.push({g,stops:[o,lfo]}); });
