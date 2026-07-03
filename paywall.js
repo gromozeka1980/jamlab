@@ -1,5 +1,5 @@
 // Paywall: free-tier gating + RevenueCat billing glue (via the Capacitor bridge, no bundler).
-// Free tier: Bright fully + Blues in its canonical form (Major × Shuffle). Everything else is Pro.
+// Free tier: East fully + Blues in its canonical form (Major × Shuffle). Everything else is Pro.
 // The web build stays fully open (it is the demo); add ?paywall to the URL to preview the locks in a browser.
 import { t } from './i18n.js';
 
@@ -8,7 +8,7 @@ const RC = (NATIVE && window.Capacitor.Plugins) ? window.Capacitor.Plugins.Purch
 const RC_API_KEY = '';                       // TODO: RevenueCat public Google key (goog_…) once the account is wired up
 const ENTITLEMENT = 'pro';
 
-export const FREE_MODES = new Set(['blues','light']);
+export const FREE_MODES = new Set(['blues','vostok']);
 export const FREE_BLUES = { harmony:new Set(['major']), rhythm:new Set(['shuffle']) };
 const GATED = NATIVE || new URLSearchParams(location.search).has('paywall');
 
