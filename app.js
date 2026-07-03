@@ -182,7 +182,9 @@ function quantizeToPocket(now,notesPerBeat){ if(!jazzBeatLen) return now;   // s
 function glideVoice(v,tf){ v.baseFreq=tf; const t0=actx.currentTime; let b=v.dragBend; if(kbBend>0) b=Math.max(b,kbBend);
   const semis=Math.max(-v.maxDown,Math.min(v.maxUp,b)), r=Math.pow(2,semis/12);
   for(const fn of v.freqNodes) fn.osc.frequency.setTargetAtTime(tf*fn.mult*r,t0,0.09); }   // settle held note to a chord tone
+const VOICE_CAP=6;                                 // voice stealing: a palm on the screen must not overload the audio thread
 function noteOn(id,offset,el){ initAudio(); resumeAudio(); if(activeVoices.has(id)) return null;
+  if(activeVoices.size>=VOICE_CAP) stopVoice(activeVoices.keys().next().value);   // steal the oldest voice
   currentIndex=clampIndex(currentIndex+offset);
   const bt=bendTargets(currentIndex); let freq=pitchFreq(currentIndex), approach=0, playedMidi=null;
   if(M.id==='jazz' && curChord && settings.jazzPhrase!=='free'){

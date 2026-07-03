@@ -4,6 +4,7 @@ import { t } from './i18n.js';
 import { viz } from './viz.js';
 import { actx, comp, recDest, initAudio, resumeAudio } from './audio.js';
 
+const REC_MAX_MS=5*60*1000;
 let mediaRec=null, recChunks=[], recStart=0, recTimer=null, recTracks=null;
 let tapDest=null;                                   // local fallback tap if the shared recDest feed died
 const recBtn=document.getElementById("recBtn");
@@ -69,7 +70,9 @@ function startRecording(){
   };
   mediaRec.start(500);                              // timeslice — data is collected as it goes
   recStart=Date.now(); recBtn.classList.add('rec');
-  recTimer=setInterval(()=>{ const s=Math.floor((Date.now()-recStart)/1000); recBtn.textContent=t('btn.recStop')+Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); },250);
+  recTimer=setInterval(()=>{ const ms=Date.now()-recStart;
+    if(ms>=REC_MAX_MS){ stopRecording(); return; }  // chunks live in memory — cap the clip length
+    const s=Math.floor(ms/1000); recBtn.textContent=t('btn.recStop')+Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); },250);
 }
 function stopRecording(){ if(mediaRec && mediaRec.state!=='inactive') mediaRec.stop(); clearInterval(recTimer); recBtn.classList.remove('rec'); recBtn.textContent=t('btn.rec'); }
 let lastBlob=null, lastFile=null, lastUrl=null;
