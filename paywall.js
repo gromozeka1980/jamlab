@@ -1,5 +1,5 @@
 // Paywall: free-tier gating + RevenueCat billing glue (via the Capacitor bridge, no bundler).
-// Free tier: East fully + Blues in its canonical form (Major × Shuffle). Everything else is Pro.
+// Free tier: Blues and East, complete. Everything else is Pro.
 // The web build stays fully open (it is the demo); add ?paywall to the URL to preview the locks in a browser.
 import { t } from './i18n.js';
 
@@ -9,7 +9,6 @@ const RC_API_KEY = '';                       // TODO: RevenueCat public Google k
 const ENTITLEMENT = 'pro';
 
 export const FREE_MODES = new Set(['blues','vostok']);
-export const FREE_BLUES = { harmony:new Set(['major']), rhythm:new Set(['shuffle']) };
 const GATED = NATIVE || new URLSearchParams(location.search).has('paywall');
 
 let pro=false; try{ pro = localStorage.getItem('jamlab.pro')==='1'; }catch(e){}
@@ -17,7 +16,6 @@ const listeners=[];
 export function onProChange(fn){ listeners.push(fn); }
 export function isPro(){ return pro || !GATED; }
 export function modeLocked(id){ return !isPro() && !FREE_MODES.has(id); }
-export function bluesLocked(kind,val){ return !isPro() && FREE_BLUES[kind] && !FREE_BLUES[kind].has(val); }
 function setPro(v){ pro=!!v; try{ v?localStorage.setItem('jamlab.pro','1'):localStorage.removeItem('jamlab.pro'); }catch(e){}
   listeners.forEach(f=>{ try{f();}catch(e){} }); }
 

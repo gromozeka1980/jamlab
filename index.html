@@ -18,16 +18,18 @@
   <div data-i18n="app.tagline" style="color:var(--muted); font-size:12px; letter-spacing:2.5px; text-transform:uppercase; margin:-8px 0 2px;">Relational instruments</div>
   <p data-i18n="intro.p">Keys are steps along a scale, not separate notes — you can't play a wrong one. Pick an instrument:</p>
   <div class="pickers">
+    <!-- free tier first, Jazz (experimental) last -->
     <div class="pick" data-mode="blues"><b data-i18n="pick.blues.t">Blues</b><span data-i18n="pick.blues.d">blues scale, bends, 12-bar backing</span></div>
-    <div class="pick" data-mode="jazz"><b data-i18n="pick.jazz.t">Jazz</b><span data-i18n="pick.jazz.d">the scale follows the chords (golden sequence)</span></div>
+    <div class="pick" data-mode="vostok"><b data-i18n="pick.vostok.t">East</b><span data-i18n="pick.vostok.d">phrygian dominant, hungarian scale, drone</span></div>
     <div class="pick" data-mode="koto"><b data-i18n="pick.koto.t">Koto</b><span data-i18n="pick.koto.d">Japanese pentatonic, drone/ostinato</span></div>
     <div class="pick" data-mode="dream"><b data-i18n="pick.dream.t">Dream</b><span data-i18n="pick.dream.d">whole-tone scale, floating pad</span></div>
     <div class="pick" data-mode="gamelan"><b data-i18n="pick.gamelan.t">Gamelan</b><span data-i18n="pick.gamelan.d">pelog/slendro, gong and metallophone</span></div>
-    <div class="pick" data-mode="vostok"><b data-i18n="pick.vostok.t">East</b><span data-i18n="pick.vostok.d">phrygian dominant, hungarian scale, drone</span></div>
     <div class="pick" data-mode="light"><b data-i18n="pick.light.t">Bright</b><span data-i18n="pick.light.d">major/minor pentatonic</span></div>
     <div class="pick" data-mode="synth"><b data-i18n="pick.synth.t">Synthwave</b><span data-i18n="pick.synth.d">neon minor, pumping bass, four-on-the-floor</span></div>
+    <div class="pick" data-mode="jazz"><b data-i18n="pick.jazz.t">Jazz</b><span data-i18n="pick.jazz.d">the scale follows the chords (golden sequence)</span></div>
     <!-- Dorian, Cosmos, flute and Lo-fi are hidden (code kept in MODES) -->
   </div>
+  <button id="helpBtn" data-i18n="btn.help">❔ Help</button>
 </div>
 
 <div id="settings" class="hidden" role="dialog" aria-modal="true">
@@ -94,7 +96,6 @@
     <h3 data-i18n="pw.title">Unlock everything</h3>
     <ul style="margin:0; padding-left:18px; color:var(--muted); font-size:13px; line-height:1.55; display:flex; flex-direction:column; gap:5px;">
       <li data-i18n="pw.li1"></li>
-      <li data-i18n="pw.li2"></li>
       <li data-i18n="pw.li3"></li>
       <li data-i18n="pw.li4"></li>
     </ul>
@@ -116,6 +117,7 @@
     <div style="display:flex; align-items:center; gap:6px"><input id="bpm" type="range" min="40" max="160" value="85" style="width:90px"><span class="val" id="bpmVal" style="min-width:22px; font-size:11px; color:var(--muted)">85</span></div>
   </div>
   <div class="ctl" id="ctlGyro"><label data-i18n="ctl.gyro">Tilt</label><select id="gyroSel"><option value="off" data-i18n="opt.off">Off</option><option value="vibrato" data-i18n="gyro.vibrato">Vibrato</option><option value="volume" data-i18n="gyro.volume">Volume</option><option value="tone" data-i18n="gyro.tone">Brightness</option></select></div>
+  <div class="ctl" id="ctlJazzHelp"><button id="jazzHelpBtn" class="jhelp" data-i18n="btn.jazzHelp">About Jazz</button></div>
   <div class="ctl" id="ctlBack"><label data-i18n="ctl.back">Backing</label><select id="backSel"></select></div>
   <div class="ctl" id="ctlHarm"><label data-i18n="ctl.harm">Harmony</label><select id="harmSel"></select></div>
   <div class="ctl" id="ctlRhythm"><label data-i18n="ctl.rhythm">Rhythm</label><select id="rhythmSel"></select></div>
@@ -127,7 +129,7 @@
 
 <div class="display">
   <div class="note" id="noteName">—</div>
-  <div class="role"><b id="roleName"></b><br><span class="tip" id="tip"></span></div>
+  <div class="role"><b id="roleName"></b></div>
   <div class="chords" id="chordBox" style="display:none"><b id="chordNow"></b><span id="chordNext"></span></div>
 </div>
 
@@ -144,10 +146,8 @@
 <!-- bottom bar: things you reach for while playing (perform) -->
 <div class="extra" id="extra"></div>
 <div class="controls actions" id="bottombar">
-  <div class="ctl"><button id="homeBtn" data-i18n="ctl.styles">⌂ Styles</button></div>
   <div class="ctl"><button id="accBtn" class="toggle" data-i18n="btn.bgStart">▶ Backing</button></div>
   <div class="ctl"><button id="recBtn" data-i18n="btn.rec">⏺ Record</button></div>
-  <div class="ctl"><button id="helpBtn" data-i18n="btn.help">❔ Help</button></div>
   <div class="ctl"><button id="settingsBtn" data-i18n="btn.settings">⚙ Settings</button></div>
 </div>
 <div class="hint" id="hint"></div>

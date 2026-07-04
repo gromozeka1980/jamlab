@@ -9,7 +9,7 @@ import { actx, comp, leadBus, leadFilter, leadOut, accBus, busPerc, busBass, bus
          initAudio, resumeAudio, accGain } from './audio.js';
 import { viz, cssRgb } from './viz.js';
 import { refreshRecLabel } from './rec.js';
-import { isPro, modeLocked, bluesLocked, showPaywall, onProChange, initBilling } from './paywall.js';
+import { isPro, modeLocked, showPaywall, onProChange, initBilling } from './paywall.js';
 
 // true inside the native Capacitor app (vs the plain web build)
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
@@ -213,7 +213,8 @@ function noteOn(id,offset,el){ initAudio(); resumeAudio(); if(activeVoices.has(i
 function noteOff(id,el){ stopVoice(id);
   heldNotes.delete(id); viz.keysHeld([...heldNotes.values()]);
   if(activeVoices.size===0){ viz.liveNote(null,0); elNote.classList.remove('bup','bdown'); }   // silence → no note in the video
-  if(el){el.classList.remove("active","bending","bent","nobend","down"); el.style.setProperty("--bend",0); const a=el.querySelector(".arrow"); if(a)a.textContent="↑";} }
+  if(el){el.classList.remove("active","bending","bent","nobend","down"); el.style.setProperty("--bend",0);}
+  refreshKeyLabels(); }                                                        // restore the per-key bend arrows
 function shiftOctave(dir){ currentIndex=clampIndex(currentIndex+dir*(M.kind==='harmonic'?8:SCALE.length)); updateDisplay(); }
 function resetToRoot(){ currentIndex = (M.kind==='harmonic') ? clampIndex(Math.round(currentIndex/8)*8) : nearestRootIndex(pitchFreq(currentIndex)); updateDisplay(); }
 
@@ -233,7 +234,7 @@ function applyLadLock(){            // disable scales that don't fit the harmony
 }
 
 /* ============ Display ============ */
-const elNote=document.getElementById("noteName"), elRole=document.getElementById("roleName"), elTip=document.getElementById("tip");
+const elNote=document.getElementById("noteName"), elRole=document.getElementById("roleName");
 function updateDisplay(){
   const lab=pitchLabel(currentIndex); elNote.textContent=lab.note;
   let role;
@@ -242,13 +243,12 @@ function updateDisplay(){
   else { const len=SCALE.length, step=((currentIndex%len)+len)%len, oct=Math.floor(currentIndex/len);
     role=degName(SCALE[step])+(oct? " · "+t('role.oct')+" "+(oct>0?"+":"")+oct : ""); }
   elRole.textContent=role;
-  const bt=bendTargets(currentIndex), parts=[];
-  if(bt.up) parts.push("↑ "+bt.up.name); if(bt.down) parts.push("↓ "+bt.down.name);
-  elTip.textContent = parts.length ? t('tip.bend')+" "+parts.join("  ·  ") : "";
   refreshKeyLabels();
 }
 function refreshKeyLabels(){ const ct=curChord; for(const k of noteKeys){
     const idx=clampIndex(currentIndex+k.off), lab=pitchLabel(idx); k.lead.textContent=lab.deg+" ("+lab.note+")";
+    const bt=bendTargets(idx), ar=k.el.querySelector('.arrow');                 // per-key bend directions: ↑ ↓ ↕
+    if(ar) ar.textContent=(bt.up&&bt.down)?'↕':bt.up?'↑':bt.down?'↓':'';
     let role=0;                                  // current-chord tone: 1/3/5/7
     if(ct){ const pc=((indexToMidi(idx)%12)+12)%12;
       if(pc===ct.r) role=1; else if(pc===(ct.r+ct.ivs[1])%12) role=3;
@@ -648,6 +648,7 @@ function setMode(id){ const was=accOn; if(actx) stopBacking();
   document.getElementById("ctlLand").style.display   = isJazz?'':'none';
   document.getElementById("ctlPhrase").style.display = isJazz?'':'none';
   document.getElementById("ctlTiming").style.display = isJazz?'':'none';
+  document.getElementById("ctlJazzHelp").style.display = isJazz?'':'none';
   if(isBlues){ settings.harmony='major'; settings.rhythm='shuffle'; harmSel.value='major'; rhythmSel.value='shuffle'; }
   else { settings.backing=M.defBacking; buildBackingOptions(); }
   if(isJazz){ colorSel.value=settings.jazzColor; landSel.value=settings.jazzLand; phraseSel.value=settings.jazzPhrase; timingSel.value=settings.jazzTiming; }
@@ -673,16 +674,12 @@ backSel.addEventListener("change",()=>{ settings.backing=backSel.value; if(accOn
 const harmSel=document.getElementById("harmSel"), rhythmSel=document.getElementById("rhythmSel");
 function populateHarmRhythm(){
   const hv=harmSel.value, rv=rhythmSel.value;
-  harmSel.innerHTML=""; HARM_OPTS.forEach(([v,k])=>harmSel.appendChild(new Option(t(k)+(bluesLocked('harmony',v)?t('opt.pro'):''),v)));
-  rhythmSel.innerHTML=""; RHY_OPTS.forEach(([v,k])=>rhythmSel.appendChild(new Option(t(k)+(bluesLocked('rhythm',v)?t('opt.pro'):''),v)));
+  harmSel.innerHTML=""; HARM_OPTS.forEach(([v,k])=>harmSel.appendChild(new Option(t(k),v)));
+  rhythmSel.innerHTML=""; RHY_OPTS.forEach(([v,k])=>rhythmSel.appendChild(new Option(t(k),v)));
   if(hv) harmSel.value=hv; if(rv) rhythmSel.value=rv;
 }
-harmSel.addEventListener("change",()=>{
-  if(bluesLocked('harmony',harmSel.value)){ harmSel.value=settings.harmony; showPaywall(); return; }
-  settings.harmony=harmSel.value; applyLadLock(); if(accOn){stopBacking();startBacking();} });  // scale locked to the harmony, restart from bar I
-rhythmSel.addEventListener("change",()=>{
-  if(bluesLocked('rhythm',rhythmSel.value)){ rhythmSel.value=settings.rhythm; showPaywall(); return; }
-  settings.rhythm=rhythmSel.value; });   // rhythm changes on the fly
+harmSel.addEventListener("change",()=>{ settings.harmony=harmSel.value; applyLadLock(); if(accOn){stopBacking();startBacking();} });  // scale locked to the harmony, restart from bar I
+rhythmSel.addEventListener("change",()=>{ settings.rhythm=rhythmSel.value; });   // rhythm changes on the fly
 
 const colorSel=document.getElementById("colorSel"), landSel=document.getElementById("landSel"), phraseSel=document.getElementById("phraseSel"), timingSel=document.getElementById("timingSel");
 colorSel.addEventListener("change",()=>{ settings.jazzColor=colorSel.value; saveSettings(); });   // scales apply from the next chord
@@ -715,12 +712,19 @@ const settingsEl=document.getElementById("settings");
 document.getElementById("settingsBtn").addEventListener("click",()=>settingsEl.classList.remove("hidden"));
 document.getElementById("closeSettings").addEventListener("click",()=>settingsEl.classList.add("hidden"));
 const helpEl=document.getElementById("help");
-document.getElementById("helpBtn").addEventListener("click",()=>{ document.getElementById("helpJazz").style.display=(M.id==='jazz')?'block':'none'; helpEl.classList.remove("hidden"); });
+function showHelp(withJazz){ document.getElementById("helpJazz").style.display=withJazz?'block':'none';
+  helpEl.classList.remove("hidden");
+  if(withJazz) document.getElementById("helpJazz").scrollIntoView({block:'start'}); }
+document.getElementById("helpBtn").addEventListener("click",()=>showHelp(false));       // general help lives on the start screen
+document.getElementById("jazzHelpBtn").addEventListener("click",()=>showHelp(true));    // jazz help lives inside jazz
 document.getElementById("closeHelp").addEventListener("click",()=>helpEl.classList.add("hidden"));
 accBtn.addEventListener("click",()=> accOn?stopBacking():startBacking());
 // close any open sheet with Escape or a tap on the backdrop
 const SHEETS=["settings","help","recov","paywall"];
-document.addEventListener("keydown",e=>{ if(e.key==="Escape") SHEETS.forEach(id=>document.getElementById(id).classList.add("hidden")); });
+document.addEventListener("keydown",e=>{ if(e.key!=="Escape") return;
+  let closed=false;
+  SHEETS.forEach(id=>{ const el=document.getElementById(id); if(!el.classList.contains("hidden")){ el.classList.add("hidden"); closed=true; } });
+  if(!closed && overlay.style.display==='none') goHome(); });   // Esc with nothing open → back to the picker
 SHEETS.forEach(id=>{ const el=document.getElementById(id); el.addEventListener("pointerdown",e=>{ if(e.target===el) el.classList.add("hidden"); }); });
 // pause the backing while the recording preview is open — it clashes with the clip's own audio;
 // watching the class covers every close path (button, Escape, backdrop tap)
@@ -755,7 +759,8 @@ langSel.addEventListener("change",()=>setLang(langSel.value));
 /* ============ Instrument picker and start ============ */
 const overlay=document.getElementById("overlay");
 function refreshLocks(){ document.querySelectorAll('.pick').forEach(p=>p.classList.toggle('locked', modeLocked(p.dataset.mode))); }
-onProChange(()=>{ refreshLocks(); populateHarmRhythm(); });   // a purchase unlocks everything in place
+onProChange(refreshLocks);   // a purchase unlocks everything in place
+function goHome(){ if(accOn) stopBacking(); overlay.style.display="flex"; }
 document.querySelectorAll(".pick").forEach(p=>p.addEventListener("click",()=>{
   if(modeLocked(p.dataset.mode)){ showPaywall(); return; }
   initAudio(); resumeAudio();
@@ -763,21 +768,32 @@ document.querySelectorAll(".pick").forEach(p=>p.addEventListener("click",()=>{
   if(accOn) stopBacking();              // so the backing doesn't double up on a repeat pick
   setMode(p.dataset.mode);
   overlay.style.display="none";
+  if(!NATIVE) history.pushState({jam:1},'');   // browser Back mirrors the Android back gesture
   updateDisplay(); startBacking();
-  try{ if(!localStorage.getItem('jamlab.helpSeen')){ localStorage.setItem('jamlab.helpSeen','1'); helpEl.classList.remove('hidden'); } }catch(e){}  // first-run tutorial
+  try{                                          // first-run tutorials: general once, jazz extras on first jazz entry
+    const firstRun=!localStorage.getItem('jamlab.helpSeen');
+    const firstJazz=p.dataset.mode==='jazz' && !localStorage.getItem('jamlab.jazzHelpSeen');
+    if(firstRun) localStorage.setItem('jamlab.helpSeen','1');
+    if(firstJazz) localStorage.setItem('jamlab.jazzHelpSeen','1');
+    if(firstRun||firstJazz) showHelp(p.dataset.mode==='jazz');
+  }catch(e){}
 }));
-// back to the style-picker start screen
-document.getElementById("homeBtn").addEventListener("click",()=>{ if(accOn) stopBacking(); overlay.style.display="flex"; });
 // Android back button: open sheet → close it (recording preview acts like Cancel);
 // play screen → style picker; style picker → leave the app
+function closeTopSheet(){
+  const sheet=SHEETS.map(id=>document.getElementById(id)).find(el=>!el.classList.contains('hidden'));
+  if(!sheet) return false;
+  if(sheet.id==='recov') document.getElementById('recVid').pause();
+  sheet.classList.add('hidden'); return true;
+}
 if(NPLUG && NPLUG.App){
   NPLUG.App.addListener('backButton', ()=>{
-    const sheet=SHEETS.map(id=>document.getElementById(id)).find(el=>!el.classList.contains('hidden'));
-    if(sheet){ if(sheet.id==='recov') document.getElementById('recVid').pause(); sheet.classList.add('hidden'); return; }
-    if(overlay.style.display==='none'){ if(accOn) stopBacking(); overlay.style.display='flex'; return; }
+    if(closeTopSheet()) return;
+    if(overlay.style.display==='none'){ goHome(); return; }
     NPLUG.App.exitApp();
   });
 }
+window.addEventListener('popstate',()=>{ if(!NATIVE && overlay.style.display==='none'){ closeTopSheet(); goHome(); } });
 
 // initial build (under the overlay)
 applyPrefsToControls();
