@@ -446,7 +446,8 @@ function modalScheduler(){ const b=curBack(), beat=60/settings.bpm, vamp=M.vamp|
     const step=mStep%8, bar=Math.floor(mStep/8), vroot = b.vamp ? (vamp[bar%vamp.length]||0) : 0;
     if(b.perc) percHit(M.perc, step, nextNoteTime);
     if(b.bass && (step===0||step===4)) modalBass(vroot + (step===4?7:0), nextNoteTime);
-    if(b.arp) kotoPluck(vroot + ARP[mStep%ARP.length], nextNoteTime);
+    if(b.arp){ const AP=(M.arps&&M.arps[settings.variant])||ARP, av=AP[mStep%AP.length];   // lab: per-scale custom arp with rests
+      if(av!=null) kotoPluck(vroot+av, nextNoteTime); }
     nextNoteTime += beat/2; mStep++;
   } }
 
@@ -778,36 +779,59 @@ langSel.addEventListener("change",()=>setLang(langSel.value));
 const DEG12=['1','♭2','2','♭3','3','4','♯4','5','♭6','6','♭7','7'];
 let labScales=[]; try{ labScales=JSON.parse(localStorage.getItem('jamlab.labScales')||'[]')||[]; }catch(e){ labScales=[]; }
 function saveLabStore(){ try{ localStorage.setItem('jamlab.labScales',JSON.stringify(labScales)); }catch(e){} }
-function rebuildLabMode(){ const m=MODES.lab; m.scales={}; m.downScales={}; m.variants=[];
+function rebuildLabMode(){ const m=MODES.lab; m.scales={}; m.downScales={}; m.arps={}; m.variants=[];
   for(const p of LAB_PRESETS){ m.scales[p.id]=p.pcs; if(p.down) m.downScales[p.id]=p.down; m.variants.push({id:p.id,label:p.label}); }
-  for(const c of labScales){ m.scales[c.id]=c.pcs; m.variants.push({id:c.id,label:c.name}); }
+  for(const c of labScales){ m.scales[c.id]=c.pcs; if(c.down) m.downScales[c.id]=c.down; if(c.arp) m.arps[c.id]=c.arp; m.variants.push({id:c.id,label:c.name}); }
   if(!m.scales[m.defVariant]) m.defVariant='p_harm';
 }
 rebuildLabMode();
 const percSel=document.getElementById('percSel');
 percSel.addEventListener('change',()=>{ if(M.lab){ M.perc=percSel.value; try{ localStorage.setItem('jamlab.labPerc',percSel.value); }catch(e){} } });
-const labov=document.getElementById('labov'), labPcs=document.getElementById('labPcs'),
+const labov=document.getElementById('labov'), labPcs=document.getElementById('labPcs'), labPcsDn=document.getElementById('labPcsDn'),
+      labDownSel=document.getElementById('labDownSel'), labArpEl=document.getElementById('labArp'),
       labName=document.getElementById('labName'), labCount=document.getElementById('labCount');
-let labSel=new Set([0]);
-function labRender(){ labPcs.innerHTML='';
-  for(let pc=0;pc<12;pc++){ const b=document.createElement('button'); b.className='pcbtn'+(labSel.has(pc)?' on':''); b.textContent=DEG12[pc]; b.disabled=(pc===0);
-    b.addEventListener('click',()=>{ if(labSel.has(pc)) labSel.delete(pc); else { if(labSel.size>=7) return; labSel.add(pc); tapHaptic('LIGHT'); } labRender(); });
-    labPcs.appendChild(b); }
-  labCount.textContent=t('lab.count',{n:labSel.size}); }
+let labSel=new Set([0]), labSelDn=new Set([0]), labArp=[0,7,12,7];
+function labArpChoices(){ return [null, ...[...labSel].sort((a,b)=>a-b), 12]; }   // rest → scale degrees → octave
+function labArpLabel(v){ return v==null?'·':(v===12?'1↑':DEG12[v]); }
+function labSanitizeArp(){ const ok=new Set([...labSel,12]); labArp=labArp.map(v=>v==null?null:(ok.has(v)?v:0)); }
+function labGrid(host,set){ host.innerHTML='';
+  for(let pc=0;pc<12;pc++){ const b=document.createElement('button'); b.className='pcbtn'+(set.has(pc)?' on':''); b.textContent=DEG12[pc]; b.disabled=(pc===0);
+    b.addEventListener('click',()=>{ if(set.has(pc)) set.delete(pc); else { if(set.size>=7) return; set.add(pc); tapHaptic('LIGHT'); } labRender(); });
+    host.appendChild(b); } }
+function labRender(){
+  labGrid(labPcs,labSel);
+  const dn=labDownSel.value==='on';
+  labPcsDn.style.display=dn?'':'none';
+  if(dn) labGrid(labPcsDn,labSelDn);
+  labSanitizeArp();
+  labArpEl.innerHTML='';
+  labArp.forEach((v,i)=>{ const b=document.createElement('button'); b.className='pcbtn'+(v!=null?' on':''); b.textContent=labArpLabel(v);
+    b.addEventListener('click',()=>{ const ch=labArpChoices(), idx=ch.findIndex(x=>x===v); labArp[i]=ch[(idx+1)%ch.length]; labRender(); });
+    labArpEl.appendChild(b); });
+  labCount.style.color='var(--muted)';
+  labCount.textContent=t('lab.count',{n:labSel.size}) + (dn? '  ·  ↓ '+t('lab.count',{n:labSelDn.size}) : ''); }
 document.getElementById('labBtn').addEventListener('click',()=>{
   labSel=new Set(SCALE); labSel.add(0);
+  labSelDn=new Set(SCALEDN||SCALE); labSelDn.add(0);
+  labDownSel.value=SCALEDN?'on':'off';
   const cur=labScales.find(c=>c.id===settings.variant);
+  labArp=(cur&&cur.arp)?cur.arp.slice():[0,7,12,7];
   labName.value=cur?cur.name:'';
   document.getElementById('labDelete').style.display=cur?'':'none';
   labRender(); labov.classList.remove('hidden'); });
+labDownSel.addEventListener('change',()=>{ if(labDownSel.value==='on'&&labSelDn.size<=1) labSelDn=new Set(labSel); labRender(); });
 document.getElementById('labClose').addEventListener('click',()=>labov.classList.add('hidden'));
 document.getElementById('labSave').addEventListener('click',()=>{
   const pcs=[...labSel].sort((a,b)=>a-b);
+  const useDown=labDownSel.value==='on';
+  const down=useDown?[...labSelDn].sort((a,b)=>a-b):null;
+  if(useDown && down.length!==pcs.length){ labCount.textContent=t('lab.eqErr'); labCount.style.color='#ff8787'; return; }
+  labSanitizeArp();
   let name=labName.value.trim(); if(!name) name=t('lab.defName',{n:labScales.length+1});
   const cur=labScales.find(c=>c.id===settings.variant);
   let id;
-  if(cur){ cur.pcs=pcs; cur.name=name; id=cur.id; }
-  else { id='c'+Date.now().toString(36); labScales.push({id,name,pcs}); }
+  if(cur){ cur.pcs=pcs; cur.name=name; cur.down=down||undefined; cur.arp=labArp.slice(); id=cur.id; }
+  else { id='c'+Date.now().toString(36); labScales.push({id,name,pcs,down:down||undefined,arp:labArp.slice()}); }
   saveLabStore(); rebuildLabMode(); buildLadRow(); setVariant(id);
   labov.classList.add('hidden'); });
 document.getElementById('labDelete').addEventListener('click',()=>{

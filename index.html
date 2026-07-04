@@ -102,6 +102,10 @@
     <h3 data-i18n="lab.title">⚗ Scale builder</h3>
     <div style="font-size:12px; color:var(--muted); line-height:1.45;" data-i18n="lab.hint">Pick up to 7 notes (the root is always on). The scale plays relative to the root.</div>
     <div class="pcgrid" id="labPcs"></div>
+    <div class="srow"><label data-i18n="lab.down">Different scale downwards</label><select id="labDownSel"><option value="off" data-i18n="opt.off">Off</option><option value="on" data-i18n="opt.on">On</option></select></div>
+    <div class="pcgrid" id="labPcsDn" style="display:none"></div>
+    <div style="font-size:12px; color:var(--muted);" data-i18n="lab.arp">Backing arpeggio (tap a step to change it)</div>
+    <div class="arprow" id="labArp"></div>
     <div style="text-align:right; font-size:12px; color:var(--muted);" id="labCount"></div>
     <div class="srow"><label data-i18n="lab.name">Name</label><input id="labName" type="text" maxlength="24" style="flex:1; background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:13px;"></div>
     <div style="display:flex; gap:8px; justify-content:space-between;">

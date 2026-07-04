@@ -138,6 +138,8 @@ input[type=range]{width:150px; accent-color:var(--accent);}
 .pcbtn{min-height:44px; border-radius:10px; font-weight:700; color:var(--muted);}
 .pcbtn.on{background:var(--accent); border-color:var(--accent); color:#15151f;}
 .pcbtn:disabled{opacity:.55;}
+.arprow{display:grid; grid-template-columns:repeat(8,1fr); gap:6px;}
+.arprow .pcbtn{min-height:38px; font-size:12px;}
 #labov{position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:22px; background:rgba(7,8,16,.85); z-index:11;}
 #labov.hidden{display:none;}
 #closeSettings,#closeHelp{align-self:flex-end; background:var(--zero); border-color:var(--zero); color:#04140a; font-weight:700; padding:9px 22px;}
