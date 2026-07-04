@@ -246,6 +246,7 @@ function updateDisplay(){
   refreshKeyLabels();
 }
 function refreshKeyLabels(){ const ct=curChord; for(const k of noteKeys){
+    if(k.el.classList.contains('active')) continue;   // freeze a held key: its label/arrows describe the sounding voice
     const idx=clampIndex(currentIndex+k.off), lab=pitchLabel(idx); k.lead.textContent=lab.deg+" ("+lab.note+")";
     const bt=bendTargets(idx);                                                  // per-key bend directions
     k.el.classList.toggle('canup',!!bt.up); k.el.classList.toggle('candn',!!bt.down);
@@ -711,11 +712,12 @@ const settingsEl=document.getElementById("settings");
 document.getElementById("settingsBtn").addEventListener("click",()=>settingsEl.classList.remove("hidden"));
 document.getElementById("closeSettings").addEventListener("click",()=>settingsEl.classList.add("hidden"));
 const helpEl=document.getElementById("help");
-function showHelp(withJazz){ document.getElementById("helpJazz").style.display=withJazz?'block':'none';
-  helpEl.classList.remove("hidden");
-  if(withJazz) document.getElementById("helpJazz").scrollIntoView({block:'start'}); }
-document.getElementById("helpBtn").addEventListener("click",()=>showHelp(false));       // general help lives on the start screen
-document.getElementById("jazzHelpBtn").addEventListener("click",()=>showHelp(true));    // jazz help lives inside jazz
+function showHelp(withMain,withJazz){
+  document.getElementById("helpMain").style.display=withMain?'block':'none';
+  document.getElementById("helpJazz").style.display=withJazz?'block':'none';
+  helpEl.classList.remove("hidden"); }
+document.getElementById("helpBtn").addEventListener("click",()=>showHelp(true,false));      // general help lives on the start screen
+document.getElementById("jazzHelpBtn").addEventListener("click",()=>showHelp(false,true));  // jazz help shows only the jazz part
 document.getElementById("closeHelp").addEventListener("click",()=>helpEl.classList.add("hidden"));
 accBtn.addEventListener("click",()=> accOn?stopBacking():startBacking());
 // close any open sheet with Escape or a tap on the backdrop
@@ -774,7 +776,7 @@ document.querySelectorAll(".pick").forEach(p=>p.addEventListener("click",()=>{
     const firstJazz=p.dataset.mode==='jazz' && !localStorage.getItem('jamlab.jazzHelpSeen');
     if(firstRun) localStorage.setItem('jamlab.helpSeen','1');
     if(firstJazz) localStorage.setItem('jamlab.jazzHelpSeen','1');
-    if(firstRun||firstJazz) showHelp(p.dataset.mode==='jazz');
+    if(firstRun||firstJazz) showHelp(firstRun, p.dataset.mode==='jazz');
   }catch(e){}
 }));
 // Android back button: open sheet → close it (recording preview acts like Cancel);
