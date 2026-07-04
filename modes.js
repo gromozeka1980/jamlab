@@ -67,6 +67,13 @@ export const MODES = {
     variants:[{id:'dorian',label:'variant.dorian'},{id:'penta',label:'variant.penta'}], defVariant:'dorian',
     backings:[{id:'tape',label:'backing.lofi.tape'}], defBacking:'tape',
   },
+  lab: {
+    id:'lab', name:'mode.lab.name', sub:'mode.lab.sub', voice:'pluck', back:'koto', perc:'taiko',
+    theme:{bg1:'#241b52', accent:'#b39dff', zero:'#8f6fff', neg:'#5b6ee1', pos:'#c77dff', blue:'#9db4ff'},
+    kind:'scale', lab:true,
+    scales:{}, downScales:{}, variants:[], defVariant:'p_harm',   // filled at runtime from presets + saved custom scales
+    backings:[{id:'drone',label:'backing.drone',pad:1},{id:'arp',label:'backing.arp',arp:1},{id:'padperc',label:'backing.light.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.light.arpperc',arp:1,perc:1,bass:1}], defBacking:'arpperc',
+  },
   dorian: {
     id:'dorian', name:'mode.dorian.name', sub:'mode.dorian.sub', voice:'saw', back:'koto',
     theme:{bg1:'#13392b', accent:'#a9e34b', zero:'#37b24d', neg:'#3bc9db', pos:'#82c91e', blue:'#3bc9db'},
@@ -123,6 +130,13 @@ export const DREAMARP=[0,4,8,12,8,4];
 export const GMPAT=[0,1,2,3,4,2,3,4];
 export const DARBUKA=['D','.','t','.','D','t','.','t'];  // baladi-ish pattern over eighths
 export const RIDE=[1,0,1,1,1,0,1,1];               // spang-a-lang over eighths
+
+/* --- lab: built-in presets (melodic minor descends differently — our step model knows direction) --- */
+export const LAB_PRESETS=[
+  {id:'p_harm', label:'variant.harmmin', pcs:[0,2,3,5,7,8,11]},
+  {id:'p_mel',  label:'variant.melmin',  pcs:[0,2,3,5,7,9,11], down:[0,2,3,5,7,8,10]},
+  {id:'p_dbl',  label:'variant.dblharm', pcs:[0,1,4,5,7,8,11]},
+];
 
 /* --- synthwave / lo-fi progressions --- */
 export const SYNTH_PROG=[{root:0,ivs:[0,3,7]},{root:8,ivs:[0,4,7]},{root:3,ivs:[0,4,7]},{root:10,ivs:[0,4,7]}];   // i–VI–III–VII

@@ -4,7 +4,7 @@ import { LANG, t, degName, setLangCode } from './i18n.js';
 import { settings, saveSettings } from './settings.js';
 import { MODES, NOTE_NAMES, HARMONY, HARM_OPTS, HARM_LADS, RHYTHM, RHY_OPTS,
          ARP, DREAMARP, GMPAT, DARBUKA, RIDE, DARING, QUAL, JAZZ_PROG,
-         SYNTH_PROG, LOFI_PROG } from './modes.js';
+         SYNTH_PROG, LOFI_PROG, LAB_PRESETS } from './modes.js';
 import { actx, comp, leadBus, leadFilter, leadOut, accBus, busPerc, busBass, busChord, noiseBuf,
          initAudio, resumeAudio, accGain } from './audio.js';
 import { viz, cssRgb } from './viz.js';
@@ -25,6 +25,7 @@ function tapHaptic(style){ if(NPLUG && NPLUG.Haptics){ try{ NPLUG.Haptics.impact
 
 let M = MODES.blues;
 let SCALE = MODES.blues.scales.minor;
+let SCALEDN = null;                                // descending variant of the scale (melodic-minor style), or null
 let gyroV=0;                                       // current tilt value (0..1)
 let currentIndex = 0;
 
@@ -201,6 +202,10 @@ function noteOn(id,offset,el){ initAudio(); resumeAudio(); if(activeVoices.has(i
     }
     lastJazzMidi=playedMidi; freq=midiToFreq(playedMidi);
   } else lastJazzMidi=null;
+  if(SCALEDN && offset<0 && M.kind==='scale'){               // melodic-minor style: stepping down uses the descending scale
+    const len=SCALE.length, o=Math.floor(currentIndex/len), s=((currentIndex%len)+len)%len;
+    freq=midiToFreq(leadRoot()+12*o+SCALEDN[s]);
+  }
   const when=(M.id==='jazz' && settings.jazzTiming!=='free' && jazzBeatLen) ? quantizeToPocket(actx.currentTime, (+settings.jazzTiming)/4) : undefined;
   const v=makeVoice(freq, bt.up?bt.up.amt:0, bt.down?bt.down.amt:0, approach, when);
   activeVoices.set(id,v); el.classList.add("active");
@@ -209,7 +214,10 @@ function noteOn(id,offset,el){ initAudio(); resumeAudio(); if(activeVoices.has(i
   viz.liveNote(midiToName(Math.round(freqToMidi(freq))),0);
   if(settings.viz){ const r=el.getBoundingClientRect(); const cv=el.classList.contains('neg')?'--neg':el.classList.contains('pos')?'--pos':'--zero'; viz.note(r.left+r.width/2, r.top+10, cssRgb(cv));
     const mm=freqToMidi(freq), p01=Math.max(0,Math.min(1,(mm-settings.minMidi)/Math.max(1,settings.maxMidi-settings.minMidi))); viz.melody(p01); }
-  updateDisplay(); if(playedMidi!=null) elNote.textContent=midiToName(playedMidi); return v; }
+  updateDisplay();
+  if(playedMidi!=null) elNote.textContent=midiToName(playedMidi);
+  else if(SCALEDN && offset<0) elNote.textContent=midiToName(Math.round(freqToMidi(freq)));
+  return v; }
 function noteOff(id,el){ stopVoice(id);
   heldNotes.delete(id); viz.keysHeld([...heldNotes.values()]);
   if(activeVoices.size===0){ viz.liveNote(null,0); elNote.classList.remove('bup','bdown'); }   // silence → no note in the video
@@ -220,6 +228,8 @@ function resetToRoot(){ currentIndex = (M.kind==='harmonic') ? clampIndex(Math.r
 
 function setVariant(id){ if(M.kind!=='scale'||!M.scales||!M.scales[id]) return;
   const oldF=pitchFreq(currentIndex); SCALE=M.scales[id]; settings.variant=id;
+  SCALEDN=(M.downScales&&M.downScales[id])||null;
+  if(M.lab){ try{ localStorage.setItem('jamlab.labVariant',id); }catch(e){} }
   currentIndex=clampIndex(nearestIndex(oldF));
   [...ladHost.querySelectorAll('button')].forEach(b=>b.classList.toggle('active', b.dataset.v===id));
   buildKeys();
@@ -426,6 +436,7 @@ function tek(time,vel){ const n=actx.createBufferSource();n.buffer=noiseBuf;cons
 function shaker(time,vel){ const n=actx.createBufferSource();n.buffer=noiseBuf;const f=actx.createBiquadFilter();f.type='highpass';f.frequency.value=6500;const g=accGain(0,busPerc);
   g.gain.setValueAtTime(vel,time);g.gain.exponentialRampToValueAtTime(0.001,time+0.04);n.connect(f);f.connect(g);n.start(time);n.stop(time+0.06); }
 function percHit(type,step,time){
+  if(!type) return;                                         // lab: percussion set to "None"
   if(type==='taiko'){ if(step===0) taiko(time,1.0); else if(step===4) taiko(time,0.6); else if(step===6) taiko(time,0.32); }
   else if(type==='darbuka'){ const x=DARBUKA[step]; if(x==='D') doum(time); else if(x==='t') tek(time,0.3); }
   else { shaker(time, step%2?0.18:0.1); }
@@ -635,7 +646,11 @@ function setHint(){ document.getElementById("hint").innerHTML = t(TOUCH ? 'hint.
 
 function setMode(id){ const was=accOn; if(actx) stopBacking();
   M=MODES[id]; applyTheme(M.theme);
-  if(M.kind==='scale' && M.scales){ settings.variant=M.defVariant; SCALE=M.scales[M.defVariant]; }
+  if(M.lab){ rebuildLabMode();                                 // lab: variants come from presets + saved custom scales
+    try{ const lv=localStorage.getItem('jamlab.labVariant'); if(lv && M.scales[lv]) M.defVariant=lv;
+      const lp=localStorage.getItem('jamlab.labPerc'); M.perc=(lp===null)?'taiko':lp; percSel.value=M.perc; }catch(e){} }
+  if(M.kind==='scale' && M.scales){ settings.variant=M.defVariant; SCALE=M.scales[M.defVariant];
+    SCALEDN=(M.downScales&&M.downScales[M.defVariant])||null; }
   if(M.id==='jazz'){ settings.rootMidi=60; document.getElementById("rootSel").value=60; applyJazzChord(JAZZ_PROG[0]); }
   settings.bpm = M.defBpm||85;                                  // mode's default tempo (jazz — 160)
   document.getElementById("bpm").value=settings.bpm; document.getElementById("bpmVal").textContent=settings.bpm;
@@ -649,6 +664,8 @@ function setMode(id){ const was=accOn; if(actx) stopBacking();
   document.getElementById("ctlPhrase").style.display = isJazz?'':'none';
   document.getElementById("ctlTiming").style.display = isJazz?'':'none';
   document.getElementById("ctlJazzHelp").style.display = isJazz?'':'none';
+  document.getElementById("ctlPerc").style.display = M.lab?'':'none';
+  document.getElementById("ctlLab").style.display = M.lab?'':'none';
   if(isBlues){ settings.harmony='major'; settings.rhythm='shuffle'; harmSel.value='major'; rhythmSel.value='shuffle'; }
   else { settings.backing=M.defBacking; buildBackingOptions(); }
   if(isJazz){ colorSel.value=settings.jazzColor; landSel.value=settings.jazzLand; phraseSel.value=settings.jazzPhrase; timingSel.value=settings.jazzTiming; }
@@ -721,7 +738,7 @@ document.getElementById("jazzHelpBtn").addEventListener("click",()=>showHelp(fal
 document.getElementById("closeHelp").addEventListener("click",()=>helpEl.classList.add("hidden"));
 accBtn.addEventListener("click",()=> accOn?stopBacking():startBacking());
 // close any open sheet with Escape or a tap on the backdrop
-const SHEETS=["settings","help","recov","paywall"];
+const SHEETS=["settings","help","recov","paywall","labov"];
 document.addEventListener("keydown",e=>{ if(e.key!=="Escape") return;
   let closed=false;
   SHEETS.forEach(id=>{ const el=document.getElementById(id); if(!el.classList.contains("hidden")){ el.classList.add("hidden"); closed=true; } });
@@ -756,6 +773,47 @@ function refreshLabels(){
 function setLang(l){ const v=setLangCode(l); document.documentElement.lang=v; refreshLabels(); }
 const langSel=document.getElementById("langSel"); langSel.value=LANG;
 langSel.addEventListener("change",()=>setLang(langSel.value));
+
+/* ============ Lab: custom scale builder ============ */
+const DEG12=['1','♭2','2','♭3','3','4','♯4','5','♭6','6','♭7','7'];
+let labScales=[]; try{ labScales=JSON.parse(localStorage.getItem('jamlab.labScales')||'[]')||[]; }catch(e){ labScales=[]; }
+function saveLabStore(){ try{ localStorage.setItem('jamlab.labScales',JSON.stringify(labScales)); }catch(e){} }
+function rebuildLabMode(){ const m=MODES.lab; m.scales={}; m.downScales={}; m.variants=[];
+  for(const p of LAB_PRESETS){ m.scales[p.id]=p.pcs; if(p.down) m.downScales[p.id]=p.down; m.variants.push({id:p.id,label:p.label}); }
+  for(const c of labScales){ m.scales[c.id]=c.pcs; m.variants.push({id:c.id,label:c.name}); }
+  if(!m.scales[m.defVariant]) m.defVariant='p_harm';
+}
+rebuildLabMode();
+const percSel=document.getElementById('percSel');
+percSel.addEventListener('change',()=>{ if(M.lab){ M.perc=percSel.value; try{ localStorage.setItem('jamlab.labPerc',percSel.value); }catch(e){} } });
+const labov=document.getElementById('labov'), labPcs=document.getElementById('labPcs'),
+      labName=document.getElementById('labName'), labCount=document.getElementById('labCount');
+let labSel=new Set([0]);
+function labRender(){ labPcs.innerHTML='';
+  for(let pc=0;pc<12;pc++){ const b=document.createElement('button'); b.className='pcbtn'+(labSel.has(pc)?' on':''); b.textContent=DEG12[pc]; b.disabled=(pc===0);
+    b.addEventListener('click',()=>{ if(labSel.has(pc)) labSel.delete(pc); else { if(labSel.size>=7) return; labSel.add(pc); tapHaptic('LIGHT'); } labRender(); });
+    labPcs.appendChild(b); }
+  labCount.textContent=t('lab.count',{n:labSel.size}); }
+document.getElementById('labBtn').addEventListener('click',()=>{
+  labSel=new Set(SCALE); labSel.add(0);
+  const cur=labScales.find(c=>c.id===settings.variant);
+  labName.value=cur?cur.name:'';
+  document.getElementById('labDelete').style.display=cur?'':'none';
+  labRender(); labov.classList.remove('hidden'); });
+document.getElementById('labClose').addEventListener('click',()=>labov.classList.add('hidden'));
+document.getElementById('labSave').addEventListener('click',()=>{
+  const pcs=[...labSel].sort((a,b)=>a-b);
+  let name=labName.value.trim(); if(!name) name=t('lab.defName',{n:labScales.length+1});
+  const cur=labScales.find(c=>c.id===settings.variant);
+  let id;
+  if(cur){ cur.pcs=pcs; cur.name=name; id=cur.id; }
+  else { id='c'+Date.now().toString(36); labScales.push({id,name,pcs}); }
+  saveLabStore(); rebuildLabMode(); buildLadRow(); setVariant(id);
+  labov.classList.add('hidden'); });
+document.getElementById('labDelete').addEventListener('click',()=>{
+  const i=labScales.findIndex(c=>c.id===settings.variant);
+  if(i>=0){ labScales.splice(i,1); saveLabStore(); rebuildLabMode(); buildLadRow(); setVariant('p_harm'); }
+  labov.classList.add('hidden'); });
 
 /* ============ Instrument picker and start ============ */
 const overlay=document.getElementById("overlay");

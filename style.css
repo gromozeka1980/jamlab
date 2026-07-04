@@ -133,6 +133,13 @@ input[type=range]{width:150px; accent-color:var(--accent);}
 .sgroup{background:rgba(255,255,255,.025); border:1px solid var(--line); border-radius:12px; padding:10px 12px; display:flex; flex-direction:column; gap:10px;}
 .sgroup .subs{margin-left:6px; padding-left:12px; border-left:2px solid var(--line); display:flex; flex-direction:column; gap:10px;}
 .sgroup .subs input[type=range]{width:126px;}
+/* lab: 12 chromatic note toggles */
+.pcgrid{display:grid; grid-template-columns:repeat(6,1fr); gap:6px;}
+.pcbtn{min-height:44px; border-radius:10px; font-weight:700; color:var(--muted);}
+.pcbtn.on{background:var(--accent); border-color:var(--accent); color:#15151f;}
+.pcbtn:disabled{opacity:.55;}
+#labov{position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:22px; background:rgba(7,8,16,.85); z-index:11;}
+#labov.hidden{display:none;}
 #closeSettings,#closeHelp{align-self:flex-end; background:var(--zero); border-color:var(--zero); color:#04140a; font-weight:700; padding:9px 22px;}
 
 /* short viewport (phone landscape): keep two rows, just compact the chrome */

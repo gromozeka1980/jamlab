@@ -26,6 +26,7 @@
     <div class="pick" data-mode="gamelan"><b data-i18n="pick.gamelan.t">Gamelan</b><span data-i18n="pick.gamelan.d">pelog/slendro, gong and metallophone</span></div>
     <div class="pick" data-mode="light"><b data-i18n="pick.light.t">Bright</b><span data-i18n="pick.light.d">major/minor pentatonic</span></div>
     <div class="pick" data-mode="synth"><b data-i18n="pick.synth.t">Synthwave</b><span data-i18n="pick.synth.d">neon minor, pumping bass, four-on-the-floor</span></div>
+    <div class="pick" data-mode="lab"><b data-i18n="pick.lab.t">Lab</b><span data-i18n="pick.lab.d">build your own scale from the 12 notes</span></div>
     <div class="pick" data-mode="jazz"><b data-i18n="pick.jazz.t">Jazz</b><span data-i18n="pick.jazz.d">the scale follows the chords (golden sequence)</span></div>
     <!-- Dorian, Cosmos, flute and Lo-fi are hidden (code kept in MODES) -->
   </div>
@@ -96,11 +97,29 @@
   </div>
 </div>
 
+<div id="labov" class="hidden" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <h3 data-i18n="lab.title">⚗ Scale builder</h3>
+    <div style="font-size:12px; color:var(--muted); line-height:1.45;" data-i18n="lab.hint">Pick up to 7 notes (the root is always on). The scale plays relative to the root.</div>
+    <div class="pcgrid" id="labPcs"></div>
+    <div style="text-align:right; font-size:12px; color:var(--muted);" id="labCount"></div>
+    <div class="srow"><label data-i18n="lab.name">Name</label><input id="labName" type="text" maxlength="24" style="flex:1; background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:13px;"></div>
+    <div style="display:flex; gap:8px; justify-content:space-between;">
+      <button id="labDelete" data-i18n="lab.delete" style="color:#ff8787;">Delete</button>
+      <div style="display:flex; gap:8px;">
+        <button id="labClose" data-i18n="btn.close">Close</button>
+        <button id="labSave" data-i18n="lab.save" style="background:var(--accent); border-color:var(--accent); color:#15151f; font-weight:700;">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="paywall" class="hidden" role="dialog" aria-modal="true">
   <div class="sheet">
     <h3 data-i18n="pw.title">Unlock everything</h3>
     <ul style="margin:0; padding-left:18px; color:var(--muted); font-size:13px; line-height:1.55; display:flex; flex-direction:column; gap:5px;">
       <li data-i18n="pw.li1"></li>
+      <li data-i18n="pw.li2"></li>
       <li data-i18n="pw.li3"></li>
       <li data-i18n="pw.li4"></li>
     </ul>
@@ -123,6 +142,8 @@
   </div>
   <div class="ctl" id="ctlGyro"><label data-i18n="ctl.gyro">Tilt</label><select id="gyroSel"><option value="off" data-i18n="opt.off">Off</option><option value="vibrato" data-i18n="gyro.vibrato">Vibrato</option><option value="volume" data-i18n="gyro.volume">Volume</option><option value="tone" data-i18n="gyro.tone">Brightness</option></select></div>
   <div class="ctl" id="ctlJazzHelp"><button id="jazzHelpBtn" class="jhelp" data-i18n="btn.jazzHelp">About Jazz</button></div>
+  <div class="ctl" id="ctlPerc"><label data-i18n="ctl.perc">Percussion</label><select id="percSel"><option value="taiko" data-i18n="perc.taiko">Taiko</option><option value="darbuka" data-i18n="perc.darbuka">Darbuka</option><option value="shaker" data-i18n="perc.shaker">Shaker</option><option value="" data-i18n="perc.none">None</option></select></div>
+  <div class="ctl" id="ctlLab"><button id="labBtn" class="jhelp" data-i18n="btn.lab">⚗ Scale builder</button></div>
   <div class="ctl" id="ctlBack"><label data-i18n="ctl.back">Backing</label><select id="backSel"></select></div>
   <div class="ctl" id="ctlHarm"><label data-i18n="ctl.harm">Harmony</label><select id="harmSel"></select></div>
   <div class="ctl" id="ctlRhythm"><label data-i18n="ctl.rhythm">Rhythm</label><select id="rhythmSel"></select></div>
