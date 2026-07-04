@@ -795,7 +795,7 @@ percSel.addEventListener('change',()=>{ if(M.lab){ M.perc=percSel.value; try{ lo
 const labov=document.getElementById('labov'), labPcs=document.getElementById('labPcs'), labPcsDn=document.getElementById('labPcsDn'),
       labDownSel=document.getElementById('labDownSel'), labArpEl=document.getElementById('labArp'),
       labName=document.getElementById('labName'), labCount=document.getElementById('labCount');
-let labSel=new Set([0]), labSelDn=new Set([0]), labArp=[0,7,12,7];
+let labSel=new Set([0]), labSelDn=new Set([0]), labArp=[0,7,12,7,0,7,12,7];   // 8 steps = one bar of the modal scheduler
 function labArpChoices(){ return [null, ...[...labSel].sort((a,b)=>a-b), 12]; }   // rest → scale degrees → octave
 function labArpLabel(v){ return v==null?'·':(v===12?'1↑':DEG12[v]); }
 function labSanitizeArp(){ const ok=[...labSel,12];
@@ -822,7 +822,8 @@ document.getElementById('labBtn').addEventListener('click',()=>{
   labSelDn=new Set(SCALEDN||SCALE); labSelDn.add(0);
   labDownSel.value=SCALEDN?'on':'off';
   const cur=labScales.find(c=>c.id===settings.variant);
-  labArp=(cur&&cur.arp)?cur.arp.slice():[0,7,12,7];
+  const base=(cur&&cur.arp&&cur.arp.length)?cur.arp:[0,7,12,7];
+  labArp=[]; while(labArp.length<8) labArp=labArp.concat(base); labArp=labArp.slice(0,8);   // tile old/short patterns to a full bar
   labName.value=cur?cur.name:'';
   document.getElementById('labDelete').style.display=cur?'':'none';
   labRender(); labov.classList.remove('hidden'); });
