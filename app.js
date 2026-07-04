@@ -203,7 +203,7 @@ function noteOn(id,offset,el){ initAudio(); resumeAudio(); if(activeVoices.has(i
   } else lastJazzMidi=null;
   const when=(M.id==='jazz' && settings.jazzTiming!=='free' && jazzBeatLen) ? quantizeToPocket(actx.currentTime, (+settings.jazzTiming)/4) : undefined;
   const v=makeVoice(freq, bt.up?bt.up.amt:0, bt.down?bt.down.amt:0, approach, when);
-  activeVoices.set(id,v); el.classList.add("active"); el.classList.toggle("nobend", !(bt.up||bt.down));
+  activeVoices.set(id,v); el.classList.add("active");
   tapHaptic('LIGHT');
   heldNotes.set(id,(offset>0?'+':'')+offset); viz.keysHeld([...heldNotes.values()]);   // video: pressed keys + sounding note
   viz.liveNote(midiToName(Math.round(freqToMidi(freq))),0);
@@ -213,7 +213,7 @@ function noteOn(id,offset,el){ initAudio(); resumeAudio(); if(activeVoices.has(i
 function noteOff(id,el){ stopVoice(id);
   heldNotes.delete(id); viz.keysHeld([...heldNotes.values()]);
   if(activeVoices.size===0){ viz.liveNote(null,0); elNote.classList.remove('bup','bdown'); }   // silence → no note in the video
-  if(el){el.classList.remove("active","bending","bent","nobend","down"); el.style.setProperty("--bend",0);}
+  if(el){el.classList.remove("active","bending","bent","down"); el.style.setProperty("--bend",0);}
   refreshKeyLabels(); }                                                        // restore the per-key bend arrows
 function shiftOctave(dir){ currentIndex=clampIndex(currentIndex+dir*(M.kind==='harmonic'?8:SCALE.length)); updateDisplay(); }
 function resetToRoot(){ currentIndex = (M.kind==='harmonic') ? clampIndex(Math.round(currentIndex/8)*8) : nearestRootIndex(pitchFreq(currentIndex)); updateDisplay(); }
@@ -247,8 +247,8 @@ function updateDisplay(){
 }
 function refreshKeyLabels(){ const ct=curChord; for(const k of noteKeys){
     const idx=clampIndex(currentIndex+k.off), lab=pitchLabel(idx); k.lead.textContent=lab.deg+" ("+lab.note+")";
-    const bt=bendTargets(idx), ar=k.el.querySelector('.arrow');                 // per-key bend directions: ↑ ↓ ↕
-    if(ar) ar.textContent=(bt.up&&bt.down)?'↕':bt.up?'↑':bt.down?'↓':'';
+    const bt=bendTargets(idx);                                                  // per-key bend directions
+    k.el.classList.toggle('canup',!!bt.up); k.el.classList.toggle('candn',!!bt.down);
     let role=0;                                  // current-chord tone: 1/3/5/7
     if(ct){ const pc=((indexToMidi(idx)%12)+12)%12;
       if(pc===ct.r) role=1; else if(pc===(ct.r+ct.ivs[1])%12) role=3;
@@ -267,8 +267,8 @@ const KEYS=[
 ];
 const codeMap={}, noteKeys=[], noteCodes=[];
 function buildRow(list,host){ list.forEach(k=>{ const el=document.createElement("div");
-  el.className="key "+(k.off<0?"neg":k.off>0?"pos":"zero")+" canbend"; el.style.flexGrow=KW[Math.abs(k.off)];
-  el.innerHTML=`<span class="kb">${k.lbl}</span><span class="off">${k.off>0?"+":""}${k.off}</span><span class="lead"></span><span class="dot"></span><span class="bendfill"></span><span class="arrow">↑</span>`;
+  el.className="key "+(k.off<0?"neg":k.off>0?"pos":"zero"); el.style.flexGrow=KW[Math.abs(k.off)];
+  el.innerHTML=`<span class="kb">${k.lbl}</span><span class="arrow up">↑</span><span class="off">${k.off>0?"+":""}${k.off}</span><span class="lead"></span><span class="dot"></span><span class="bendfill"></span><span class="arrow dn">↓</span>`;
   bindPointer(el,k.off); host.appendChild(el); codeMap[k.code]={el,off:k.off}; noteCodes.push(k.code);
   noteKeys.push({off:k.off, el, lead:el.querySelector(".lead")}); }); }
 const rowTopEl=document.getElementById("rowTop"), rowBottomEl=document.getElementById("rowBottom");
@@ -318,7 +318,6 @@ window.addEventListener("pointermove",e=>{ const p=pointers.get(e.pointerId); if
     viz.liveNote(n0,0); viz.melodyBend(p01of(bm0));
   }
   p.wasBending=frac>0.06;
-  const a=p.el.querySelector(".arrow"); if(a) a.textContent=down?"↓":"↑";
   if(settings.viz && frac>0.3 && Math.random()<0.45){ const r=p.el.getBoundingClientRect(); viz.spark(r.left+r.width/2, r.top+(down?r.height-12:12), down?cssRgb('--blue'):cssRgb('--accent')); } });
 function endPointer(e){ const p=pointers.get(e.pointerId); if(!p) return; pointers.delete(e.pointerId); noteOff(p.id,p.el); }
 window.addEventListener("pointerup",endPointer); window.addEventListener("pointercancel",endPointer);

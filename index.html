@@ -29,13 +29,16 @@
     <div class="pick" data-mode="jazz"><b data-i18n="pick.jazz.t">Jazz</b><span data-i18n="pick.jazz.d">the scale follows the chords (golden sequence)</span></div>
     <!-- Dorian, Cosmos, flute and Lo-fi are hidden (code kept in MODES) -->
   </div>
-  <button id="helpBtn" data-i18n="btn.help">❔ Help</button>
+  <div class="obtns">
+    <button id="helpBtn" data-i18n="btn.help">❔ Help</button>
+    <button id="settingsBtn" data-i18n="btn.settings">⚙ Settings</button>
+  </div>
 </div>
 
 <div id="settings" class="hidden" role="dialog" aria-modal="true">
   <div class="sheet">
     <h3 data-i18n="set.title">⚙ Settings</h3>
-    <div class="srow"><label data-i18n="set.lang">Language</label><select id="langSel"><option value="en">English</option><option value="ru">Русский</option></select></div>
+    <div class="srow"><label data-i18n="set.lang">Language</label><select id="langSel"><option value="en">English</option><option value="ru">Русский</option><option value="es">Español</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="fr">Français</option><option value="ja">日本語</option><option value="zh">中文</option></select></div>
     <div class="srow"><label data-i18n="set.tone">Tone (brightness)</label><input id="tone" type="range" min="600" max="6000" value="2600"><span class="val" id="toneVal">2600</span></div>
     <div class="srow"><label data-i18n="set.volSolo">Lead volume</label><input id="volSolo" type="range" min="0" max="100" value="80"><span class="val" id="volSoloVal">80%</span></div>
     <div class="sgroup">
@@ -148,7 +151,6 @@
 <div class="controls actions" id="bottombar">
   <div class="ctl"><button id="accBtn" class="toggle" data-i18n="btn.bgStart">▶ Backing</button></div>
   <div class="ctl"><button id="recBtn" data-i18n="btn.rec">⏺ Record</button></div>
-  <div class="ctl"><button id="settingsBtn" data-i18n="btn.settings">⚙ Settings</button></div>
 </div>
 <div class="hint" id="hint"></div>
 
