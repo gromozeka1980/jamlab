@@ -39,8 +39,8 @@ export const MODES = {
     id:'vostok', name:'mode.vostok.name', sub:'mode.vostok.sub', voice:'pluck', back:'koto', perc:'darbuka', vamp:[0,1],
     theme:{bg1:'#3a2417', accent:'#e8b04b', zero:'#d6453b', neg:'#b5651d', pos:'#e8930c', blue:'#e8b04b'},
     kind:'scale',
-    scales:{freygish:[0,1,4,5,7,8,10], hungarian:[0,2,3,6,7,8,11]},
-    variants:[{id:'freygish',label:'variant.freygish'},{id:'hungarian',label:'variant.hungarian'}], defVariant:'freygish',
+    scales:{freygish:[0,1,4,5,7,8,10], hungarian:[0,2,3,6,7,8,11], romanian:[0,2,3,6,7,9,10]},
+    variants:[{id:'freygish',label:'variant.freygish'},{id:'hungarian',label:'variant.hungarian'},{id:'romanian',label:'variant.romanian'}], defVariant:'freygish',
     backings:[{id:'drone',label:'backing.drone',pad:1},{id:'padperc',label:'backing.vostok.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.vostok.arpperc',arp:1,perc:1,bass:1},{id:'vamp',label:'backing.vostok.vamp',vamp:1,arp:1,perc:1,bass:1}], defBacking:'arpperc',
   },
   light: {
