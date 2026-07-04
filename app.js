@@ -415,6 +415,10 @@ function bluesScheduler(){ const H=HARMONY[settings.harmony]||HARMONY.major, R=R
 
 // --- modal backing: arpeggio + bass + percussion + vamp ---
 function curBack(){ return M.backings.find(b=>b.id===settings.backing) || M.backings[0]; }
+// the backing anchor tone: a perfect fifth when the scale has one, otherwise the nearest scale tone
+// (iwato has b5 instead of 5 — droning a perfect fifth against it clashes)
+function fifthOf(){ if(M.kind!=='scale') return 7;
+  for(const c of [7,6,8,5,9]) if(SCALE.includes(c)) return c; return 12; }
 function kotoPluck(off,time){ const m=settings.rootMidi+off;   // an octave above the drone
   const o=actx.createOscillator();o.type="triangle";o.frequency.value=midiToFreq(m);
   const f=actx.createBiquadFilter();f.type="lowpass";f.frequency.setValueAtTime(5200,time);f.frequency.exponentialRampToValueAtTime(1500,time+0.5);
@@ -444,9 +448,10 @@ function percHit(type,step,time){
 function modalScheduler(){ const b=curBack(), beat=60/settings.bpm, vamp=M.vamp||[0];
   while(nextNoteTime < actx.currentTime+LOOKAHEAD){
     const step=mStep%8, bar=Math.floor(mStep/8), vroot = b.vamp ? (vamp[bar%vamp.length]||0) : 0;
+    const f5=fifthOf();
     if(b.perc) percHit(M.perc, step, nextNoteTime);
-    if(b.bass && (step===0||step===4)) modalBass(vroot + (step===4?7:0), nextNoteTime);
-    if(b.arp){ const AP=(M.arps&&M.arps[settings.variant])||ARP, av=AP[mStep%AP.length];   // lab: per-scale custom arp with rests
+    if(b.bass && (step===0||step===4)) modalBass(vroot + (step===4?f5:0), nextNoteTime);
+    if(b.arp){ const AP=(M.arps&&M.arps[settings.variant])||[0,f5,12,f5], av=AP[mStep%AP.length];   // lab: per-scale custom arp with rests
       if(av!=null) kotoPluck(vroot+av, nextNoteTime); }
     nextNoteTime += beat/2; mStep++;
   } }
@@ -455,7 +460,7 @@ function modalScheduler(){ const b=curBack(), beat=60/settings.bpm, vamp=M.vamp|
 function stopPad(){ if(!actx){padNodes=[];return;} const t0=actx.currentTime;
   padNodes.forEach(p=>{ try{ p.g.gain.cancelScheduledValues(t0); p.g.gain.setValueAtTime(p.g.gain.value,t0); p.g.gain.linearRampToValueAtTime(0,t0+0.5); p.stops.forEach(n=>n.stop(t0+0.6)); }catch(e){} }); padNodes=[]; }
 function startPadKoto(){ stopPad(); const t0=actx.currentTime;
-  [[settings.rootMidi-12,0.085],[settings.rootMidi-5,0.05],[settings.rootMidi,0.05]].forEach(([m,vol],i)=>{
+  [[settings.rootMidi-12,0.085],[settings.rootMidi-12+fifthOf(),0.05],[settings.rootMidi,0.05]].forEach(([m,vol],i)=>{
     const o1=actx.createOscillator(),o2=actx.createOscillator();o1.type=o2.type='sawtooth';o1.frequency.value=midiToFreq(m);o2.frequency.value=midiToFreq(m);o2.detune.value=6;
     const f=actx.createBiquadFilter();f.type='lowpass';f.frequency.value=850; const g=actx.createGain();g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(vol,t0+1.4);
     const lfo=actx.createOscillator(),lg=actx.createGain();lfo.frequency.value=0.12+i*0.03;lg.gain.value=0.015;lfo.connect(lg);lg.connect(g.gain);
@@ -793,7 +798,9 @@ const labov=document.getElementById('labov'), labPcs=document.getElementById('la
 let labSel=new Set([0]), labSelDn=new Set([0]), labArp=[0,7,12,7];
 function labArpChoices(){ return [null, ...[...labSel].sort((a,b)=>a-b), 12]; }   // rest → scale degrees → octave
 function labArpLabel(v){ return v==null?'·':(v===12?'1↑':DEG12[v]); }
-function labSanitizeArp(){ const ok=new Set([...labSel,12]); labArp=labArp.map(v=>v==null?null:(ok.has(v)?v:0)); }
+function labSanitizeArp(){ const ok=[...labSel,12];
+  labArp=labArp.map(v=>{ if(v==null||ok.includes(v)) return v;
+    let best=0,bd=99; for(const c of ok){ const d=Math.abs(c-v); if(d<bd){bd=d;best=c;} } return best; }); }   // dropped notes fall to the nearest scale tone
 function labGrid(host,set){ host.innerHTML='';
   for(let pc=0;pc<12;pc++){ const b=document.createElement('button'); b.className='pcbtn'+(set.has(pc)?' on':''); b.textContent=DEG12[pc]; b.disabled=(pc===0);
     b.addEventListener('click',()=>{ if(set.has(pc)) set.delete(pc); else { if(set.size>=7) return; set.add(pc); tapHaptic('LIGHT'); } labRender(); });
