@@ -66,11 +66,15 @@ function indexToMidi(i){ const len=SCALE.length,o=Math.floor(i/len),s=((i%len)+l
 // a near-major scale). Fold that chunk so every octave repeats it, transposed — just intonation kept.
 const HSER=[8,9,10,11,12,13,14,15];
 function harmFold(i){ const o=Math.floor(i/8), s=((i%8)+8)%8; return {o, h:HSER[s]}; }
+function centScale(){ return M.centScales && M.centScales[settings.variant]; }   // non-tempered tuning (gamelan), else null
 function pitchFreq(i){ if(M.kind==='harmonic'){ const {o,h}=harmFold(i); return midiToFreq(settings.rootMidi)*(h/8)*Math.pow(2,o); }
+  const cs=centScale();
+  if(cs){ const len=cs.length,o=Math.floor(i/len),s=((i%len)+len)%len; return midiToFreq(leadRoot())*Math.pow(2,(o*1200+cs[s])/1200); }
   return midiToFreq(indexToMidi(i)); }
 function pitchLabel(i){
   if(M.kind==='harmonic'){ return {deg:harmFold(i).h, note:midiToName(freqToMidi(pitchFreq(i)))}; }
-  const len=SCALE.length, s=((i%len)+len)%len; return {deg:s+1, note:midiToName(indexToMidi(i))};
+  const len=SCALE.length, s=((i%len)+len)%len;
+  return {deg:s+1, note:midiToName(centScale()?freqToMidi(pitchFreq(i)):indexToMidi(i))};   // cent tunings: name = nearest tempered note
 }
 
 function indexRange(){
@@ -93,6 +97,7 @@ let liveChordPcs=null;
 function currentChordPcs(){ if(accOn && liveChordPcs) return liveChordPcs;
   return settings.variant==='major' ? new Set([0,4,7,10]) : new Set([0,3,7,10]); }
 function bendTargets(i){
+  if(M.noBend) return {up:null,down:null};           // struck metallophones don't bend (gamelan)
   if(M.kind==='harmonic'){                          // bend to the neighbouring step of the folded series
     const f=pitchFreq(i);
     const up={amt:Math.min(2,12*Math.log2(pitchFreq(i+1)/f)), name:t('ord',{n:harmFold(i+1).h})};
@@ -481,22 +486,27 @@ function startPadDream(){ stopPad(); const t0=actx.currentTime;
     const lfo=actx.createOscillator(),lg=actx.createGain();lfo.frequency.value=0.08+i*0.04;lg.gain.value=0.014;lfo.connect(lg);lg.connect(g.gain);
     o.connect(g);g.connect(busChord);o.start(t0);lfo.start(t0); padNodes.push({g,stops:[o,lfo]}); }); }
 function dreamScheduler(){ const beat=60/settings.bpm; while(nextNoteTime<actx.currentTime+LOOKAHEAD){ kotoPluck(DREAMARP[qStep%DREAMARP.length],nextNoteTime); nextNoteTime+=beat; qStep++; } }
-// "Gamelan": gong, bell pattern (metallophone), soft drone
+// "Gamelan": gong, bell pattern (metallophone), soft drone — tuned to the (non-tempered) scale, with ombak beats
+function ombakMul(){ return Math.pow(2,(M.ombak||0)/1200); }   // detune factor for the paired "wave" resonator
 function gong(time){ vizBeat(time,0.9); const f=midiToFreq(settings.rootMidi-12);   // an octave higher — phone speakers roll off below ~110 Hz
   [[1,0.34],[2.0,0.3],[2.76,0.24],[4.1,0.16],[5.4,0.09]].forEach(([mult,vol])=>{ const o=actx.createOscillator();o.type='sine';o.frequency.value=f*mult;
-    const g=accGain(0,busPerc); g.gain.setValueAtTime(vol,time); g.gain.exponentialRampToValueAtTime(0.001,time+3.2); o.connect(g);o.start(time);o.stop(time+3.3); }); }
-function bell(midi,time){ const f=midiToFreq(midi);
+    const g=accGain(0,busPerc); g.gain.setValueAtTime(vol,time); g.gain.exponentialRampToValueAtTime(0.001,time+3.2); o.connect(g);o.start(time);o.stop(time+3.3); });
+  const ob=actx.createOscillator();ob.type='sine';ob.frequency.value=f*ombakMul();   // detuned twin → slow beating
+  const gb=accGain(0,busPerc); gb.gain.setValueAtTime(0.22,time); gb.gain.exponentialRampToValueAtTime(0.001,time+3.2); ob.connect(gb);ob.start(time);ob.stop(time+3.3); }
+function bell(f,time){
   [[1,0.16],[2.76,0.05],[5.4,0.025]].forEach(([mult,vol])=>{ const o=actx.createOscillator();o.type='sine';o.frequency.value=f*mult;
-    const g=accGain(0,busChord); g.gain.setValueAtTime(vol,time); g.gain.exponentialRampToValueAtTime(0.001,time+1.1); o.connect(g);o.start(time);o.stop(time+1.2); }); }
-function startGamelanDrone(){ stopPad(); const t0=actx.currentTime;
-  [[settings.rootMidi-12,0.05],[settings.rootMidi-5,0.035]].forEach(([m,vol],i)=>{ const o=actx.createOscillator();o.type='sine';o.frequency.value=midiToFreq(m);
+    const g=accGain(0,busChord); g.gain.setValueAtTime(vol,time); g.gain.exponentialRampToValueAtTime(0.001,time+1.1); o.connect(g);o.start(time);o.stop(time+1.2); });
+  const ob=actx.createOscillator();ob.type='sine';ob.frequency.value=f*ombakMul();
+  const gb=accGain(0,busChord); gb.gain.setValueAtTime(0.10,time); gb.gain.exponentialRampToValueAtTime(0.001,time+1.1); ob.connect(gb);ob.start(time);ob.stop(time+1.2); }
+function startGamelanDrone(){ stopPad(); const t0=actx.currentTime, mul=ombakMul();
+  [[pitchFreq(0)/2,0.05,1],[pitchFreq(3)/2,0.035,mul]].forEach(([fr,vol,dt],i)=>{ const o=actx.createOscillator();o.type='sine';o.frequency.value=fr*dt;
     const g=actx.createGain();g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(vol,t0+1.5);
     const lfo=actx.createOscillator(),lg=actx.createGain();lfo.frequency.value=0.1+i*0.03;lg.gain.value=0.01;lfo.connect(lg);lg.connect(g.gain);
     o.connect(g);g.connect(busChord);o.start(t0);lfo.start(t0); padNodes.push({g,stops:[o,lfo]}); }); }
 function gamelanScheduler(){ const beat=60/settings.bpm, pat=(curBack().id==='pattern');
   while(nextNoteTime<actx.currentTime+LOOKAHEAD){ const s=qStep%16;
     if(s===0) gong(nextNoteTime);
-    if(pat){ const idx=GMPAT[qStep%GMPAT.length]; bell(settings.rootMidi+(SCALE[idx%SCALE.length]||0)+12, nextNoteTime); }
+    if(pat){ const idx=GMPAT[qStep%GMPAT.length]; bell(pitchFreq(idx)*2, nextNoteTime); }   // metallophone in the scale's true tuning, an octave up
     nextNoteTime+=beat/2; qStep++; } }
 
 // --- synthwave: pumping bass arp, four-on-the-floor, gated pads over i–VI–III–VII ---
