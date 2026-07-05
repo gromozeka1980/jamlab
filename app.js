@@ -801,9 +801,10 @@ function labArpLabel(v){ return v==null?'·':(v===12?'1↑':DEG12[v]); }
 function labSanitizeArp(){ const ok=[...labSel,12];
   labArp=labArp.map(v=>{ if(v==null||ok.includes(v)) return v;
     let best=0,bd=99; for(const c of ok){ const d=Math.abs(c-v); if(d<bd){bd=d;best=c;} } return best; }); }   // dropped notes fall to the nearest scale tone
+function labPing(off){ if(actx) kotoPluck(off, actx.currentTime); }   // audition a single tone
 function labGrid(host,set){ host.innerHTML='';
   for(let pc=0;pc<12;pc++){ const b=document.createElement('button'); b.className='pcbtn'+(set.has(pc)?' on':''); b.textContent=DEG12[pc]; b.disabled=(pc===0);
-    b.addEventListener('click',()=>{ if(set.has(pc)) set.delete(pc); else { if(set.size>=7) return; set.add(pc); tapHaptic('LIGHT'); } labRender(); });
+    b.addEventListener('click',()=>{ if(set.has(pc)) set.delete(pc); else { if(set.size>=7) return; set.add(pc); tapHaptic('LIGHT'); labPing(pc); } labRender(); });
     host.appendChild(b); } }
 function labRender(){
   labGrid(labPcs,labSel);
@@ -813,7 +814,8 @@ function labRender(){
   labSanitizeArp();
   labArpEl.innerHTML='';
   labArp.forEach((v,i)=>{ const b=document.createElement('button'); b.className='pcbtn'+(v!=null?' on':''); b.textContent=labArpLabel(v);
-    b.addEventListener('click',()=>{ const ch=labArpChoices(), idx=ch.findIndex(x=>x===v); labArp[i]=ch[(idx+1)%ch.length]; labRender(); });
+    b.addEventListener('click',()=>{ const ch=labArpChoices(), idx=ch.findIndex(x=>x===v); labArp[i]=ch[(idx+1)%ch.length];
+      if(labArp[i]!=null) labPing(labArp[i]); labRender(); });
     labArpEl.appendChild(b); });
   labCount.style.color='var(--muted)';
   labCount.textContent=t('lab.count',{n:labSel.size}) + (dn? '  ·  ↓ '+t('lab.count',{n:labSelDn.size}) : ''); }
@@ -828,6 +830,24 @@ document.getElementById('labBtn').addEventListener('click',()=>{
   document.getElementById('labDelete').style.display=cur?'':'none';
   labRender(); labov.classList.remove('hidden'); });
 labDownSel.addEventListener('change',()=>{ if(labDownSel.value==='on'&&labSelDn.size<=1) labSelDn=new Set(labSel); labRender(); });
+// audition: play the edited scale up (and back down via the descending row) or two bars of the arp pattern
+let labPrevUntil=0;
+function labPrevOk(){ initAudio(); resumeAudio(); return actx.currentTime>=labPrevUntil; }
+document.getElementById('labPlayScale').addEventListener('click',()=>{
+  if(!labPrevOk()) return;
+  const up=[...labSel].sort((a,b)=>a-b).concat([12]);
+  const dnSet=labDownSel.value==='on'?labSelDn:labSel;
+  const down=[...dnSet].filter(v=>v!==0).sort((a,b)=>b-a).concat([0]);
+  const dt=0.22; let t=actx.currentTime+0.05, i=0;
+  for(const pc of up) kotoPluck(pc, t+(i++)*dt);
+  for(const pc of down) kotoPluck(pc, t+(i++)*dt);
+  labPrevUntil=t+i*dt+0.3; });
+document.getElementById('labPlayArp').addEventListener('click',()=>{
+  if(!labPrevOk()) return;
+  labSanitizeArp();
+  const step=(60/settings.bpm)/2; const t=actx.currentTime+0.05;
+  for(let r=0;r<2;r++) labArp.forEach((v,i)=>{ if(v!=null) kotoPluck(v, t+(r*8+i)*step); });
+  labPrevUntil=t+16*step+0.3; });
 document.getElementById('labClose').addEventListener('click',()=>labov.classList.add('hidden'));
 document.getElementById('labSave').addEventListener('click',()=>{
   const pcs=[...labSel].sort((a,b)=>a-b);
