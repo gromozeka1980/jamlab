@@ -229,7 +229,7 @@ function resetToRoot(){ currentIndex = (M.kind==='harmonic') ? clampIndex(Math.r
 function setVariant(id){ if(M.kind!=='scale'||!M.scales||!M.scales[id]) return;
   const oldF=pitchFreq(currentIndex); SCALE=M.scales[id]; settings.variant=id;
   SCALEDN=(M.downScales&&M.downScales[id])||null;
-  if(M.lab){ try{ localStorage.setItem('jamlab.labVariant',id); }catch(e){} }
+  if(M.lab){ try{ localStorage.setItem('jamlab.labVariant',id); }catch(e){} updateModeSub(); }
   currentIndex=clampIndex(nearestIndex(oldF));
   [...ladHost.querySelectorAll('button')].forEach(b=>b.classList.toggle('active', b.dataset.v===id));
   buildKeys();
@@ -650,6 +650,8 @@ function buildLadRow(){ ladHost.innerHTML="";
     b.addEventListener("pointerdown",e=>{e.preventDefault();initAudio();resumeAudio();setVariant(vr.id);tapHaptic('LIGHT');}); ladHost.appendChild(b); }); }
 function buildBackingOptions(){ backSel.innerHTML=""; M.backings.forEach(bk=>backSel.appendChild(new Option(t(bk.label),bk.id))); backSel.value=settings.backing; }
 function setHint(){ document.getElementById("hint").innerHTML = t(TOUCH ? 'hint.touch' : (M.kind==='harmonic'?'hint.harmonic':'hint.scale')); }
+// sub-title under the instrument name: in Lab it's the active scale's name, elsewhere the mode blurb
+function updateModeSub(){ document.getElementById("h1sub").textContent = M.lab ? ('· '+labScaleName(settings.variant)) : t(M.sub); }
 
 function setMode(id){ const was=accOn; if(actx) stopBacking();
   M=MODES[id]; applyTheme(M.theme);
@@ -682,7 +684,7 @@ function setMode(id){ const was=accOn; if(actx) stopBacking();
   buildKeys();
   currentIndex=clampIndex(0);
   document.getElementById("h1name").textContent=t(M.name);
-  document.getElementById("h1sub").textContent=t(M.sub);
+  updateModeSub();
   setHint();
   updateDisplay();
   if(was && actx) startBacking(); }
@@ -770,7 +772,7 @@ function refreshLabels(){
   applyStaticI18n();
   populateHarmRhythm();
   document.getElementById("h1name").textContent=t(M.name);
-  document.getElementById("h1sub").textContent=t(M.sub);
+  updateModeSub();
   buildLadRow(); applyLadLock();
   if(!(M.back==='blues'||M.id==='jazz')) buildBackingOptions();
   setHint(); setExtraLabels();
@@ -879,7 +881,8 @@ document.getElementById('labOk').addEventListener('click',()=>{
   labSanitizeArp();
   const sel=labScaleSel.value;
   if(sel!=='__new' && labSig(pcs,down,labArp)===labOrigSig){ setVariant(sel); labov.classList.add('hidden'); return; }   // pick an existing scale unchanged
-  let name=labName.value.trim(); if(!name) name=t('lab.defName',{n:labScales.length+1});
+  const name=labName.value.trim();
+  if(!name){ labCount.textContent=t('lab.needName'); labCount.style.color='#ff8787'; labName.focus(); return; }   // a saved scale must be named
   const own=labScales.find(c=>c.id===sel);      // editing one's own custom scale → overwrite; a preset/new → create
   let id;
   if(own){ own.pcs=pcs; own.name=name; own.down=down||undefined; own.arp=labArp.slice(); id=own.id; }
