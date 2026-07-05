@@ -17,13 +17,15 @@ export const MODES = {
   gamelan: {
     id:'gamelan', name:'mode.gamelan.name', sub:'mode.gamelan.sub', voice:'metal', back:'gamelan',
     theme:{bg1:'#3a2e10', accent:'#ffd43b', zero:'#e8a23a', neg:'#c98a2a', pos:'#e8c14a', blue:'#7fd1ff'},
-    kind:'scale', scales:{pelog:[0,1,3,7,8], slendro:[0,2,5,7,10]},
-    // true (non-tempered) tunings in cents — gamelan doesn't fit 12-TET. slendro = 5 equal steps (octave/5);
-    // pelog ~ averaged field measurements. The scales[] above stay as 12-TET fallbacks / for note-name labels.
-    centScales:{pelog:[0,130,265,675,785], slendro:[0,240,480,720,960]},
+    kind:'scale', scales:{pelogLima:[0,1,3,7,8], pelogBarang:[0,2,5,7,9], slendro:[0,2,5,7,10]},
+    // true (non-tempered) tunings in cents — gamelan doesn't fit 12-TET.
+    // Pelog is a 7-note tuning (~[0,120,270,540,670,785,1050]); each patet plays only 5 of the 7:
+    //   lima = degrees 1·2·3·5·6, barang = 2·3·5·6·7 (transposed to its own tonic).
+    // Slendro is its own 5 equal steps (octave/5). scales[] above are 12-TET fallbacks for note-name labels.
+    centScales:{pelogLima:[0,120,270,670,785], pelogBarang:[0,150,550,665,930], slendro:[0,240,480,720,960]},
     ombak:6,                                   // detune (cents) between paired resonators → the shimmering "waves"
     noBend:true,                               // struck metallophones can't be bent
-    variants:[{id:'pelog',label:'variant.pelog'},{id:'slendro',label:'variant.slendro'}], defVariant:'pelog',
+    variants:[{id:'pelogLima',label:'variant.pelogLima'},{id:'pelogBarang',label:'variant.pelogBarang'},{id:'slendro',label:'variant.slendro'}], defVariant:'pelogLima',
     backings:[{id:'gong',label:'backing.gong'},{id:'pattern',label:'backing.pattern'}], defBacking:'gong',
   },
   dream: {
