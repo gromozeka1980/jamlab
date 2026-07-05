@@ -4,6 +4,25 @@
 export function hexToRgb(h){ h=(h||'').trim().replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join(''); const n=parseInt(h||'888888',16); return [(n>>16)&255,(n>>8)&255,n&255]; }
 export function cssRgb(v){ return hexToRgb(getComputedStyle(document.documentElement).getPropertyValue(v)); }
 
+// Compact test-tube-note brand mark, centred on (cx,cy), unit k (~14k tall). Used by the watermark.
+export function drawTubeNote(c, cx, cy, k){
+  const sx=cx+1.2*k;                                   // tube centre x
+  // bubbles rising & arcing (the note flag)
+  c.fillStyle='#b39dff';
+  [[0.2,-6.2,1.5],[1.8,-8.0,1.1],[3.1,-9.2,0.8],[-0.4,-7.6,0.7]].forEach(([dx,dy,r])=>{
+    c.beginPath(); c.arc(sx+dx*k, cy+dy*k, r*k, 0, 6.2832); c.fill(); });
+  // tube (stem)
+  c.strokeStyle='#6d4aff'; c.lineWidth=2.4*k; c.lineCap='round';
+  c.beginPath(); c.moveTo(sx, cy+4.4*k); c.lineTo(sx, cy-4.6*k); c.stroke();
+  c.strokeStyle='#a98fff'; c.lineWidth=2.4*k;           // lighter rim at the mouth
+  c.beginPath(); c.moveTo(sx-1.3*k, cy-4.6*k); c.lineTo(sx+1.3*k, cy-4.6*k); c.stroke();
+  // note head
+  c.save(); c.translate(cx-1.6*k, cy+4.8*k); c.rotate(-0.32);
+  c.fillStyle='#7c5cff'; c.beginPath(); c.ellipse(0,0,3.6*k,2.7*k,0,0,6.2832); c.fill();
+  c.fillStyle='#cabdff'; c.globalAlpha=0.75; c.beginPath(); c.ellipse(-1.1*k,-0.9*k,1.1*k,0.7*k,0,0,6.2832); c.fill(); c.globalAlpha=1;
+  c.restore();
+}
+
 export const viz=(()=>{
   const cv=document.getElementById('viz'), ctx=cv.getContext('2d'); let W=1,H=1,dpr=1;
   // recording renders on its own high-res canvas, independent of screen dpr
@@ -85,18 +104,11 @@ export const viz=(()=>{
     c.fillText(document.getElementById('h1name').textContent||'', RW/2, 30*s);
     c.fillStyle='rgba(230,232,245,0.55)'; c.font='400 '+Math.round(11*s)+'px system-ui,sans-serif';
     c.fillText((document.getElementById('h1sub').textContent||'').replace(/^·\s*/,''), RW/2, 48*s);
-    // watermark: note logo + wordmark
-    c.globalAlpha=0.78; c.font='700 '+Math.round(16*s)+'px system-ui,sans-serif'; c.textAlign='left'; c.textBaseline='middle';
-    const wmTxt='Jamlab', tw=c.measureText(wmTxt).width, k=1.15*s, lw=13*k, gap=8*s, x0=(RW-(lw+gap+tw))/2, wmY=RH-24*s;
-    const hx=x0+4.5*k, hy=wmY, stx=hx+4.3*k;
-    const lg=c.createLinearGradient(stx,hy,stx+4*k,hy-16*k);
-    lg.addColorStop(0,'#4dd0e1'); lg.addColorStop(0.6,'#69db7c'); lg.addColorStop(1,'#ffd43b');
-    c.strokeStyle=lg; c.lineWidth=2.6*s; c.lineCap='round';
-    c.beginPath(); c.moveTo(stx, hy-1*k); c.lineTo(stx, hy-15*k); c.stroke();
-    c.beginPath(); c.moveTo(stx, hy-15*k); c.bezierCurveTo(stx+5.5*k, hy-13.2*k, stx+7*k, hy-9*k, stx+5.5*k, hy-4.5*k); c.stroke();
-    c.fillStyle='#ffd43b'; c.beginPath(); c.ellipse(hx, hy, 5.2*k, 4*k, -0.35, 0, 6.2832); c.fill();
-    c.fillStyle='#fff3bf'; c.globalAlpha=0.5; c.beginPath(); c.ellipse(hx-1.6*k, hy-1.4*k, 1.5*k, 1*k, -0.35, 0, 6.2832); c.fill();
-    c.globalAlpha=0.78; c.fillStyle='#eceaf3'; c.fillText(wmTxt, x0+lw+gap, wmY-6*s);
+    // watermark: test-tube note logo + wordmark
+    c.globalAlpha=0.82; c.font='700 '+Math.round(16*s)+'px system-ui,sans-serif'; c.textAlign='left'; c.textBaseline='middle';
+    const wmTxt='Jamlab', tw=c.measureText(wmTxt).width, k=1.25*s, lw=11*k, gap=9*s, x0=(RW-(lw+gap+tw))/2, wmY=RH-24*s;
+    drawTubeNote(c, x0+lw*0.5, wmY-4*s, k);
+    c.globalAlpha=0.82; c.fillStyle='#eceaf3'; c.fillText(wmTxt, x0+lw+gap, wmY-4*s);
     c.globalAlpha=1;
   }
   function frame(){ size();

@@ -133,9 +133,15 @@ export const RIDE=[1,0,1,1,1,0,1,1];               // spang-a-lang over eighths
 
 /* --- lab: built-in presets (melodic minor descends differently — our step model knows direction) --- */
 export const LAB_PRESETS=[
-  {id:'p_harm', label:'variant.harmmin', pcs:[0,2,3,5,7,8,11]},
-  {id:'p_mel',  label:'variant.melmin',  pcs:[0,2,3,5,7,9,11], down:[0,2,3,5,7,8,10]},
-  {id:'p_dbl',  label:'variant.dblharm', pcs:[0,1,4,5,7,8,11]},
+  {id:'p_harm', label:'variant.harmmin', pcs:[0,2,3,5,7,8,11],          arp:[0,7,12,7,0,8,7,3]},
+  {id:'p_mel',  label:'variant.melmin',  pcs:[0,2,3,5,7,9,11], down:[0,2,3,5,7,8,10], arp:[0,7,12,7,0,7,12,7]},
+  {id:'p_dbl',  label:'variant.dblharm', pcs:[0,1,4,5,7,8,11],          arp:[0,7,12,7,0,5,7,1]},
+  {id:'p_hira', label:'variant.hira',    pcs:[0,2,3,7,8],               arp:[0,7,12,7,0,3,8,3]},
+  {id:'p_hun',  label:'variant.hungarian',pcs:[0,2,3,6,7,8,11],         arp:[0,7,12,7,0,6,7,3]},
+  {id:'p_phr',  label:'variant.freygish',pcs:[0,1,4,5,7,8,10],          arp:[0,7,12,7,0,4,7,1]},
+  {id:'p_pent', label:'variant.majpent', pcs:[0,2,4,7,9],               arp:[0,7,12,9,0,7,4,7]},
+  {id:'p_blues',label:'variant.bluesmin',pcs:[0,3,5,6,7,10],            arp:[0,7,12,10,0,7,3,7]},
+  {id:'p_whole',label:'variant.whole',   pcs:[0,2,4,6,8,10],            arp:[0,4,8,4,0,6,8,6]},
 ];
 
 /* --- synthwave / lo-fi progressions --- */

@@ -643,6 +643,7 @@ function applyTheme(th){ const s=document.documentElement.style; for(const k in 
 const ladHost=document.getElementById("ladHost"), backSel=document.getElementById("backSel"),
       accBtn=document.getElementById("accBtn");
 function buildLadRow(){ ladHost.innerHTML="";
+  if(M.lab) return;                                  // lab: scales are chosen inside the builder, not in the play-screen row
   if(M.variants.length<2) return;
   M.variants.forEach(vr=>{ const b=document.createElement("button"); b.className="ladbtn"+(vr.id===settings.variant?" active":"");
     b.dataset.v=vr.id; b.textContent=t(vr.label);
@@ -819,16 +820,36 @@ function labRender(){
     labArpEl.appendChild(b); });
   labCount.style.color='var(--muted)';
   labCount.textContent=t('lab.count',{n:labSel.size}) + (dn? '  ·  ↓ '+t('lab.count',{n:labSelDn.size}) : ''); }
+const labScaleSel=document.getElementById('labScaleSel');
+let labOrigSig='';
+function labScaleName(id){ const p=LAB_PRESETS.find(x=>x.id===id); if(p) return t(p.label);
+  const c=labScales.find(x=>x.id===id); return c?c.name:''; }
+function labSig(pcs,down,arp){ return pcs.join(',')+'|'+(down?down.join(','):'')+'|'+arp.join(','); }
+function labFillSelect(){ labScaleSel.innerHTML='';
+  LAB_PRESETS.forEach(p=>labScaleSel.appendChild(new Option(t(p.label),p.id)));
+  labScales.forEach(c=>labScaleSel.appendChild(new Option(c.name,c.id)));
+  labScaleSel.appendChild(new Option(t('lab.newScale'),'__new')); }
+function labLoad(id){
+  if(id==='__new'){ labSel=new Set([0]); labSelDn=new Set([0]); labDownSel.value='off';
+    labArp=[0,7,12,7,0,7,12,7]; labName.value=''; labName.placeholder=t('lab.newName'); }
+  else { const src=LAB_PRESETS.find(p=>p.id===id)||labScales.find(c=>c.id===id)||LAB_PRESETS[0];
+    labSel=new Set(src.pcs); labSel.add(0);
+    labSelDn=new Set(src.down||src.pcs); labSelDn.add(0);
+    labDownSel.value=src.down?'on':'off';
+    const base=(src.arp&&src.arp.length)?src.arp:[0,7,12,7];
+    labArp=[]; while(labArp.length<8) labArp=labArp.concat(base); labArp=labArp.slice(0,8);
+    const own=labScales.find(c=>c.id===id);
+    labName.value=own?own.name:''; labName.placeholder=own?'':labScaleName(id); }
+  document.getElementById('labDelete').style.display = labScales.some(c=>c.id===id) ? '' : 'none';
+  labRender();
+  labOrigSig=labSig([...labSel].sort((a,b)=>a-b), labDownSel.value==='on'?[...labSelDn].sort((a,b)=>a-b):null, labArp);
+}
 document.getElementById('labBtn').addEventListener('click',()=>{
-  labSel=new Set(SCALE); labSel.add(0);
-  labSelDn=new Set(SCALEDN||SCALE); labSelDn.add(0);
-  labDownSel.value=SCALEDN?'on':'off';
-  const cur=labScales.find(c=>c.id===settings.variant);
-  const base=(cur&&cur.arp&&cur.arp.length)?cur.arp:[0,7,12,7];
-  labArp=[]; while(labArp.length<8) labArp=labArp.concat(base); labArp=labArp.slice(0,8);   // tile old/short patterns to a full bar
-  labName.value=cur?cur.name:'';
-  document.getElementById('labDelete').style.display=cur?'':'none';
-  labRender(); labov.classList.remove('hidden'); });
+  labFillSelect();
+  const cur=M.scales[settings.variant]?settings.variant:'p_harm';
+  labScaleSel.value=cur; labLoad(cur);
+  labov.classList.remove('hidden'); });
+labScaleSel.addEventListener('change',()=>labLoad(labScaleSel.value));
 labDownSel.addEventListener('change',()=>{ if(labDownSel.value==='on'&&labSelDn.size<=1) labSelDn=new Set(labSel); labRender(); });
 // audition: play the edited scale up (and back down via the descending row) or two bars of the arp pattern
 let labPrevUntil=0;
@@ -849,22 +870,24 @@ document.getElementById('labPlayArp').addEventListener('click',()=>{
   for(let r=0;r<2;r++) labArp.forEach((v,i)=>{ if(v!=null) kotoPluck(v, t+(r*8+i)*step); });
   labPrevUntil=t+16*step+0.3; });
 document.getElementById('labClose').addEventListener('click',()=>labov.classList.add('hidden'));
-document.getElementById('labSave').addEventListener('click',()=>{
+document.getElementById('labOk').addEventListener('click',()=>{
   const pcs=[...labSel].sort((a,b)=>a-b);
   const useDown=labDownSel.value==='on';
   const down=useDown?[...labSelDn].sort((a,b)=>a-b):null;
   if(useDown && down.length!==pcs.length){ labCount.textContent=t('lab.eqErr'); labCount.style.color='#ff8787'; return; }
   labSanitizeArp();
+  const sel=labScaleSel.value;
+  if(sel!=='__new' && labSig(pcs,down,labArp)===labOrigSig){ setVariant(sel); labov.classList.add('hidden'); return; }   // pick an existing scale unchanged
   let name=labName.value.trim(); if(!name) name=t('lab.defName',{n:labScales.length+1});
-  const cur=labScales.find(c=>c.id===settings.variant);
+  const own=labScales.find(c=>c.id===sel);      // editing one's own custom scale → overwrite; a preset/new → create
   let id;
-  if(cur){ cur.pcs=pcs; cur.name=name; cur.down=down||undefined; cur.arp=labArp.slice(); id=cur.id; }
+  if(own){ own.pcs=pcs; own.name=name; own.down=down||undefined; own.arp=labArp.slice(); id=own.id; }
   else { id='c'+Date.now().toString(36); labScales.push({id,name,pcs,down:down||undefined,arp:labArp.slice()}); }
-  saveLabStore(); rebuildLabMode(); buildLadRow(); setVariant(id);
+  saveLabStore(); rebuildLabMode(); setVariant(id);
   labov.classList.add('hidden'); });
 document.getElementById('labDelete').addEventListener('click',()=>{
-  const i=labScales.findIndex(c=>c.id===settings.variant);
-  if(i>=0){ labScales.splice(i,1); saveLabStore(); rebuildLabMode(); buildLadRow(); setVariant('p_harm'); }
+  const i=labScales.findIndex(c=>c.id===labScaleSel.value);
+  if(i>=0){ labScales.splice(i,1); saveLabStore(); rebuildLabMode(); if(settings.variant===labScaleSel.value) setVariant('p_harm'); }
   labov.classList.add('hidden'); });
 
 /* ============ Instrument picker and start ============ */
