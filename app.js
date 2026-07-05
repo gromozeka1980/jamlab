@@ -753,12 +753,13 @@ document.addEventListener("keydown",e=>{ if(e.key!=="Escape") return;
 SHEETS.forEach(id=>{ const el=document.getElementById(id); el.addEventListener("pointerdown",e=>{ if(e.target===el) el.classList.add("hidden"); }); });
 // pause the backing while the recording preview is open — it clashes with the clip's own audio;
 // watching the class covers every close path (button, Escape, backdrop tap)
-let backingHeld=false;
-const recovEl=document.getElementById('recov');
-new MutationObserver(()=>{ const open=!recovEl.classList.contains('hidden');
-  if(open && accOn){ backingHeld=true; stopBacking(); }
-  else if(!open && backingHeld){ backingHeld=false; startBacking(); }
-}).observe(recovEl,{attributes:true,attributeFilter:['class']});
+// same for the scale builder: silence the backing while editing (so auditions don't overlap it),
+// then restart it on close — now under whatever scale/arp OK selected
+[['recov'],['labov']].forEach(([id])=>{ let held=false; const el=document.getElementById(id);
+  new MutationObserver(()=>{ const open=!el.classList.contains('hidden');
+    if(open && accOn){ held=true; stopBacking(); }
+    else if(!open && held){ held=false; startBacking(); }
+  }).observe(el,{attributes:true,attributeFilter:['class']}); });
 
 /* ============ Language ============ */
 function applyStaticI18n(){

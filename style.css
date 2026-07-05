@@ -20,9 +20,9 @@ h1 small{color:var(--muted); font-weight:400;}
 /* brand mark: top-left on the play screen (for screenshots) */
 .brand{position:absolute; left:12px; top:max(6px,env(safe-area-inset-top)); display:flex; align-items:center; gap:5px; opacity:.82;}
 .brand span{font-size:12px; font-weight:700; letter-spacing:.3px;}
-.hlogo{width:15px; height:20px;}
+.hlogo{width:13px; height:23px;}
 /* big logo on the start screen */
-.ologo{width:62px; height:84px; display:block; margin:0 auto;}
+.ologo{width:52px; height:92px; display:block; margin:0 auto;}
 
 .controls{display:flex; flex-wrap:wrap; gap:6px 14px; justify-content:center; align-items:flex-end; padding:6px 12px;}
 .ctl{display:flex; flex-direction:column; gap:2px;}
