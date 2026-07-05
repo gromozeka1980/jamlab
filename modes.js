@@ -149,6 +149,8 @@ export const LAB_PRESETS=[
   {id:'p_pent', label:'variant.majpent', pcs:[0,2,4,7,9],               arp:[0,7,12,9,0,7,4,7]},
   {id:'p_blues',label:'variant.bluesmin',pcs:[0,3,5,6,7,10],            arp:[0,7,12,10,0,7,3,7]},
   {id:'p_whole',label:'variant.whole',   pcs:[0,2,4,6,8,10],            arp:[0,4,8,4,0,6,8,6]},
+  {id:'p_octa', label:'variant.octatonic',pcs:[0,1,3,4,6,7,9,10],       arp:[0,7,12,6,0,7,3,9]},
+  {id:'p_bebop',label:'variant.bebop',   pcs:[0,2,4,5,7,9,10,11],       arp:[0,7,12,10,0,7,4,2]},
 ];
 
 /* --- synthwave / lo-fi progressions --- */

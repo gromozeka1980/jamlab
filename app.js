@@ -818,7 +818,7 @@ function labSanitizeArp(){ const ok=[...labSel,12];
 function labPing(off){ if(actx) kotoPluck(off, actx.currentTime); }   // audition a single tone
 function labGrid(host,set){ host.innerHTML='';
   for(let pc=0;pc<12;pc++){ const b=document.createElement('button'); b.className='pcbtn'+(set.has(pc)?' on':''); b.textContent=DEG12[pc]; b.disabled=(pc===0);
-    b.addEventListener('click',()=>{ if(set.has(pc)) set.delete(pc); else { if(set.size>=7) return; set.add(pc); tapHaptic('LIGHT'); labPing(pc); } labRender(); });
+    b.addEventListener('click',()=>{ if(set.has(pc)) set.delete(pc); else { if(set.size>=8) return; set.add(pc); tapHaptic('LIGHT'); labPing(pc); } labRender(); });
     host.appendChild(b); } }
 function labRender(){
   labGrid(labPcs,labSel);

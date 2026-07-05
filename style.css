@@ -4,11 +4,11 @@
   --text:#eceaf3; --muted:#9aa0bf; --accent:#ffd43b; --blue:#4dd0e1;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-html,body{margin:0; height:100%;}
+html,body{margin:0; height:100vh; height:100dvh;}   /* dvh — survives the dynamic browser bars of in-app WebViews */
 body{
   background:radial-gradient(1200px 600px at 50% -10%, var(--bg1) 0%, var(--bg) 62%);
   color:var(--text); font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-  display:flex; flex-direction:column; min-height:100%; overflow:hidden;
+  display:flex; flex-direction:column; height:100%; overflow:hidden;
   user-select:none; -webkit-user-select:none;
   transition:background .4s;
 }
@@ -52,7 +52,8 @@ input[type=range]{width:150px; accent-color:var(--accent);}
 .chords span{font-size:11px; color:var(--muted);}
 
 .playfield{flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 10px; min-height:0;}  /* centers the keys → drag gutters above & below */
-.keys{display:flex; flex-direction:column; gap:6px; width:100%; height:clamp(150px,42vh,300px);}
+/* keys fill the playfield and never overflow it (so the octave buttons below never get overlapped) */
+.keys{display:flex; flex-direction:column; gap:6px; width:100%; flex:1; min-height:0; max-height:300px;}
 .row{display:flex; gap:6px;}
 .row.top{height:38%; flex:none;}
 .row.bottom{flex:1; min-height:0;}
@@ -150,16 +151,28 @@ input[type=range]{width:150px; accent-color:var(--accent);}
 #labov.hidden{display:none;}
 #closeSettings,#closeHelp{align-self:flex-end; background:var(--zero); border-color:var(--zero); color:#04140a; font-weight:700; padding:9px 22px;}
 
+/* shorter viewports (in-app browsers / smaller phones): tighten the chrome, keep the keys big */
+@media (max-height:760px){
+  header{padding:max(4px,env(safe-area-inset-top)) 12px 0;}
+  .controls{padding:3px 10px; gap:4px 12px;}
+  .display{padding:2px 12px 4px; min-height:0;}
+  .note{font-size:24px;}
+  .extra{padding:0 12px 4px;}
+  .extra .key{height:40px;}
+  .actions{padding:4px 12px max(6px,env(safe-area-inset-bottom));}
+  .hint{font-size:10px; padding:0 10px 3px;}
+}
 /* short viewport (phone landscape): keep two rows, just compact the chrome */
 @media (max-height:520px){
   header{padding:1px 12px 0;}
   h1{font-size:11px;}
+  .brand{opacity:.6;}
   .controls{padding:2px 8px; gap:3px 8px;}
   .display{padding:1px 12px 2px; min-height:0;}
   .note{font-size:18px;}
   .role{font-size:11px;}
   .playfield{padding:0 8px;}
-  .keys{height:clamp(118px,54vh,220px); gap:4px;}
+  .keys{gap:4px;}
   .row.bottom .key .off{font-size:clamp(22px,5vw,40px);}
   .extra{padding:0 12px 3px;}
   .extra .key{height:34px; min-width:60px;}
