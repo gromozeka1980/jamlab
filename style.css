@@ -65,10 +65,10 @@ input[type=range]{width:150px; accent-color:var(--accent);}
   cursor:pointer; position:relative; overflow:hidden; transition:transform .05s, box-shadow .12s, background .12s;}
 .key .off{font-weight:800; line-height:1;}
 .row.bottom .key .off{font-size:clamp(24px,6vw,46px);}
-.row.top .key .off{font-size:clamp(14px,3.6vw,26px); font-weight:700;}
+.row.top .key .off{font-size:var(--topoff,clamp(14px,3.6vw,26px)); font-weight:700;}
 .key .lead{color:var(--muted); white-space:nowrap; line-height:1.1; margin-top:3px;}
 .row.bottom .key .lead{font-size:clamp(11px,2.6vw,15px);}
-.row.top .key .lead{font-size:clamp(8px,2.2vw,12px);}
+.row.top .key .lead{font-size:var(--toplead,clamp(8px,2.2vw,12px));}
 .key.zero .lead{color:#cfe8d6;}
 .key .kb{position:absolute; top:6px; left:6px; font-size:10px; color:var(--muted);
   border:1px solid var(--line); border-radius:5px; padding:0 5px; min-width:16px; text-align:center;}

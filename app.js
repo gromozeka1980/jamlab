@@ -262,7 +262,8 @@ function updateDisplay(){
 }
 function refreshKeyLabels(){ const ct=curChord; for(const k of noteKeys){
     if(k.el.classList.contains('active')) continue;   // freeze a held key: its label/arrows describe the sounding voice
-    const idx=clampIndex(currentIndex+k.off), lab=pitchLabel(idx); k.lead.textContent=lab.deg+" ("+lab.note+")";
+    const idx=clampIndex(currentIndex+k.off), lab=pitchLabel(idx);
+    k.lead.textContent = Math.abs(k.off)>=3 ? String(lab.deg) : lab.deg+" ("+lab.note+")";   // narrow top-row keys: degree only, no (note)
     const bt=bendTargets(idx);                                                  // per-key bend directions
     k.el.classList.toggle('canup',!!bt.up); k.el.classList.toggle('candn',!!bt.down);
     let role=0;                                  // current-chord tone: 1/3/5/7
@@ -275,11 +276,13 @@ function refreshKeyLabels(){ const ct=curChord; for(const k of noteKeys){
 
 /* ============ Keys ============ */
 // weight by distance from the current note: small steps big & central, octave leaps small at the edges
-const KW={0:3.8,1:3.2,2:2.4,3:1.7,4:1.3,5:1.0,6:0.85,7:0.7};
+const KW={0:3.8,1:3.2,2:2.4,3:1.7,4:1.3,5:1.0,6:0.85,7:0.7,8:0.62};
 const KEYS=[
+  {off:-8,code:"Digit1",lbl:"1"},
   {off:-7,code:"KeyQ",lbl:"Q"},{off:-6,code:"KeyA",lbl:"A"},{off:-5,code:"KeyS",lbl:"S"},{off:-4,code:"KeyD",lbl:"D"},{off:-3,code:"KeyF",lbl:"F"},
   {off:-2,code:"KeyG",lbl:"G"},{off:-1,code:"KeyH",lbl:"H"},{off:0,code:"Space",lbl:"␣"},{off:1,code:"KeyJ",lbl:"J"},{off:2,code:"KeyK",lbl:"K"},
-  {off:3,code:"KeyL",lbl:"L"},{off:4,code:"Semicolon",lbl:";"},{off:5,code:"Quote",lbl:"'"},{off:6,code:"KeyP",lbl:"P"},{off:7,code:"Backslash",lbl:"\\"}
+  {off:3,code:"KeyL",lbl:"L"},{off:4,code:"Semicolon",lbl:";"},{off:5,code:"Quote",lbl:"'"},{off:6,code:"KeyP",lbl:"P"},{off:7,code:"Backslash",lbl:"\\"},
+  {off:8,code:"Backquote",lbl:"`"}
 ];
 const codeMap={}, noteKeys=[], noteCodes=[];
 function buildRow(list,host){ list.forEach(k=>{ const el=document.createElement("div");
@@ -294,8 +297,14 @@ function buildKeys(){
   const set=KEYS.filter(k=>Math.abs(k.off)<=maxReach());
   rowTopEl.innerHTML=""; rowBottomEl.innerHTML="";
   noteKeys.length=0; noteCodes.forEach(c=>delete codeMap[c]); noteCodes.length=0;
-  buildRow(set.filter(k=>Math.abs(k.off)>=3),rowTopEl);     // rare leaps — small, top row
+  const top=set.filter(k=>Math.abs(k.off)>=3);
+  buildRow(top,rowTopEl);                                    // rare leaps — small, top row
   buildRow(set.filter(k=>Math.abs(k.off)<=2),rowBottomEl);  // frequent steps — big, bottom row
+  // adaptive font: the more leap keys in the top row, the narrower they are → shrink their labels to fit
+  const n=top.length;
+  const off = n>=12?'clamp(12px,3vw,20px)' : n>=10?'clamp(13px,3.3vw,23px)' : 'clamp(14px,3.6vw,26px)';
+  const lead= n>=12?'clamp(7px,1.7vw,10px)' : n>=10?'clamp(8px,2vw,11px)' : 'clamp(8px,2.2vw,12px)';
+  rowTopEl.style.setProperty('--topoff',off); rowTopEl.style.setProperty('--toplead',lead);
 }
 buildKeys();
 
