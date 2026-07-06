@@ -808,7 +808,7 @@ const DEG12=['1','♭2','2','♭3','3','4','♯4','5','♭6','6','♭7','7'];
 let labScales=[]; try{ labScales=JSON.parse(localStorage.getItem('jamlab.labScales')||'[]')||[]; }catch(e){ labScales=[]; }
 function saveLabStore(){ try{ localStorage.setItem('jamlab.labScales',JSON.stringify(labScales)); }catch(e){} }
 function rebuildLabMode(){ const m=MODES.lab; m.scales={}; m.downScales={}; m.arps={}; m.variants=[];
-  for(const p of LAB_PRESETS){ m.scales[p.id]=p.pcs; if(p.down) m.downScales[p.id]=p.down; m.variants.push({id:p.id,label:p.label}); }
+  for(const p of LAB_PRESETS){ m.scales[p.id]=p.pcs; if(p.down) m.downScales[p.id]=p.down; if(p.arp) m.arps[p.id]=p.arp; m.variants.push({id:p.id,label:p.label}); }
   for(const c of labScales){ m.scales[c.id]=c.pcs; if(c.down) m.downScales[c.id]=c.down; if(c.arp) m.arps[c.id]=c.arp; m.variants.push({id:c.id,label:c.name}); }
   if(!m.scales[m.defVariant]) m.defVariant='p_harm';
 }
