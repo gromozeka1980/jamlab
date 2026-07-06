@@ -4,22 +4,26 @@
 export function hexToRgb(h){ h=(h||'').trim().replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join(''); const n=parseInt(h||'888888',16); return [(n>>16)&255,(n>>8)&255,n&255]; }
 export function cssRgb(v){ return hexToRgb(getComputedStyle(document.documentElement).getPropertyValue(v)); }
 
-// Compact test-tube-note brand mark, centred on (cx,cy), unit k (~14k tall). Used by the watermark.
+// Test-tube-note brand mark for the recording watermark — same geometry as the app-icon logo
+// (logo.svg local space, bbox ~x[368..660] y[179..723], centre ~(500,451)), scaled to unit k.
+const LOGO_BUB=[[509,185,6],[515,216,13],[528,260,23],[513,311,16],[538,338,10],[523,375,23],[507,417,11],[538,414,9],[566,280,8],[562,313,16],[595,304,5],[603,345,19],[635,357,4],[629,385,15],[628,419,5],[651,413,9],[648,444,12],[644,474,10],[628,495,6],[611,519,4]];
+const LOGO_BHL=[[521,252,7,0.9],[516,367,7,0.85],[597,339,6,0.8],[624,380,5,0.75],[644,440,4,0.7],[557,308,5,0.75]];
+function _rr(c,x,y,w,h,r){ r=Math.min(r,w/2,h/2); c.beginPath();
+  c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); c.fill(); }
 export function drawTubeNote(c, cx, cy, k){
-  const sx=cx+1.2*k;                                   // tube centre x
-  // bubbles rising & arcing (the note flag)
-  c.fillStyle='#b39dff';
-  [[0.2,-6.2,1.5],[1.8,-8.0,1.1],[3.1,-9.2,0.8],[-0.4,-7.6,0.7]].forEach(([dx,dy,r])=>{
-    c.beginPath(); c.arc(sx+dx*k, cy+dy*k, r*k, 0, 6.2832); c.fill(); });
-  // tube (stem)
-  c.strokeStyle='#6d4aff'; c.lineWidth=2.4*k; c.lineCap='round';
-  c.beginPath(); c.moveTo(sx, cy+4.4*k); c.lineTo(sx, cy-4.6*k); c.stroke();
-  c.strokeStyle='#a98fff'; c.lineWidth=2.4*k;           // lighter rim at the mouth
-  c.beginPath(); c.moveTo(sx-1.3*k, cy-4.6*k); c.lineTo(sx+1.3*k, cy-4.6*k); c.stroke();
-  // note head
-  c.save(); c.translate(cx-1.6*k, cy+4.8*k); c.rotate(-0.32);
-  c.fillStyle='#7c5cff'; c.beginPath(); c.ellipse(0,0,3.6*k,2.7*k,0,0,6.2832); c.fill();
-  c.fillStyle='#cabdff'; c.globalAlpha=0.75; c.beginPath(); c.ellipse(-1.1*k,-0.9*k,1.1*k,0.7*k,0,0,6.2832); c.fill(); c.globalAlpha=1;
+  const S=k*0.033, X=lx=>cx+(lx-500)*S, Y=ly=>cy+(ly-451)*S, R=r=>r*S;
+  c.fillStyle='#8f6fff';
+  for(const [x,y,r] of LOGO_BUB){ c.beginPath(); c.arc(X(x),Y(y),R(r),0,6.2832); c.fill(); }
+  for(const [x,y,r,a] of LOGO_BHL){ c.globalAlpha=a; c.fillStyle='#e4dcff'; c.beginPath(); c.arc(X(x),Y(y),R(r),0,6.2832); c.fill(); }
+  c.globalAlpha=1;
+  c.fillStyle='#6d4aff'; _rr(c, X(489),Y(482),R(54),R(186),R(12));      // tube
+  c.fillStyle='#7c5cff'; _rr(c, X(492),Y(512),R(48),R(148),R(12));      // liquid
+  c.globalAlpha=0.55; c.fillStyle='#d9d0ff'; _rr(c, X(495),Y(492),R(8),R(160),R(4)); c.globalAlpha=1;   // glass sheen
+  c.fillStyle='#7c5cff'; _rr(c, X(480),Y(466),R(72),R(24),R(11));       // rim
+  c.fillStyle='#a78bfa'; _rr(c, X(480),Y(466),R(72),R(11),R(5));
+  c.save(); c.translate(X(456),Y(661)); c.rotate(-0.279);               // note head (rotated -16°)
+  c.fillStyle='#6d4aff'; c.beginPath(); c.ellipse(0,0,R(88),R(62),0,0,6.2832); c.fill();
+  c.globalAlpha=0.75; c.fillStyle='#cabdff'; c.beginPath(); c.ellipse(R(-32),R(-24),R(30),R(16),0,0,6.2832); c.fill(); c.globalAlpha=1;
   c.restore();
 }
 
