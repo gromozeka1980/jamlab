@@ -122,21 +122,33 @@ function makeVoice(freq,maxUp,maxDown,approach,when){
   v.vibG=vibG; v.vibBase=vibG.gain.value;
   if(settings.gyro==='vibrato') vibG.gain.value = v.vibBase + gyroV*18;   // pick up the current tilt
   vib.connect(vibG); vib.start(t0); v.stops.push(vib);
+  let vout=g;                                                  // per-voice output (a filter may sit before g)
   const addOsc=(type,mult,detune,gain)=>{ const o=actx.createOscillator(); o.type=type; const target=freq*mult;
     if(approach){ o.frequency.setValueAtTime(target*Math.pow(2,approach/12),t0); o.frequency.exponentialRampToValueAtTime(target,t0+0.06); }  // chromatic lead-in
     else o.frequency.value=target;
     if(detune)o.detune.value=detune; vibG.connect(o.detune);
-    const og=actx.createGain(); og.gain.value=(gain==null?1:gain); o.connect(og); og.connect(g);
+    const og=actx.createGain(); og.gain.value=(gain==null?1:gain); o.connect(og); og.connect(vout);
     o.start(t0); v.freqNodes.push({osc:o,mult}); v.stops.push(o); };
+  const pluckNoise=(amp,dur,bpFreq,Q)=>{                       // attack transient: pick/mallet against the string/bar
+    const nz=actx.createBufferSource(); nz.buffer=noiseBuf;
+    const nf=actx.createBiquadFilter(); nf.type='bandpass'; nf.frequency.value=bpFreq; nf.Q.value=Q;
+    const ng=actx.createGain(); ng.gain.setValueAtTime(amp,t0); ng.gain.exponentialRampToValueAtTime(0.0006,t0+dur);
+    nz.connect(nf); nf.connect(g); nz.start(t0); nz.stop(t0+dur+0.02); v.stops.push(nz); };
   if(M.voice==='saw'){
     addOsc('sawtooth',1,0,1); addOsc('sawtooth',1,8,1);
     g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.30,t0+0.012); g.gain.exponentialRampToValueAtTime(.2,t0+0.3);
-  } else if(M.voice==='pluck'){
-    addOsc('triangle',1,0,1); addOsc('sine',2,6,0.4);
-    g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.42,t0+0.006); g.gain.exponentialRampToValueAtTime(.12,t0+1.4);
-  } else if(M.voice==='metal'){         // metallophone/gamelan: inharmonic partials, bright decay
-    addOsc('triangle',1,0,1); addOsc('sine',2.01,0,0.5); addOsc('sine',3.0,0,0.25); addOsc('sine',5.4,0,0.12);
-    g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.4,t0+0.003); g.gain.exponentialRampToValueAtTime(.08,t0+1.8);
+  } else if(M.voice==='pluck'){         // plucked string (koto/qanun): rich harmonics through a fast-closing lowpass + pick transient
+    const lp=actx.createBiquadFilter(); lp.type='lowpass'; lp.Q.value=1.1;
+    lp.frequency.setValueAtTime(Math.min(9000,freq*8),t0); lp.frequency.exponentialRampToValueAtTime(Math.max(650,freq*2.2),t0+0.45);
+    lp.connect(g); vout=lp;
+    addOsc('sawtooth',1,0,1); addOsc('sawtooth',2,5,0.28);
+    pluckNoise(0.22,0.05,freq*3,0.8);
+    g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.40,t0+0.004); g.gain.exponentialRampToValueAtTime(.10,t0+1.6);
+  } else if(M.voice==='metal'){         // metallophone (saron/gender): pure partials, gentle inharmonic shimmer, soft mallet
+    const lp=actx.createBiquadFilter(); lp.type='lowpass'; lp.Q.value=0.5; lp.frequency.value=Math.min(8000,freq*7); lp.connect(g); vout=lp;
+    addOsc('sine',1,0,1); addOsc('sine',2,0,0.34); addOsc('sine',3.01,0,0.11); addOsc('sine',5.9,0,0.045);
+    pluckNoise(0.10,0.03,freq*4,1.2);
+    g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.34,t0+0.009); g.gain.exponentialRampToValueAtTime(.05,t0+2.0);
   } else if(M.voice==='keys'){          // soft e-piano (lo-fi)
     addOsc('sine',1,0,1); addOsc('sine',2,3,0.25); addOsc('triangle',3,0,0.05);
     g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.38,t0+0.008); g.gain.exponentialRampToValueAtTime(.10,t0+1.1);
