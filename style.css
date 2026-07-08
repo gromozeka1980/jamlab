@@ -10,6 +10,7 @@ body{
   color:var(--text); font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
   display:flex; flex-direction:column; height:100%; overflow:hidden;
   user-select:none; -webkit-user-select:none;
+  touch-action:manipulation;   /* kill iOS double-tap-to-zoom (it ignores user-scalable=no) while keeping taps/clicks */
   transition:background .4s;
 }
 /* block scroll/zoom only on the play surfaces — leave sheets/pickers scrollable */

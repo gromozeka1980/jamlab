@@ -972,6 +972,7 @@ refreshLabels();
 refreshLocks();
 initBilling();
 document.addEventListener("gesturestart",e=>e.preventDefault());
+document.addEventListener("dblclick",e=>e.preventDefault());   // belt-and-suspenders vs iOS double-tap zoom
 document.addEventListener("contextmenu",e=>e.preventDefault());
 document.addEventListener("touchend",resumeAudio,{passive:true});
 // interruptions (call, app switch, screen lock): hold the backing while hidden, resume on return
