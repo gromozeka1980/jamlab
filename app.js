@@ -105,7 +105,9 @@ function bendTargets(i){
     return {up, down};
   }
   const len=SCALE.length, step=((i%len)+len)%len, pc=SCALE[step];
-  const chord = M.id==='blues' ? currentChordPcs() : new Set(SCALE);
+  // bend targets = scale tones ∪ current-chord tones. For blues this is essential: the signature
+  // bends (4→♭5, ♭3→3) aim at blue notes that live in the scale but never in the chord.
+  const chord = M.id==='blues' ? new Set([...SCALE, ...currentChordPcs()]) : new Set(SCALE);
   let up=null,down=null;
   for(const a of [1,2]){ const tp=(pc+a)%12;    if(chord.has(tp)){ up  ={amt:a,name:degName(tp)}; break; } }
   for(const a of [1,2]){ const tp=(pc-a+12)%12; if(chord.has(tp)){ down={amt:a,name:degName(tp)}; break; } }
