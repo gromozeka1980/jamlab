@@ -125,11 +125,14 @@ function makeVoice(freq,maxUp,maxDown,approach,when){
   if(settings.gyro==='vibrato') vibG.gain.value = v.vibBase + gyroV*18;   // pick up the current tilt
   vib.connect(vibG); vib.start(t0); v.stops.push(vib);
   let vout=g;                                                  // per-voice output (a filter may sit before g)
-  const addOsc=(type,mult,detune,gain)=>{ const o=actx.createOscillator(); o.type=type; const target=freq*mult;
+  const addOsc=(type,mult,detune,gain,decay)=>{ const o=actx.createOscillator(); o.type=type; const target=freq*mult;
     if(approach){ o.frequency.setValueAtTime(target*Math.pow(2,approach/12),t0); o.frequency.exponentialRampToValueAtTime(target,t0+0.06); }  // chromatic lead-in
     else o.frequency.value=target;
     if(detune)o.detune.value=detune; vibG.connect(o.detune);
-    const og=actx.createGain(); og.gain.value=(gain==null?1:gain); o.connect(og); og.connect(vout);
+    const og=actx.createGain(); const gv=(gain==null?1:gain);
+    if(decay){ og.gain.setValueAtTime(gv,t0); og.gain.exponentialRampToValueAtTime(Math.max(0.001,gv*0.04),t0+decay); }  // per-partial fade (strings: highs die first)
+    else og.gain.value=gv;
+    o.connect(og); og.connect(vout);
     o.start(t0); v.freqNodes.push({osc:o,mult}); v.stops.push(o); };
   const pluckNoise=(amp,dur,bpFreq,Q)=>{                       // attack transient: pick/mallet against the string/bar
     const nz=actx.createBufferSource(); nz.buffer=noiseBuf;
@@ -139,13 +142,19 @@ function makeVoice(freq,maxUp,maxDown,approach,when){
   if(M.voice==='saw'){
     addOsc('sawtooth',1,0,1); addOsc('sawtooth',1,8,1);
     g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.30,t0+0.012); g.gain.exponentialRampToValueAtTime(.2,t0+0.3);
-  } else if(M.voice==='pluck'){         // plucked string (koto/qanun): rich harmonics through a fast-closing lowpass + pick transient
-    const lp=actx.createBiquadFilter(); lp.type='lowpass'; lp.Q.value=1.1;
-    lp.frequency.setValueAtTime(Math.min(9000,freq*8),t0); lp.frequency.exponentialRampToValueAtTime(Math.max(650,freq*2.2),t0+0.45);
-    lp.connect(g); vout=lp;
-    addOsc('sawtooth',1,0,1); addOsc('sawtooth',2,5,0.28);
-    pluckNoise(0.22,0.05,freq*3,0.8);
-    g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.40,t0+0.004); g.gain.exponentialRampToValueAtTime(.10,t0+1.6);
+  } else if(M.voice==='pluck'){         // generic pluck (vostok/jazz/light/lab) — the original voice
+    addOsc('triangle',1,0,1); addOsc('sine',2,6,0.4);
+    g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.42,t0+0.006); g.gain.exponentialRampToValueAtTime(.12,t0+1.4);
+  } else if(M.voice==='koto'){          // koto: additive plucked string — per-partial decay (highs die first), slight inharmonic stretch, tsume pick tick
+    addOsc('triangle',1,0,1,2.4);       // warm fundamental
+    addOsc('sine',1,4,0.35,2.0);        // detuned double → gentle beating, like neighbouring strings ringing along
+    addOsc('sine',2.003,0,0.62,1.0);
+    addOsc('sine',3.008,0,0.38,0.6);
+    addOsc('sine',4.014,0,0.22,0.42);
+    addOsc('sine',5.022,0,0.13,0.30);
+    addOsc('sine',7.05,0,0.07,0.18);
+    pluckNoise(0.30,0.02,Math.min(8500,freq*6),1.5);
+    g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.46,t0+0.003); g.gain.exponentialRampToValueAtTime(.13,t0+2.0);
   } else if(M.voice==='metal'){         // metallophone (saron/gender): pure partials, gentle inharmonic shimmer, soft mallet
     const lp=actx.createBiquadFilter(); lp.type='lowpass'; lp.Q.value=0.5; lp.frequency.value=Math.min(8000,freq*7); lp.connect(g); vout=lp;
     addOsc('sine',1,0,1); addOsc('sine',2,0,0.34); addOsc('sine',3.01,0,0.11); addOsc('sine',5.9,0,0.045);

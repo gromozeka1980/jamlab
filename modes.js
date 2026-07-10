@@ -35,7 +35,7 @@ export const MODES = {
     backings:[{id:'drone',label:'backing.drone'},{id:'shimmer',label:'backing.shimmer'}], defBacking:'drone',
   },
   koto: {
-    id:'koto', name:'mode.koto.name', sub:'mode.koto.sub', voice:'pluck', back:'koto', perc:'taiko',
+    id:'koto', name:'mode.koto.name', sub:'mode.koto.sub', voice:'koto', back:'koto', perc:'taiko',
     theme:{bg1:'#2a2150', accent:'#ffcf6b', zero:'#e23b3b', neg:'#4263eb', pos:'#e8590c', blue:'#4dd0e1'},
     kind:'scale',
     scales:{hira:[0,2,3,7,8], kumoi:[0,2,3,7,9], insen:[0,1,5,7,10], iwato:[0,1,5,6,10]},
