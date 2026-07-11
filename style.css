@@ -16,8 +16,15 @@ body{
 /* block scroll/zoom only on the play surfaces — leave sheets/pickers scrollable */
 .playfield,.row,.ladrow,.key,.extra,.strip{touch-action:none;}
 header{padding:max(8px,env(safe-area-inset-top)) 14px 2px; text-align:center; position:relative;}
-h1{font-size:14px; margin:0; font-weight:600; letter-spacing:.3px;}
+/* keep clear of the brand mark on the left (and mirror it on the right) — long titles ellipsize */
+h1{font-size:14px; margin:0 auto; font-weight:600; letter-spacing:.3px; max-width:calc(100% - 156px);
+   overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 h1 small{color:var(--muted); font-weight:400;}
+/* on touch the title doubles as the console toggle — the chevron says "I'm tappable" */
+.touch h1{cursor:pointer;}
+h1 .h1chev{display:none; color:var(--muted); font-size:10px; margin-left:4px; transition:transform .2s;}
+.touch h1 .h1chev{display:inline-block;}
+body.cfgopen h1 .h1chev{transform:rotate(180deg);}
 /* brand mark: top-left on the play screen (for screenshots) */
 .brand{position:absolute; left:12px; top:max(6px,env(safe-area-inset-top)); display:flex; align-items:center; gap:5px; opacity:.82;}
 .brand span{font-size:12px; font-weight:700; letter-spacing:.3px;}
@@ -37,6 +44,7 @@ input[type=range]{width:150px; accent-color:var(--accent);}
 
 .ladrow{display:flex; justify-content:space-between; align-items:stretch; gap:6px; min-height:0;}
 .ladrow:empty{display:none;}
+.ladrow:not(:empty){margin-bottom:10px;}   /* breathing room before the scale strip — no mis-taps between the two */
 .ladbtn{flex:1 1 0; min-width:0; padding:9px 8px; font-weight:700; color:var(--muted); border-radius:11px;
         font-size:clamp(11px,2.6vw,14px); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .ladbtn.active{background:var(--accent); border-color:var(--accent); color:#15151f;}
