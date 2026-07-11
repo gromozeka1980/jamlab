@@ -185,9 +185,10 @@ function applyBend(v){
   const semis=Math.max(-v.maxDown,Math.min(v.maxUp,b)), r=Math.pow(2,semis/12), t0=actx.currentTime;
   for(const fn of v.freqNodes) fn.osc.frequency.setTargetAtTime(v.baseFreq*fn.mult*r,t0,0.025);
 }
-function stopVoice(id){ const v=activeVoices.get(id); if(!v) return; activeVoices.delete(id);
+function stopVoice(id,rel){ const v=activeVoices.get(id); if(!v) return; activeVoices.delete(id);
+  rel=rel||0.3;                                     // glissando uses a fast release so voices don't pile up
   const t0=actx.currentTime; v.g.gain.cancelScheduledValues(t0); v.g.gain.setValueAtTime(v.g.gain.value,t0);
-  v.g.gain.exponentialRampToValueAtTime(.0008,t0+0.3); for(const n of v.stops){ try{n.stop(t0+0.34);}catch(e){} } }
+  v.g.gain.exponentialRampToValueAtTime(.0008,t0+rel); for(const n of v.stops){ try{n.stop(t0+rel+0.04);}catch(e){} } }
 
 /* ============ Key press ============ */
 // Jazz "bebop" phrasing: snap each step to a chord tone (3/5/7/root incl. guide tones) and lead in chromatically
@@ -250,7 +251,7 @@ function noteOn(id,offset,el){ initAudio(); resumeAudio(); if(activeVoices.has(i
   document.dispatchEvent(new CustomEvent('jl:note',{detail:{offset}}));   // tutorial listens
   trackOnce('first_note',{mode:M.id,tta:sinceLaunch()});                  // tta = seconds from launch to first sound
   return v; }
-function noteOff(id,el){ stopVoice(id);
+function noteOff(id,el,rel){ stopVoice(id,rel);
   heldNotes.delete(id); viz.keysHeld([...heldNotes.values()]);
   if(activeVoices.size===0){ viz.liveNote(null,0); elNote.classList.remove('bup','bdown'); }   // silence → no note in the video
   if(el){el.classList.remove("active","bending","bent","down"); el.style.setProperty("--bend",0);}
@@ -296,23 +297,27 @@ window.addEventListener('resize',()=>{ stripSig=''; stripRender(); });   // dot 
 // The strip is playable: tap a dot to teleport there (sounds like pressing "0" at the new spot),
 // slide the finger along it for a glissando over the scale. Snaps to the nearest dot — no precision needed.
 let stripPtr=null;
-function stripNearest(x){ let best=null,bd=Infinity;
-  for(const d of stripDots){ const r=d.el.getBoundingClientRect(), c=Math.abs(x-(r.left+r.width/2));
-    if(c<bd){ bd=c; best=d; } } return best; }
+// dot centers are cached for the whole gesture: measuring 30+ rects on every pointermove forces
+// layout and starves the main thread — that jank was audible as crackle during fast glissandi
+function stripCenters(){ return stripDots.map(d=>{ const r=d.el.getBoundingClientRect(); return {i:d.i, el:d.el, x:r.left+r.width/2}; }); }
+function stripNearest(cs,x){ let best=null,bd=Infinity;
+  for(const c of cs){ const d=Math.abs(x-c.x); if(d<bd){ bd=d; best=c; } } return best; }
+const STRIP_MIN_MS=45;                               // ≤22 notes/s — faster only piles voices up
 if(stripEl){
   stripEl.addEventListener('pointerdown',e=>{ e.preventDefault(); initAudio(); resumeAudio();
-    const d=stripNearest(e.clientX); if(!d) return;
+    const cs=stripCenters(), d=stripNearest(cs,e.clientX); if(!d) return;
     try{ stripEl.setPointerCapture(e.pointerId); }catch(err){}
-    stripPtr={pid:e.pointerId, d};
+    stripPtr={pid:e.pointerId, d, cs, last:performance.now()};
     noteOn('strip', d.i-currentIndex, d.el); tapHaptic('LIGHT');
     document.dispatchEvent(new Event('jl:strip')); });   // tutorial listens
   stripEl.addEventListener('pointermove',e=>{ if(!stripPtr || e.pointerId!==stripPtr.pid) return;
-    const d=stripNearest(e.clientX); if(!d || d.i===stripPtr.d.i) return;
-    noteOff('strip', stripPtr.d.el);
-    stripPtr.d=d; noteOn('strip', d.i-currentIndex, d.el);
+    const now=performance.now(); if(now-stripPtr.last<STRIP_MIN_MS) return;
+    const d=stripNearest(stripPtr.cs,e.clientX); if(!d || d.i===stripPtr.d.i) return;
+    noteOff('strip', stripPtr.d.el, 0.08);             // fast release: the next note takes over
+    stripPtr.d=d; stripPtr.last=now; noteOn('strip', d.i-currentIndex, d.el);
     document.dispatchEvent(new Event('jl:strip')); });
   const stripEnd=e=>{ if(!stripPtr || e.pointerId!==stripPtr.pid) return;
-    noteOff('strip', stripPtr.d.el); stripPtr=null; };
+    noteOff('strip', stripPtr.d.el); stripPtr=null; };   // last note rings out naturally
   stripEl.addEventListener('pointerup',stripEnd); stripEl.addEventListener('pointercancel',stripEnd);
 }
 
