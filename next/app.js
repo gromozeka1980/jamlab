@@ -293,6 +293,27 @@ function stripRender(){ if(!stripEl) return;
 }
 window.addEventListener('resize',()=>{ stripSig=''; stripRender(); });   // dot positions shift with the viewport
 
+// The strip is playable: tap a dot to teleport there (sounds like pressing "0" at the new spot),
+// slide the finger along it for a glissando over the scale. Snaps to the nearest dot — no precision needed.
+let stripPtr=null;
+function stripNearest(x){ let best=null,bd=Infinity;
+  for(const d of stripDots){ const r=d.el.getBoundingClientRect(), c=Math.abs(x-(r.left+r.width/2));
+    if(c<bd){ bd=c; best=d; } } return best; }
+if(stripEl){
+  stripEl.addEventListener('pointerdown',e=>{ e.preventDefault(); initAudio(); resumeAudio();
+    const d=stripNearest(e.clientX); if(!d) return;
+    try{ stripEl.setPointerCapture(e.pointerId); }catch(err){}
+    stripPtr={pid:e.pointerId, d};
+    noteOn('strip', d.i-currentIndex, d.el); tapHaptic('LIGHT'); });
+  stripEl.addEventListener('pointermove',e=>{ if(!stripPtr || e.pointerId!==stripPtr.pid) return;
+    const d=stripNearest(e.clientX); if(!d || d.i===stripPtr.d.i) return;
+    noteOff('strip', stripPtr.d.el);
+    stripPtr.d=d; noteOn('strip', d.i-currentIndex, d.el); });
+  const stripEnd=e=>{ if(!stripPtr || e.pointerId!==stripPtr.pid) return;
+    noteOff('strip', stripPtr.d.el); stripPtr=null; };
+  stripEl.addEventListener('pointerup',stripEnd); stripEl.addEventListener('pointercancel',stripEnd);
+}
+
 /* ============ Display ============ */
 const elNote=document.getElementById("noteName"), elRole=document.getElementById("roleName");
 function updateDisplay(){
@@ -988,8 +1009,8 @@ function goHome(){ if(accOn) stopBacking(); disarmPicks(); overlay.style.display
 // Sounding picker: the first tap on a card plays a short taste of that instrument (its real
 // voice + scale, incl. locked ones — a shop window), the second tap enters. setMode() under the
 // opaque overlay is invisible, so the preview simply borrows the whole engine.
-// The phrase is the app's own idiom: a fast relational run — root, then +1 +1 −1 three times.
-const PREVIEW_STEPS=[1,1,-1,1,1,-1,1,1,-1];
+// The phrase is the app's own idiom: a swung +1+1−1 zigzag through one octave, root to root
+// (blues: A C D C · D D# D · D# E D# · E G E · G A G · A C A — brushes the top and resolves home).
 let prevVoices=[], prevTimers=[];
 function releaseVoiceNow(v){ const t0=actx.currentTime;
   try{ v.g.gain.cancelScheduledValues(t0); v.g.gain.setValueAtTime(Math.max(v.g.gain.value,0.0009),t0);
@@ -997,11 +1018,15 @@ function releaseVoiceNow(v){ const t0=actx.currentTime;
 function stopPreview(){ prevTimers.forEach(clearTimeout); prevTimers=[];
   if(actx) prevVoices.forEach(releaseVoiceNow); prevVoices=[]; }
 function playPreview(id){ stopPreview(); setMode(id);
-  let idx=0; const seq=[0]; for(const s of PREVIEW_STEPS) seq.push(idx+=s);
+  const L=(M.kind==='harmonic')?8:SCALE.length;
+  const seq=[0]; let cur=0;
+  while(cur<L){ seq.push(++cur); seq.push(++cur); seq.push(--cur); }   // +1 +1 −1 until the upper root
+  const PAIR=230, UP=145;                                              // swung eighths: long-short
+  const at=n=>Math.floor(n/2)*PAIR + (n%2?UP:0);
   seq.forEach((ix,n)=>{ prevTimers.push(setTimeout(()=>{
     const v=makeVoice(pitchFreq(clampIndex(ix)),0,0,0); prevVoices.push(v);
-    prevTimers.push(setTimeout(()=>{ releaseVoiceNow(v); prevVoices=prevVoices.filter(x=>x!==v); },220));
-  }, n*115)); }); }
+    prevTimers.push(setTimeout(()=>{ releaseVoiceNow(v); prevVoices=prevVoices.filter(x=>x!==v); },(n%2?110:170)));
+  }, at(n))); }); }
 let armedPick=null, disarmT=null;
 function disarmPicks(){ armedPick=null; clearTimeout(disarmT);
   document.querySelectorAll('.pick.primed').forEach(x=>x.classList.remove('primed')); }
