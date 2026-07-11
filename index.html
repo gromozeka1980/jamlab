@@ -38,18 +38,19 @@
   <svg class="ologo"><use href="#tubelogo"/></svg>
   <h2 data-i18n="app.title" style="font-size:30px; letter-spacing:.5px; margin:2px 0 0;">Jamlab</h2>
   <div data-i18n="app.tagline" style="color:var(--muted); font-size:12px; letter-spacing:2.5px; text-transform:uppercase; margin:-4px 0 2px;">Relational instruments</div>
-  <p data-i18n="intro.p">Keys are steps along a scale, not separate notes — you can't play a wrong one. Pick an instrument:</p>
+  <div class="hero" data-i18n="intro.hero">You can't play a wrong note here.</div>
+  <p data-i18n="intro.p">Keys are steps along a scale, not fixed notes. Pick an instrument:</p>
   <div class="pickers">
-    <!-- free tier first, Jazz (experimental) last -->
-    <div class="pick" data-mode="blues"><b data-i18n="pick.blues.t">Blues</b><span data-i18n="pick.blues.d">blues scale, bends, 12-bar backing</span></div>
-    <div class="pick" data-mode="vostok"><b data-i18n="pick.vostok.t">East</b><span data-i18n="pick.vostok.d">phrygian dominant, hungarian scale, drone</span></div>
-    <div class="pick" data-mode="koto"><b data-i18n="pick.koto.t">Koto</b><span data-i18n="pick.koto.d">Japanese pentatonic, drone/ostinato</span></div>
-    <div class="pick" data-mode="dream"><b data-i18n="pick.dream.t">Dream</b><span data-i18n="pick.dream.d">whole-tone scale, floating pad</span></div>
-    <div class="pick" data-mode="gamelan"><b data-i18n="pick.gamelan.t">Gamelan</b><span data-i18n="pick.gamelan.d">pelog/slendro, gong and metallophone</span></div>
-    <div class="pick" data-mode="light"><b data-i18n="pick.light.t">Bright</b><span data-i18n="pick.light.d">major/minor pentatonic</span></div>
-    <div class="pick" data-mode="synth"><b data-i18n="pick.synth.t">Synthwave</b><span data-i18n="pick.synth.d">neon minor, pumping bass, four-on-the-floor</span></div>
-    <div class="pick" data-mode="lab"><b data-i18n="pick.lab.t">Lab</b><span data-i18n="pick.lab.d">build your own scale from the 12 notes</span></div>
-    <div class="pick" data-mode="jazz"><b data-i18n="pick.jazz.t">Jazz</b><span data-i18n="pick.jazz.d">the scale follows the chords (golden sequence)</span></div>
+    <!-- free tier first, Jazz (experimental) last · mood line sells the vibe, the small line keeps the theory -->
+    <div class="pick" data-mode="blues"><b data-i18n="pick.blues.t">Blues</b><span class="mood" data-i18n="pick.blues.m">road, garage, whiskey</span><span data-i18n="pick.blues.d">blues scale, bends, 12-bar backing</span></div>
+    <div class="pick" data-mode="vostok"><b data-i18n="pick.vostok.t">East</b><span class="mood" data-i18n="pick.vostok.m">desert, snakes, trance</span><span data-i18n="pick.vostok.d">phrygian dominant, hungarian scale, drone</span></div>
+    <div class="pick" data-mode="koto"><b data-i18n="pick.koto.t">Koto</b><span class="mood" data-i18n="pick.koto.m">a rock garden in the rain</span><span data-i18n="pick.koto.d">Japanese pentatonic, drone/ostinato</span></div>
+    <div class="pick" data-mode="dream"><b data-i18n="pick.dream.t">Dream</b><span class="mood" data-i18n="pick.dream.m">weightlessness</span><span data-i18n="pick.dream.d">whole-tone scale, floating pad</span></div>
+    <div class="pick" data-mode="gamelan"><b data-i18n="pick.gamelan.t">Gamelan</b><span class="mood" data-i18n="pick.gamelan.m">the bronze orchestra of Bali</span><span data-i18n="pick.gamelan.d">pelog/slendro, gong and metallophone</span></div>
+    <div class="pick" data-mode="light"><b data-i18n="pick.light.t">Bright</b><span class="mood" data-i18n="pick.light.m">morning and sunshine</span><span data-i18n="pick.light.d">major/minor pentatonic</span></div>
+    <div class="pick" data-mode="synth"><b data-i18n="pick.synth.t">Synthwave</b><span class="mood" data-i18n="pick.synth.m">neon and a night highway</span><span data-i18n="pick.synth.d">neon minor, pumping bass, four-on-the-floor</span></div>
+    <div class="pick" data-mode="lab"><b data-i18n="pick.lab.t">Lab</b><span class="mood" data-i18n="pick.lab.m">your own sound laboratory</span><span data-i18n="pick.lab.d">build your own scale from the 12 notes</span></div>
+    <div class="pick" data-mode="jazz"><b data-i18n="pick.jazz.t">Jazz</b><span class="mood" data-i18n="pick.jazz.m">smoky basement, upright bass</span><span data-i18n="pick.jazz.d">the scale follows the chords (golden sequence)</span></div>
     <!-- Dorian, Cosmos, flute and Lo-fi are hidden (code kept in MODES) -->
   </div>
   <div class="obtns">

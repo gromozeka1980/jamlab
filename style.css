@@ -137,7 +137,14 @@ input[type=range]{width:150px; accent-color:var(--accent);}
 .pick.locked::after{content:'PRO'; position:absolute; top:8px; right:8px; font-size:9px; font-weight:800; letter-spacing:.6px;
   color:#15151f; background:var(--accent); border-radius:5px; padding:2px 6px;}
 .pick b{font-size:15px;} .pick span{display:block; color:var(--muted); font-size:11px; margin-top:2px; line-height:1.3;}
+.pick .mood{color:color-mix(in srgb, var(--text) 82%, transparent); font-size:11.5px;}
+.pick span:not(.mood){font-size:10px; opacity:.8;}
 .pick:active{transform:translateY(1px);}
+/* first tap auditions the instrument and arms the card; second tap enters */
+.pick.primed{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent), 0 0 16px color-mix(in srgb, var(--accent) 35%, transparent);}
+.pick.primed::after{content:'▶ ' attr(data-again); position:absolute; top:8px; right:8px; font-size:9px; font-weight:800;
+  color:#15151f; background:var(--accent); border-radius:5px; padding:2px 6px; letter-spacing:.2px;}
+#overlay .hero{font-size:17px; font-weight:700; margin:2px 0 0;}
 .obtns{display:flex; gap:8px; margin-top:12px;}
 .obtns button{padding:8px 22px;}
 .jhelp{border-color:color-mix(in srgb, var(--accent) 60%, transparent); color:var(--accent); font-weight:700;}

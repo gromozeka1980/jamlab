@@ -963,18 +963,49 @@ document.getElementById('labDelete').addEventListener('click',()=>{
 const overlay=document.getElementById("overlay");
 function refreshLocks(){ document.querySelectorAll('.pick').forEach(p=>p.classList.toggle('locked', modeLocked(p.dataset.mode))); }
 onProChange(refreshLocks);   // a purchase unlocks everything in place
-function goHome(){ if(accOn) stopBacking(); overlay.style.display="flex"; }
+function goHome(){ if(accOn) stopBacking(); disarmPicks(); overlay.style.display="flex"; }
+
+// Sounding picker: the first tap on a card plays a short taste of that instrument (its real
+// voice + scale, incl. locked ones — a shop window), the second tap enters. setMode() under the
+// opaque overlay is invisible, so the preview simply borrows the whole engine.
+const PREVIEW_PHRASES={ blues:[0,2,3,2,0], vostok:[0,1,2,3,4], koto:[0,1,2,4,7], dream:[0,1,2,3,4],
+  gamelan:[0,1,2,4,5], light:[0,1,2,4,7], synth:[0,2,4,7,9], lab:[0,2,4,7,9], jazz:[0,1,2,3,4] };
+let prevVoices=[], prevTimers=[];
+function releaseVoiceNow(v){ const t0=actx.currentTime;
+  try{ v.g.gain.cancelScheduledValues(t0); v.g.gain.setValueAtTime(Math.max(v.g.gain.value,0.0009),t0);
+    v.g.gain.exponentialRampToValueAtTime(.0008,t0+0.25); for(const n of v.stops){ try{n.stop(t0+0.3);}catch(e){} } }catch(e){} }
+function stopPreview(){ prevTimers.forEach(clearTimeout); prevTimers=[];
+  if(actx) prevVoices.forEach(releaseVoiceNow); prevVoices=[]; }
+function playPreview(id){ stopPreview(); setMode(id);
+  const ph=PREVIEW_PHRASES[id]||[0,1,2];
+  ph.forEach((idx,n)=>{ prevTimers.push(setTimeout(()=>{
+    const v=makeVoice(pitchFreq(clampIndex(idx)),0,0,0); prevVoices.push(v);
+    prevTimers.push(setTimeout(()=>{ releaseVoiceNow(v); prevVoices=prevVoices.filter(x=>x!==v); },300));
+  }, n*175)); }); }
+let armedPick=null, disarmT=null;
+function disarmPicks(){ armedPick=null; clearTimeout(disarmT);
+  document.querySelectorAll('.pick.primed').forEach(x=>x.classList.remove('primed')); }
 document.querySelectorAll(".pick").forEach(p=>p.addEventListener("click",()=>{
-  if(modeLocked(p.dataset.mode)){ showPaywall(); return; }
+  const id=p.dataset.mode;
+  if(armedPick!==id){                       // first tap: audition & arm the card
+    initAudio(); resumeAudio();
+    disarmPicks(); armedPick=id;
+    p.dataset.again=t('pick.again'); p.classList.add('primed');
+    playPreview(id);
+    disarmT=setTimeout(disarmPicks,3500);
+    return;
+  }
+  disarmPicks(); stopPreview();             // second tap: enter
+  if(modeLocked(id)){ showPaywall(); return; }
   initAudio(); resumeAudio();
   if(settings.gyro!=='off') enableGyro();   // restored gyro pref needs a user gesture to attach
   if(accOn) stopBacking();              // so the backing doesn't double up on a repeat pick
-  setMode(p.dataset.mode);
+  setMode(id);
   overlay.style.display="none";
   if(!NATIVE) history.pushState({jam:1},'');   // browser Back mirrors the Android back gesture
   updateDisplay(); startBacking();
   try{                                          // jazz extras on first jazz entry (the general intro is the interactive tutorial now)
-    const firstJazz=p.dataset.mode==='jazz' && !localStorage.getItem('jamlab.jazzHelpSeen');
+    const firstJazz=id==='jazz' && !localStorage.getItem('jamlab.jazzHelpSeen');
     if(firstJazz){ localStorage.setItem('jamlab.jazzHelpSeen','1'); showHelp(false,true); }
   }catch(e){}
 }));
@@ -1004,7 +1035,7 @@ refreshLocks();
 initBilling();
 // tutorial entry: like a picker tap, but no auto-backing (the tutorial's last step turns the band on)
 // and no lock check — a guided taste of koto/bright is deliberate
-initTutorial({ enterMode:(id)=>{ initAudio(); resumeAudio(); if(accOn) stopBacking();
+initTutorial({ enterMode:(id)=>{ initAudio(); resumeAudio(); stopPreview(); disarmPicks(); if(accOn) stopBacking();
   setMode(id); overlay.style.display='none'; if(!NATIVE) history.pushState({jam:1},'');
   updateDisplay(); } });
 document.addEventListener("gesturestart",e=>e.preventDefault());
