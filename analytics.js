@@ -27,7 +27,7 @@ export function track(name, props){
         timestamp: new Date().toISOString(),
         sessionId: sid,
         eventName: name,
-        systemProps: { isDebug: false, locale: (navigator.language || 'en'), appVersion: '1.0.0',
+        systemProps: { isDebug: false, locale: (navigator.language || 'en'), appVersion: 'next-1.0',
                        sdkVersion: 'jamlab@1.0.0',   // required by the API — without it events 400 silently
                        osName: NATIVE ? 'Android' : 'Web' },
         props: props || {},
