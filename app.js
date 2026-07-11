@@ -35,6 +35,7 @@ let currentIndex = 0;
 /* ============ Web Audio ============ */
 const activeVoices = new Map();
 let kbBend=0;
+let liteNote=false;                                // set around glissando noteOn: build a lightweight voice
 
 function vizBeat(time,s){ if(settings.viz && actx) setTimeout(()=>viz.pulse(s), Math.max(0,(time-actx.currentTime)*1000)); }
 
@@ -147,6 +148,11 @@ function makeVoice(freq,maxUp,maxDown,approach,when){
   } else if(M.voice==='pluck'){         // generic pluck (vostok/jazz/light/lab) — the original voice
     addOsc('triangle',1,0,1); addOsc('sine',2,6,0.4);
     g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.42,t0+0.006); g.gain.exponentialRampToValueAtTime(.12,t0+1.4);
+  } else if(M.voice==='koto' && liteNote){   // glissando passing note: 3 partials, no pick tick, soft attack —
+    addOsc('triangle',1,0,1,1.2);            // the full 7-osc voice at ~20 notes/s starves the audio thread (crackle)
+    addOsc('sine',2.003,0,0.5,0.7);
+    addOsc('sine',3.008,0,0.25,0.45);
+    g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.38,t0+0.007); g.gain.exponentialRampToValueAtTime(.12,t0+1.2);
   } else if(M.voice==='koto'){          // koto: additive plucked string — per-partial decay (highs die first), slight inharmonic stretch, tsume pick tick
     addOsc('triangle',1,0,1,2.4);       // warm fundamental
     addOsc('sine',1,4,0.35,2.0);        // detuned double → gentle beating, like neighbouring strings ringing along
@@ -314,7 +320,8 @@ if(stripEl){
     const now=performance.now(); if(now-stripPtr.last<STRIP_MIN_MS) return;
     const d=stripNearest(stripPtr.cs,e.clientX); if(!d || d.i===stripPtr.d.i) return;
     noteOff('strip', stripPtr.d.el, 0.08);             // fast release: the next note takes over
-    stripPtr.d=d; stripPtr.last=now; noteOn('strip', d.i-currentIndex, d.el);
+    stripPtr.d=d; stripPtr.last=now;
+    liteNote=true; try{ noteOn('strip', d.i-currentIndex, d.el); } finally{ liteNote=false; }
     document.dispatchEvent(new Event('jl:strip')); });
   const stripEnd=e=>{ if(!stripPtr || e.pointerId!==stripPtr.pid) return;
     noteOff('strip', stripPtr.d.el); stripPtr=null; };   // last note rings out naturally
