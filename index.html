@@ -102,7 +102,44 @@
         <li data-i18n="help.jz4"></li>
       </ul>
     </div>
+    <div style="display:flex; gap:8px;">
+      <button id="tutReplayBtn" data-i18n="tut.replay" style="flex:1;">🎓 Tutorial</button>
+      <button id="howitBtn" data-i18n="howit.open" style="flex:1;">How does it work?</button>
+    </div>
     <button id="closeHelp" data-i18n="btn.gotit">Got it</button>
+  </div>
+</div>
+
+<div id="howit" class="hidden" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <h3 data-i18n="howit.title">How it works</h3>
+    <div style="font-size:13px; line-height:1.55; display:flex; flex-direction:column; gap:8px;">
+      <p data-i18n="howit.p1" style="margin:0;"></p>
+      <p data-i18n="howit.p2" style="margin:0;"></p>
+      <p data-i18n="howit.p3" style="margin:0;"></p>
+      <p data-i18n="howit.p4" style="margin:0;"></p>
+      <h4 data-i18n="howit.g" style="margin:6px 0 0; font-size:13px; color:var(--accent);"></h4>
+      <ul style="margin:0; padding-left:18px; color:var(--muted); display:flex; flex-direction:column; gap:4px;">
+        <li data-i18n="howit.g1"></li>
+        <li data-i18n="howit.g2"></li>
+        <li data-i18n="howit.g3"></li>
+        <li data-i18n="howit.g4"></li>
+      </ul>
+    </div>
+    <button id="closeHowit" data-i18n="btn.gotit">Got it</button>
+  </div>
+</div>
+
+<div id="tutov" class="hidden" role="dialog" aria-modal="true">
+  <div class="sheet" style="text-align:center;">
+    <h3 data-i18n="tut.offer.t">First time here?</h3>
+    <p data-i18n="tut.offer.d" style="margin:0; color:var(--muted); font-size:13px;"></p>
+    <div style="display:flex; gap:8px;">
+      <button class="tutpick" data-tmode="koto" data-i18n="pick.koto.t">Koto</button>
+      <button class="tutpick" data-tmode="vostok" data-i18n="pick.vostok.t">East</button>
+      <button class="tutpick" data-tmode="light" data-i18n="pick.light.t">Bright</button>
+    </div>
+    <button id="tutSkip" data-i18n="tut.offer.skip">I'll figure it out myself</button>
   </div>
 </div>
 
@@ -194,6 +231,9 @@
 </div>
 
 <div class="ladrow" id="ladHost"></div>
+
+<!-- scale strip: the "you are here" ladder — makes the relational keyboard visible -->
+<div class="strip" id="stepStrip"></div>
 
 <!-- centered playfield: empty gutters above & below give bend room both ways -->
 <div class="playfield">

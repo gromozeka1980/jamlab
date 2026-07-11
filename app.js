@@ -10,6 +10,7 @@ import { actx, comp, leadBus, leadFilter, leadOut, accBus, busPerc, busBass, bus
 import { viz, cssRgb } from './viz.js';
 import { refreshRecLabel } from './rec.js';
 import { isPro, modeLocked, showPaywall, onProChange, initBilling } from './paywall.js';
+import { initTutorial } from './tutorial.js';
 
 // true inside the native Capacitor app (vs the plain web build)
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
@@ -245,6 +246,7 @@ function noteOn(id,offset,el){ initAudio(); resumeAudio(); if(activeVoices.has(i
   updateDisplay();
   if(playedMidi!=null) elNote.textContent=midiToName(playedMidi);
   else if(SCALEDN && offset<0) elNote.textContent=midiToName(Math.round(freqToMidi(freq)));
+  document.dispatchEvent(new CustomEvent('jl:note',{detail:{offset}}));   // tutorial listens
   return v; }
 function noteOff(id,el){ stopVoice(id);
   heldNotes.delete(id); viz.keysHeld([...heldNotes.values()]);
@@ -271,6 +273,24 @@ function applyLadLock(){            // disable scales that don't fit the harmony
   if(allow.length && !allow.includes(settings.variant)) setVariant(allow[0]);
 }
 
+/* ============ Scale strip: "you are here" on the scale ladder ============ */
+// The relational keyboard's state (current position) is invisible — this strip shows it.
+// Dots = every reachable scale tone, big accent dots = roots, ring marker = where you stand.
+const stripEl=document.getElementById('stepStrip');
+let stripSig='', stripDots=[], stripMark=null;
+function stripRender(){ if(!stripEl) return;
+  if(M.kind==='harmonic'){ stripEl.innerHTML=''; stripSig=''; return; }   // overtone flute: no scale ladder
+  const [a,b]=indexRange(), len=SCALE.length, sig=a+'|'+b+'|'+len+'|'+M.id;
+  if(sig!==stripSig){ stripSig=sig; stripEl.innerHTML=''; stripDots=[];
+    for(let i=a;i<=b;i++){ const d=document.createElement('span');
+      d.className='sdot'+(((i%len)+len)%len===0?' root':''); stripEl.appendChild(d); stripDots.push({i,el:d}); }
+    stripMark=document.createElement('span'); stripMark.className='smark'; stripEl.appendChild(stripMark); }
+  for(const d of stripDots) d.el.classList.toggle('cur', d.i===currentIndex);
+  const cur=stripDots.find(d=>d.i===currentIndex);
+  if(cur && stripMark) stripMark.style.left=(cur.el.offsetLeft + cur.el.offsetWidth/2)+'px';
+}
+window.addEventListener('resize',()=>{ stripSig=''; stripRender(); });   // dot positions shift with the viewport
+
 /* ============ Display ============ */
 const elNote=document.getElementById("noteName"), elRole=document.getElementById("roleName");
 function updateDisplay(){
@@ -282,6 +302,7 @@ function updateDisplay(){
     role=degName(SCALE[step])+(oct? " · "+t('role.oct')+" "+(oct>0?"+":"")+oct : ""); }
   elRole.textContent=role;
   refreshKeyLabels();
+  stripRender();
 }
 function refreshKeyLabels(){ const ct=curChord; for(const k of noteKeys){
     if(k.el.classList.contains('active')) continue;   // freeze a held key: its label/arrows describe the sounding voice
@@ -353,6 +374,7 @@ window.addEventListener("pointermove",e=>{ const p=pointers.get(e.pointerId); if
   p.el.classList.toggle("down",down&&mb>0&&frac>0.06); p.el.classList.toggle("bending",frac>0.06); p.el.classList.toggle("bent",mb>0&&mag>=mb);
   const bentNow=mb>0&&mag>=mb;                                      // haptic tick when the bend locks onto its target
   if(bentNow && !p.bentH){ p.bentH=true; tapHaptic('MEDIUM'); } else if(!bentNow && (mb<=0||mag<mb*0.9)) p.bentH=false;
+  if(frac>0.6 && !p.evBend){ p.evBend=true; document.dispatchEvent(new Event('jl:bend')); }   // tutorial: a real bend happened
   // live bent pitch: tint the on-screen note and feed the video (big note + ribbon point)
   const p01of=m=>Math.max(0,Math.min(1,(m-settings.minMidi)/Math.max(1,settings.maxMidi-settings.minMidi)));
   if(frac>0.06){
@@ -676,7 +698,8 @@ function startBacking(){ initAudio(); resumeAudio(); accOn=true;
   else if(M.back==='dream'){ startPadDream(); if(settings.backing==='shimmer'){ qStep=0; nextNoteTime=actx.currentTime+0.12; startTicks(dreamScheduler,40); } }
   else if(M.back==='gamelan'){ startGamelanDrone(); qStep=0; nextNoteTime=actx.currentTime+0.12; startTicks(gamelanScheduler,30); }
   else { startPadFlute(); }
-  accBtn.classList.add("on"); accBtn.textContent=t('btn.bgStop'); }
+  accBtn.classList.add("on"); accBtn.textContent=t('btn.bgStop');
+  document.dispatchEvent(new Event('jl:backing')); }   // tutorial listens
 function stopBacking(){ accOn=false; stopTicks(); stopPad(); liveChordPcs=null; curChord=null; jazzBeatLen=0; setChordChip('',''); refreshKeyLabels();
   accBtn.classList.remove("on"); accBtn.textContent=t('btn.bgStart'); }
 
@@ -789,7 +812,7 @@ document.getElementById("jazzHelpBtn").addEventListener("click",()=>showHelp(fal
 document.getElementById("closeHelp").addEventListener("click",()=>helpEl.classList.add("hidden"));
 accBtn.addEventListener("click",()=> accOn?stopBacking():startBacking());
 // close any open sheet with Escape or a tap on the backdrop
-const SHEETS=["settings","help","recov","paywall","labov"];
+const SHEETS=["settings","help","recov","paywall","labov","howit","tutov"];
 document.addEventListener("keydown",e=>{ if(e.key!=="Escape") return;
   let closed=false;
   SHEETS.forEach(id=>{ const el=document.getElementById(id); if(!el.classList.contains("hidden")){ el.classList.add("hidden"); closed=true; } });
@@ -950,12 +973,9 @@ document.querySelectorAll(".pick").forEach(p=>p.addEventListener("click",()=>{
   overlay.style.display="none";
   if(!NATIVE) history.pushState({jam:1},'');   // browser Back mirrors the Android back gesture
   updateDisplay(); startBacking();
-  try{                                          // first-run tutorials: general once, jazz extras on first jazz entry
-    const firstRun=!localStorage.getItem('jamlab.helpSeen');
+  try{                                          // jazz extras on first jazz entry (the general intro is the interactive tutorial now)
     const firstJazz=p.dataset.mode==='jazz' && !localStorage.getItem('jamlab.jazzHelpSeen');
-    if(firstRun) localStorage.setItem('jamlab.helpSeen','1');
-    if(firstJazz) localStorage.setItem('jamlab.jazzHelpSeen','1');
-    if(firstRun||firstJazz) showHelp(firstRun, p.dataset.mode==='jazz');
+    if(firstJazz){ localStorage.setItem('jamlab.jazzHelpSeen','1'); showHelp(false,true); }
   }catch(e){}
 }));
 // Android back button: open sheet → close it (recording preview acts like Cancel);
@@ -982,6 +1002,11 @@ setMode('blues');
 refreshLabels();
 refreshLocks();
 initBilling();
+// tutorial entry: like a picker tap, but no auto-backing (the tutorial's last step turns the band on)
+// and no lock check — a guided taste of koto/bright is deliberate
+initTutorial({ enterMode:(id)=>{ initAudio(); resumeAudio(); if(accOn) stopBacking();
+  setMode(id); overlay.style.display='none'; if(!NATIVE) history.pushState({jam:1},'');
+  updateDisplay(); } });
 document.addEventListener("gesturestart",e=>e.preventDefault());
 document.addEventListener("dblclick",e=>e.preventDefault());   // belt-and-suspenders vs iOS double-tap zoom
 document.addEventListener("contextmenu",e=>e.preventDefault());

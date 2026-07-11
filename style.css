@@ -42,6 +42,17 @@ input[type=range]{width:150px; accent-color:var(--accent);}
 .ladbtn.active{background:var(--accent); border-color:var(--accent); color:#15151f;}
 .ladbtn:disabled{opacity:.3; pointer-events:none;}
 
+/* scale strip: dots = scale tones across the playable range, roots bigger; the ring marker hops with every key press */
+.strip{position:relative; display:flex; align-items:center; justify-content:space-between; padding:2px 20px 6px; height:18px;}
+.strip:empty{display:none;}
+.strip .sdot{width:5px; height:5px; border-radius:50%; flex:0 0 auto;
+  background:color-mix(in srgb, var(--muted) 40%, transparent); transition:background .15s;}
+.strip .sdot.root{width:9px; height:9px; background:color-mix(in srgb, var(--accent) 55%, transparent);}
+.strip .sdot.cur{background:var(--accent);}
+.strip .smark{position:absolute; top:50%; width:15px; height:15px; margin:-7.5px 0 0 -7.5px; border-radius:50%;
+  border:2px solid var(--accent); box-shadow:0 0 10px color-mix(in srgb, var(--accent) 70%, transparent);
+  pointer-events:none; transition:left .18s cubic-bezier(.3,1.5,.5,1);}
+
 .display{display:flex; gap:14px; justify-content:center; align-items:center; padding:4px 12px 8px; min-height:44px;}
 .note{font-size:28px; font-weight:700; min-width:64px; text-align:center; text-shadow:0 0 18px rgba(255,212,59,.3);}
 .note.bup{color:var(--accent);}     /* bending up: the shown note is the bent pitch */
@@ -114,7 +125,7 @@ input[type=range]{width:150px; accent-color:var(--accent);}
 #rotate .ico{font-size:48px;}
 @media (orientation:landscape) and (pointer:coarse){ #rotate{display:flex;} }
 
-#overlay,#settings,#recov,#help,#paywall{position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:22px; z-index:10;}
+#overlay,#settings,#recov,#help,#paywall,#howit,#tutov{position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:22px; z-index:10;}
 #paywall{background:rgba(7,8,16,.88); z-index:12;}
 #paywall.hidden{display:none;}
 #overlay{background:rgba(7,8,16,.95); gap:14px; text-align:center;}
@@ -130,9 +141,45 @@ input[type=range]{width:150px; accent-color:var(--accent);}
 .obtns{display:flex; gap:8px; margin-top:12px;}
 .obtns button{padding:8px 22px;}
 .jhelp{border-color:color-mix(in srgb, var(--accent) 60%, transparent); color:var(--accent); font-weight:700;}
-#settings,#recov,#help{background:rgba(7,8,16,.82); z-index:11;}
-#recov,#help{z-index:11;}
-#settings.hidden,#recov.hidden,#help.hidden{display:none;}
+#settings,#recov,#help,#howit,#tutov{background:rgba(7,8,16,.82); z-index:11;}
+#recov,#help,#howit{z-index:11;}
+#tutov{z-index:12;}   /* the first-run chooser sits above the instrument picker */
+#settings.hidden,#recov.hidden,#help.hidden,#howit.hidden,#tutov.hidden{display:none;}
+.tutpick{flex:1 1 0; min-width:0; padding:14px 8px; border-radius:12px; font-weight:700; font-size:15px;
+  border-color:var(--accent); background:color-mix(in srgb, var(--accent) 14%, var(--panel));}
+
+/* ============ Tutorial overlay ============ */
+/* dim everything except the lit target; keys stay playable — the tutorial never blocks input */
+body.tut header, body.tut .ladrow, body.tut .hint{opacity:.25; transition:opacity .3s;}
+body.tut .display{opacity:.55; transition:opacity .3s;}
+body.tut .key:not(.tutlit){opacity:.25; transition:opacity .3s;}
+body.tut .ctl:not(:has(.tutlit)){opacity:.25; transition:opacity .3s;}
+.tutlit{animation:tutpulse 1.2s ease-in-out infinite;}
+@keyframes tutpulse{
+  0%,100%{box-shadow:0 0 0 2px var(--accent), 0 0 16px color-mix(in srgb, var(--accent) 55%, transparent);}
+  50%{box-shadow:0 0 0 4px var(--accent), 0 0 30px var(--accent);}
+}
+#tutbar{display:flex; align-items:center; gap:10px; margin:4px 12px; padding:9px 12px;
+  border:1px solid var(--accent); border-radius:12px; font-size:14px; line-height:1.3;
+  background:color-mix(in srgb, var(--accent) 12%, var(--panel));}
+#tutbar .tuttext{flex:1; text-align:left;}
+#tutbar .tutdots{display:flex; gap:4px; flex:0 0 auto;}
+#tutbar .tutdot{width:7px; height:7px; border-radius:50%; background:var(--line);}
+#tutbar .tutdot.done{background:var(--accent);}
+#tutbar .tutdot.cur{background:var(--accent); box-shadow:0 0 8px var(--accent);}
+#tutbar .tutskip{background:none; border:none; color:var(--muted); font-size:12px; padding:4px 6px; min-height:0;}
+#tutbar.hit{animation:tuthit .45s;}
+@keyframes tuthit{0%{background:color-mix(in srgb, var(--accent) 42%, var(--panel));}100%{background:color-mix(in srgb, var(--accent) 12%, var(--panel));}}
+#tutbar.donefx{border-color:#61e786; background:color-mix(in srgb, #61e786 14%, var(--panel));}
+#tutbar.donefx .tutdot.done{background:#61e786;}
+
+/* transient plain-language description after picking a backing */
+#uxtoast{position:fixed; left:50%; bottom:calc(74px + env(safe-area-inset-bottom));
+  transform:translateX(-50%) translateY(6px); max-width:82vw; text-align:center;
+  background:var(--panel); border:1px solid var(--line); color:var(--muted);
+  border-radius:10px; padding:7px 12px; font-size:12px; line-height:1.4;
+  opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; z-index:9;}
+#uxtoast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 .sheet{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px 20px; width:min(440px,100%); max-height:88vh; overflow-y:auto; display:flex; flex-direction:column; gap:14px;}
 .sheet h3{margin:0 0 4px; font-size:18px;}
 .srow{display:flex; align-items:center; justify-content:space-between; gap:14px; font-size:13px;}
