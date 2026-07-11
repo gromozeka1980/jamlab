@@ -340,10 +340,14 @@ function updateTopsum(){ if(!topsumTxt) return;
     const bk=M.backings && M.backings.find(b=>b.id===settings.backing); if(bk) parts.push(t(bk.label)); }
   topsumTxt.textContent=parts.join(' · ');
 }
+function toggleCfg(){ const o=!document.body.classList.contains('cfgopen');
+  document.body.classList.toggle('cfgopen',o); try{ localStorage.setItem('jamlab.cfgOpen',o?'1':'0'); }catch(e){} }
 if(topsumEl){ let cfgOpen=false; try{ cfgOpen=localStorage.getItem('jamlab.cfgOpen')==='1'; }catch(e){}
   document.body.classList.toggle('cfgopen',cfgOpen);
-  topsumEl.addEventListener('click',()=>{ const o=!document.body.classList.contains('cfgopen');
-    document.body.classList.toggle('cfgopen',o); try{ localStorage.setItem('jamlab.cfgOpen',o?'1':'0'); }catch(e){} }); }
+  topsumEl.addEventListener('click',toggleCfg); }
+// the title is a toggle too — active exactly when the collapsed-config chip is (touch layouts)
+document.querySelector('header h1').addEventListener('click',()=>{
+  if(topsumEl && getComputedStyle(topsumEl).display!=='none') toggleCfg(); });
 function refreshKeyLabels(){ const ct=curChord; for(const k of noteKeys){
     if(k.el.classList.contains('active')) continue;   // freeze a held key: its label/arrows describe the sounding voice
     const idx=clampIndex(currentIndex+k.off), lab=pitchLabel(idx);
