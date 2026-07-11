@@ -304,11 +304,13 @@ if(stripEl){
     const d=stripNearest(e.clientX); if(!d) return;
     try{ stripEl.setPointerCapture(e.pointerId); }catch(err){}
     stripPtr={pid:e.pointerId, d};
-    noteOn('strip', d.i-currentIndex, d.el); tapHaptic('LIGHT'); });
+    noteOn('strip', d.i-currentIndex, d.el); tapHaptic('LIGHT');
+    document.dispatchEvent(new Event('jl:strip')); });   // tutorial listens
   stripEl.addEventListener('pointermove',e=>{ if(!stripPtr || e.pointerId!==stripPtr.pid) return;
     const d=stripNearest(e.clientX); if(!d || d.i===stripPtr.d.i) return;
     noteOff('strip', stripPtr.d.el);
-    stripPtr.d=d; noteOn('strip', d.i-currentIndex, d.el); });
+    stripPtr.d=d; noteOn('strip', d.i-currentIndex, d.el);
+    document.dispatchEvent(new Event('jl:strip')); });
   const stripEnd=e=>{ if(!stripPtr || e.pointerId!==stripPtr.pid) return;
     noteOff('strip', stripPtr.d.el); stripPtr=null; };
   stripEl.addEventListener('pointerup',stripEnd); stripEl.addEventListener('pointercancel',stripEnd);
@@ -1008,43 +1010,9 @@ document.getElementById('labDelete').addEventListener('click',()=>{
 const overlay=document.getElementById("overlay");
 function refreshLocks(){ document.querySelectorAll('.pick').forEach(p=>p.classList.toggle('locked', modeLocked(p.dataset.mode))); }
 onProChange(refreshLocks);   // a purchase unlocks everything in place
-function goHome(){ if(accOn) stopBacking(); disarmPicks(); overlay.style.display="flex"; }
-
-// Sounding picker: the first tap on a card plays a short taste of that instrument (its real
-// voice + scale, incl. locked ones — a shop window), the second tap enters. setMode() under the
-// opaque overlay is invisible, so the preview simply borrows the whole engine.
-// The phrase is the app's own idiom: a swung +1+1−1 zigzag through one octave, root to root
-// (blues: A C D C · D D# D · D# E D# · E G E · G A G · A C A — brushes the top and resolves home).
-let prevVoices=[], prevTimers=[];
-function releaseVoiceNow(v){ const t0=actx.currentTime;
-  try{ v.g.gain.cancelScheduledValues(t0); v.g.gain.setValueAtTime(Math.max(v.g.gain.value,0.0009),t0);
-    v.g.gain.exponentialRampToValueAtTime(.0008,t0+0.25); for(const n of v.stops){ try{n.stop(t0+0.3);}catch(e){} } }catch(e){} }
-function stopPreview(){ prevTimers.forEach(clearTimeout); prevTimers=[];
-  if(actx) prevVoices.forEach(releaseVoiceNow); prevVoices=[]; }
-function playPreview(id){ stopPreview(); setMode(id);
-  const L=(M.kind==='harmonic')?8:SCALE.length;
-  const seq=[0]; let cur=0;
-  while(cur<L){ seq.push(++cur); seq.push(++cur); seq.push(--cur); }   // +1 +1 −1 until the upper root
-  const PAIR=230, UP=145;                                              // swung eighths: long-short
-  const at=n=>Math.floor(n/2)*PAIR + (n%2?UP:0);
-  seq.forEach((ix,n)=>{ prevTimers.push(setTimeout(()=>{
-    const v=makeVoice(pitchFreq(clampIndex(ix)),0,0,0); prevVoices.push(v);
-    prevTimers.push(setTimeout(()=>{ releaseVoiceNow(v); prevVoices=prevVoices.filter(x=>x!==v); },(n%2?110:170)));
-  }, at(n))); }); }
-let armedPick=null, disarmT=null;
-function disarmPicks(){ armedPick=null; clearTimeout(disarmT);
-  document.querySelectorAll('.pick.primed').forEach(x=>x.classList.remove('primed')); }
+function goHome(){ if(accOn) stopBacking(); overlay.style.display="flex"; }
 document.querySelectorAll(".pick").forEach(p=>p.addEventListener("click",()=>{
   const id=p.dataset.mode;
-  if(armedPick!==id){                       // first tap: audition & arm the card
-    initAudio(); resumeAudio();
-    disarmPicks(); armedPick=id;
-    p.dataset.again=t('pick.again'); p.classList.add('primed');
-    playPreview(id);
-    disarmT=setTimeout(disarmPicks,3500);
-    return;
-  }
-  disarmPicks(); stopPreview();             // second tap: enter
   if(modeLocked(id)){ showPaywall(); return; }   // paywall_view is tracked inside showPaywall
   track('mode_picked',{mode:id});
   initAudio(); resumeAudio();
@@ -1085,7 +1053,7 @@ refreshLocks();
 initBilling();
 // tutorial entry: like a picker tap, but no auto-backing (the tutorial's last step turns the band on)
 // and no lock check — a guided taste of koto/bright is deliberate
-initTutorial({ enterMode:(id)=>{ initAudio(); resumeAudio(); stopPreview(); disarmPicks(); if(accOn) stopBacking();
+initTutorial({ enterMode:(id)=>{ initAudio(); resumeAudio(); if(accOn) stopBacking();
   track('mode_picked',{mode:id,via:'tutorial'});
   setMode(id); overlay.style.display='none'; if(!NATIVE) history.pushState({jam:1},'');
   updateDisplay(); } });

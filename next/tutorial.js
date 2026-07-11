@@ -11,6 +11,7 @@ const X = {
     'tut.offer.skip':"I'll figure it out myself",
     'tut.s1':'Press and hold the glowing key','tut.s2':"Tap it again and again — you're climbing the scale",
     'tut.s3':'Now walk back down','tut.s4':'Same step — just three at once',
+    'tut.sstrip':"Slide your finger along the ladder — it's the map of the scale",
     'tut.s5':"Hold the key and drag up — that's a bend",'tut.s6':'Now bring in the band',
     'tut.done':"That's it — just play. You can't hit a wrong note here.",
     'tut.skip':'Skip','tut.replay':'🎓 Tutorial',
@@ -50,6 +51,7 @@ const X = {
     'tut.offer.skip':'Сам разберусь',
     'tut.s1':'Нажми светящуюся клавишу и подержи','tut.s2':'Жми её ещё и ещё — ты поднимаешься по гамме',
     'tut.s3':'А теперь спустись обратно','tut.s4':'Тот же шаг — просто три сразу',
+    'tut.sstrip':'Проведи пальцем по лесенке — это карта гаммы',
     'tut.s5':'Зажми клавишу и потяни вверх — это бенд','tut.s6':'Теперь включай группу',
     'tut.done':'Всё — просто играй. Ошибиться здесь невозможно.',
     'tut.skip':'Пропустить','tut.replay':'🎓 Обучение',
@@ -89,6 +91,7 @@ const X = {
     'tut.offer.skip':'Me las arreglo solo',
     'tut.s1':'Pulsa y mantén la tecla iluminada','tut.s2':'Púlsala una y otra vez — subes por la escala',
     'tut.s3':'Ahora baja de vuelta','tut.s4':'El mismo paso — solo que tres de golpe',
+    'tut.sstrip':'Desliza el dedo por la escalera — es el mapa de la escala',
     'tut.s5':'Mantén la tecla y arrastra hacia arriba — eso es un bend','tut.s6':'Ahora trae a la banda',
     'tut.done':'Eso es todo: toca. Aquí no existe la nota equivocada.',
     'tut.skip':'Saltar','tut.replay':'🎓 Tutorial',
@@ -128,6 +131,7 @@ const X = {
     'tut.offer.skip':'Eu me viro sozinho',
     'tut.s1':'Pressione e segure a tecla iluminada','tut.s2':'Toque nela várias vezes — você está subindo a escala',
     'tut.s3':'Agora desça de volta','tut.s4':'O mesmo passo — só que três de uma vez',
+    'tut.sstrip':'Deslize o dedo pela escadinha — é o mapa da escala',
     'tut.s5':'Segure a tecla e arraste para cima — isso é um bend','tut.s6':'Agora chame a banda',
     'tut.done':'É isso — apenas toque. Aqui não existe nota errada.',
     'tut.skip':'Pular','tut.replay':'🎓 Tutorial',
@@ -167,6 +171,7 @@ const X = {
     'tut.offer.skip':'Ich komm selbst klar',
     'tut.s1':'Drücke und halte die leuchtende Taste','tut.s2':'Tippe sie wieder und wieder — du steigst die Tonleiter hinauf',
     'tut.s3':'Jetzt geh wieder hinunter','tut.s4':'Derselbe Schritt — nur drei auf einmal',
+    'tut.sstrip':'Fahre mit dem Finger die Leiter entlang — sie ist die Karte der Tonleiter',
     'tut.s5':'Halte die Taste und zieh nach oben — das ist ein Bend','tut.s6':'Jetzt hol die Band dazu',
     'tut.done':"Das war's — spiel einfach. Einen falschen Ton gibt es hier nicht.",
     'tut.skip':'Überspringen','tut.replay':'🎓 Tutorial',
@@ -206,6 +211,7 @@ const X = {
     'tut.offer.skip':'Je me débrouille',
     'tut.s1':'Appuie sur la touche lumineuse et maintiens-la','tut.s2':'Tape-la encore et encore — tu montes la gamme',
     'tut.s3':'Maintenant redescends','tut.s4':"Le même pas — juste trois d'un coup",
+    'tut.sstrip':"Fais glisser ton doigt le long de l'échelle — c'est la carte de la gamme",
     'tut.s5':"Maintiens la touche et glisse vers le haut — c'est un bend",'tut.s6':'Maintenant fais entrer le groupe',
     'tut.done':"C'est tout — joue. Ici, la fausse note n'existe pas.",
     'tut.skip':'Passer','tut.replay':'🎓 Tutoriel',
@@ -245,6 +251,7 @@ const X = {
     'tut.offer.skip':'自分で試してみる',
     'tut.s1':'光っているキーを押さえたままにして','tut.s2':'何度も押してみて — 音階を上っています',
     'tut.s3':'今度は下りてみましょう','tut.s4':'同じ一歩 — ただし3歩ぶんいっぺんに',
+    'tut.sstrip':'はしごに沿って指をすべらせて — 音階の地図です',
     'tut.s5':'キーを押さえたまま上へドラッグ — これがベンド','tut.s6':'バンドを呼び込みましょう',
     'tut.done':'以上です — あとは弾くだけ。ここに間違った音はありません。',
     'tut.skip':'スキップ','tut.replay':'🎓 チュートリアル',
@@ -284,6 +291,7 @@ const X = {
     'tut.offer.skip':'我自己摸索',
     'tut.s1':'按住发光的琴键','tut.s2':'再按几次——你正沿着音阶往上走',
     'tut.s3':'现在往回走','tut.s4':'同样的一步——只是一次跨三步',
+    'tut.sstrip':'沿着梯子滑动手指——这是音阶的地图',
     'tut.s5':'按住琴键往上拖——这就是推弦','tut.s6':'现在请乐队进来',
     'tut.done':'就这样——尽管弹。在这里不存在错音。',
     'tut.skip':'跳过','tut.replay':'🎓 教程',
@@ -334,7 +342,9 @@ const STEPS=[
   {key:'tut.s2', target:()=>keyEl(1),  ev:'jl:note',    ok:d=>d&&d.offset===1,  need:3},
   {key:'tut.s3', target:()=>keyEl(-1), ev:'jl:note',    ok:d=>d&&d.offset===-1, need:2},
   {key:'tut.s4', target:()=>keyEl(3),  ev:'jl:note',    ok:d=>d&&d.offset===3,  need:1},
-  {key:'tut.s5', target:()=>keyEl(0),  ev:'jl:bend',    ok:()=>true,            need:1},
+  {key:'tut.sstrip', target:()=>document.getElementById('stepStrip'), ev:'jl:strip', ok:()=>true, need:4},   // a short slide or a few taps
+  // aim at a key that can actually bend up right now (after the glissando the position may sit on a bendless degree)
+  {key:'tut.s5', target:()=>document.querySelector('.keys .key.canup')||keyEl(0), ev:'jl:bend', ok:()=>true, need:1},
   {key:'tut.s6', target:()=>document.getElementById('accBtn'), ev:'jl:backing', ok:()=>true, need:1},
 ];
 let hooks=null, active=false, stepI=0, hits=0, advancing=false, barEl=null, lit=null;
@@ -374,7 +384,7 @@ function celebrate(){ active=false; light(null); document.body.classList.remove(
 function stopTutorial(){ active=false; light(null); document.body.classList.remove('tut'); unlisten(); markDone();
   if(barEl){ barEl.remove(); barEl=null; } }
 const L={};
-function listen(){ ['jl:note','jl:bend','jl:backing'].forEach(n=>{ L[n]=e=>onEvent(n,e); document.addEventListener(n,L[n]); }); }
+function listen(){ ['jl:note','jl:bend','jl:backing','jl:strip'].forEach(n=>{ L[n]=e=>onEvent(n,e); document.addEventListener(n,L[n]); }); }
 function unlisten(){ for(const n in L){ document.removeEventListener(n,L[n]); delete L[n]; } }
 function markDone(){ try{ localStorage.setItem('jamlab.tutDone','1'); }catch(e){} }
 function startTutorial(){ if(active) stopTutorial();
