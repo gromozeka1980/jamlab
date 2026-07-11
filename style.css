@@ -14,7 +14,7 @@ body{
   transition:background .4s;
 }
 /* block scroll/zoom only on the play surfaces — leave sheets/pickers scrollable */
-.playfield,.row,.ladrow,.key,.extra{touch-action:none;}
+.playfield,.row,.ladrow,.key,.extra,.strip{touch-action:none;}
 header{padding:max(8px,env(safe-area-inset-top)) 14px 2px; text-align:center; position:relative;}
 h1{font-size:14px; margin:0; font-weight:600; letter-spacing:.3px;}
 h1 small{color:var(--muted); font-weight:400;}
@@ -54,8 +54,9 @@ body.touch:not(.cfgopen) #topbar{display:none;}
 body.tut #topsum{opacity:.25; transition:opacity .3s;}
 
 /* scale strip: dots = scale tones across the playable range, roots bigger; the ring marker hops with every key press */
-.strip{position:relative; display:flex; align-items:center; justify-content:space-between; padding:2px 20px 6px; height:18px;}
+.strip{position:relative; display:flex; align-items:center; justify-content:space-between; padding:4px 20px 8px; height:26px; cursor:pointer;}
 .strip:empty{display:none;}
+.strip .sdot.active{background:var(--accent); box-shadow:0 0 8px var(--accent);}
 .strip .sdot{width:5px; height:5px; border-radius:50%; flex:0 0 auto;
   background:color-mix(in srgb, var(--muted) 40%, transparent); transition:background .15s;}
 .strip .sdot.root{width:9px; height:9px; background:color-mix(in srgb, var(--accent) 55%, transparent);}
