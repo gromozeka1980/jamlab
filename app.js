@@ -988,8 +988,8 @@ function goHome(){ if(accOn) stopBacking(); disarmPicks(); overlay.style.display
 // Sounding picker: the first tap on a card plays a short taste of that instrument (its real
 // voice + scale, incl. locked ones — a shop window), the second tap enters. setMode() under the
 // opaque overlay is invisible, so the preview simply borrows the whole engine.
-const PREVIEW_PHRASES={ blues:[0,2,3,2,0], vostok:[0,1,2,3,4], koto:[0,1,2,4,7], dream:[0,1,2,3,4],
-  gamelan:[0,1,2,4,5], light:[0,1,2,4,7], synth:[0,2,4,7,9], lab:[0,2,4,7,9], jazz:[0,1,2,3,4] };
+// The phrase is the app's own idiom: a fast relational run — root, then +1 +1 −1 three times.
+const PREVIEW_STEPS=[1,1,-1,1,1,-1,1,1,-1];
 let prevVoices=[], prevTimers=[];
 function releaseVoiceNow(v){ const t0=actx.currentTime;
   try{ v.g.gain.cancelScheduledValues(t0); v.g.gain.setValueAtTime(Math.max(v.g.gain.value,0.0009),t0);
@@ -997,11 +997,11 @@ function releaseVoiceNow(v){ const t0=actx.currentTime;
 function stopPreview(){ prevTimers.forEach(clearTimeout); prevTimers=[];
   if(actx) prevVoices.forEach(releaseVoiceNow); prevVoices=[]; }
 function playPreview(id){ stopPreview(); setMode(id);
-  const ph=PREVIEW_PHRASES[id]||[0,1,2];
-  ph.forEach((idx,n)=>{ prevTimers.push(setTimeout(()=>{
-    const v=makeVoice(pitchFreq(clampIndex(idx)),0,0,0); prevVoices.push(v);
-    prevTimers.push(setTimeout(()=>{ releaseVoiceNow(v); prevVoices=prevVoices.filter(x=>x!==v); },300));
-  }, n*175)); }); }
+  let idx=0; const seq=[0]; for(const s of PREVIEW_STEPS) seq.push(idx+=s);
+  seq.forEach((ix,n)=>{ prevTimers.push(setTimeout(()=>{
+    const v=makeVoice(pitchFreq(clampIndex(ix)),0,0,0); prevVoices.push(v);
+    prevTimers.push(setTimeout(()=>{ releaseVoiceNow(v); prevVoices=prevVoices.filter(x=>x!==v); },220));
+  }, n*115)); }); }
 let armedPick=null, disarmT=null;
 function disarmPicks(){ armedPick=null; clearTimeout(disarmT);
   document.querySelectorAll('.pick.primed').forEach(x=>x.classList.remove('primed')); }
