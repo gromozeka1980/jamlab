@@ -42,6 +42,17 @@ input[type=range]{width:150px; accent-color:var(--accent);}
 .ladbtn.active{background:var(--accent); border-color:var(--accent); color:#15151f;}
 .ladbtn:disabled{opacity:.3; pointer-events:none;}
 
+/* collapsed config: on touch the console folds into one summary line (new users see keys, not a mixing desk) */
+#topsum{display:none; margin:6px 10px 0; padding:8px 12px; border:1px solid var(--line); border-radius:11px;
+  background:var(--panel); color:var(--muted); font-size:12px; align-items:center; gap:8px; cursor:pointer;
+  white-space:nowrap; overflow:hidden;}
+#topsum #topsumTxt{overflow:hidden; text-overflow:ellipsis;}
+#topsum .chev{margin-left:auto; transition:transform .2s; flex:0 0 auto;}
+body.cfgopen #topsum .chev{transform:rotate(180deg);}
+.touch #topsum{display:flex;}
+body.touch:not(.cfgopen) #topbar{display:none;}
+body.tut #topsum{opacity:.25; transition:opacity .3s;}
+
 /* scale strip: dots = scale tones across the playable range, roots bigger; the ring marker hops with every key press */
 .strip{position:relative; display:flex; align-items:center; justify-content:space-between; padding:2px 20px 6px; height:18px;}
 .strip:empty{display:none;}

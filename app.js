@@ -303,7 +303,24 @@ function updateDisplay(){
   elRole.textContent=role;
   refreshKeyLabels();
   stripRender();
+  updateTopsum();
 }
+/* collapsed config summary: "A · 85 · Minor · Shuffle" — the one line phones see instead of the console */
+const topsumEl=document.getElementById('topsum'), topsumTxt=document.getElementById('topsumTxt');
+function updateTopsum(){ if(!topsumTxt) return;
+  const parts=[NOTE_NAMES[((settings.rootMidi%12)+12)%12], settings.bpm];
+  if(M.back==='blues'){ const h=HARM_OPTS.find(o=>o[0]===settings.harmony), r=RHY_OPTS.find(o=>o[0]===settings.rhythm);
+    if(h) parts.push(t(h[1])); if(r) parts.push(t(r[1])); }
+  else if(M.id==='jazz'){ parts.push(t('phrase.'+settings.jazzPhrase)); }
+  else { const vr=M.variants && M.variants.find(v=>v.id===settings.variant);
+    if(vr) parts.push(M.lab?labScaleName(settings.variant):t(vr.label));
+    const bk=M.backings && M.backings.find(b=>b.id===settings.backing); if(bk) parts.push(t(bk.label)); }
+  topsumTxt.textContent=parts.join(' · ');
+}
+if(topsumEl){ let cfgOpen=false; try{ cfgOpen=localStorage.getItem('jamlab.cfgOpen')==='1'; }catch(e){}
+  document.body.classList.toggle('cfgopen',cfgOpen);
+  topsumEl.addEventListener('click',()=>{ const o=!document.body.classList.contains('cfgopen');
+    document.body.classList.toggle('cfgopen',o); try{ localStorage.setItem('jamlab.cfgOpen',o?'1':'0'); }catch(e){} }); }
 function refreshKeyLabels(){ const ct=curChord; for(const k of noteKeys){
     if(k.el.classList.contains('active')) continue;   // freeze a held key: its label/arrows describe the sounding voice
     const idx=clampIndex(currentIndex+k.off), lab=pitchLabel(idx);
@@ -760,7 +777,7 @@ const rootSel=document.getElementById("rootSel");
   .forEach(([nm,mid])=>rootSel.appendChild(new Option(nm,mid)));
 rootSel.value=57;
 rootSel.addEventListener("change",()=>{ settings.rootMidi=+rootSel.value; resetToRoot(); if(accOn){stopBacking();startBacking();} });
-backSel.addEventListener("change",()=>{ settings.backing=backSel.value; if(accOn){stopBacking();startBacking();} });
+backSel.addEventListener("change",()=>{ settings.backing=backSel.value; updateTopsum(); if(accOn){stopBacking();startBacking();} });
 
 const harmSel=document.getElementById("harmSel"), rhythmSel=document.getElementById("rhythmSel");
 function populateHarmRhythm(){
@@ -769,17 +786,17 @@ function populateHarmRhythm(){
   rhythmSel.innerHTML=""; RHY_OPTS.forEach(([v,k])=>rhythmSel.appendChild(new Option(t(k),v)));
   if(hv) harmSel.value=hv; if(rv) rhythmSel.value=rv;
 }
-harmSel.addEventListener("change",()=>{ settings.harmony=harmSel.value; applyLadLock(); if(accOn){stopBacking();startBacking();} });  // scale locked to the harmony, restart from bar I
-rhythmSel.addEventListener("change",()=>{ settings.rhythm=rhythmSel.value; });   // rhythm changes on the fly
+harmSel.addEventListener("change",()=>{ settings.harmony=harmSel.value; applyLadLock(); updateTopsum(); if(accOn){stopBacking();startBacking();} });  // scale locked to the harmony, restart from bar I
+rhythmSel.addEventListener("change",()=>{ settings.rhythm=rhythmSel.value; updateTopsum(); });   // rhythm changes on the fly
 
 const colorSel=document.getElementById("colorSel"), landSel=document.getElementById("landSel"), phraseSel=document.getElementById("phraseSel"), timingSel=document.getElementById("timingSel");
 colorSel.addEventListener("change",()=>{ settings.jazzColor=colorSel.value; saveSettings(); });   // scales apply from the next chord
 landSel.addEventListener("change",()=>{ settings.jazzLand=landSel.value; saveSettings(); });
-phraseSel.addEventListener("change",()=>{ settings.jazzPhrase=phraseSel.value; saveSettings(); });
+phraseSel.addEventListener("change",()=>{ settings.jazzPhrase=phraseSel.value; saveSettings(); updateTopsum(); });
 timingSel.addEventListener("change",()=>{ settings.jazzTiming=timingSel.value; saveSettings(); });
 
 const bpm=document.getElementById("bpm"), bpmVal=document.getElementById("bpmVal");
-bpm.addEventListener("input",()=>{settings.bpm=+bpm.value; bpmVal.textContent=bpm.value;});
+bpm.addEventListener("input",()=>{settings.bpm=+bpm.value; bpmVal.textContent=bpm.value; updateTopsum();});
 const setVal=(id,txt)=>{ const e=document.getElementById(id); if(e) e.textContent=txt; };
 const tone=document.getElementById("tone"); tone.addEventListener("input",()=>{settings.tone=+tone.value; if(leadFilter) leadFilter.frequency.value=settings.tone; setVal('toneVal',tone.value); saveSettings();});
 const volSolo=document.getElementById("volSolo"); volSolo.addEventListener("input",()=>{settings.volSolo=volSolo.value/100; if(leadOut) leadOut.gain.value=settings.volSolo; setVal('volSoloVal',volSolo.value+'%'); saveSettings();});
