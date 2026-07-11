@@ -2,6 +2,7 @@
 // Free tier: Blues and East, complete. Everything else is Pro.
 // The web build stays fully open (it is the demo); add ?paywall to the URL to preview the locks in a browser.
 import { t } from './i18n.js';
+import { track } from './analytics.js';
 
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 const RC = (NATIVE && window.Capacitor.Plugins) ? window.Capacitor.Plugins.Purchases : null;
@@ -38,7 +39,7 @@ export async function initBilling(){
 
 /* --- sheet UI --- */
 const pwEl=document.getElementById('paywall'), pwNote=document.getElementById('pwNote'), pwBuy=document.getElementById('pwBuy');
-export function showPaywall(){
+export function showPaywall(){ track('paywall_view');
   pwBuy.textContent=t('pw.buy',{price:priceStr});
   pwNote.textContent = !NATIVE ? t('pw.webNote') : (!RC_API_KEY ? t('pw.soon') : '');
   pwEl.classList.remove('hidden');
@@ -49,7 +50,7 @@ pwBuy.addEventListener('click', async ()=>{
   if(!RC || !RC_API_KEY || !pkgObj){ pwNote.textContent=t('pw.soon'); return; }
   try{
     const res=await RC.purchasePackage({ aPackage: pkgObj });
-    if(applyCustomerInfo(res)){ pwNote.textContent=t('pw.thanks'); setTimeout(hidePaywall,900); }
+    if(applyCustomerInfo(res)){ track('purchase_done'); pwNote.textContent=t('pw.thanks'); setTimeout(hidePaywall,900); }
   }catch(e){ if(!(e && e.userCancelled)) pwNote.textContent=t('pw.err'); }
 });
 document.getElementById('pwRestore').addEventListener('click', async ()=>{

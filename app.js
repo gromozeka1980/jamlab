@@ -10,6 +10,7 @@ import { actx, comp, leadBus, leadFilter, leadOut, accBus, busPerc, busBass, bus
 import { viz, cssRgb } from './viz.js';
 import { refreshRecLabel } from './rec.js';
 import { isPro, modeLocked, showPaywall, onProChange, initBilling } from './paywall.js';
+import { track, trackOnce, sinceLaunch } from './analytics.js';
 
 // true inside the native Capacitor app (vs the plain web build)
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
@@ -240,6 +241,7 @@ function noteOn(id,offset,el){ initAudio(); resumeAudio(); if(activeVoices.has(i
   tapHaptic('LIGHT');
   heldNotes.set(id,(offset>0?'+':'')+offset); viz.keysHeld([...heldNotes.values()]);   // video: pressed keys + sounding note
   viz.liveNote(midiToName(Math.round(freqToMidi(freq))),0);
+  trackOnce('first_note',{mode:M.id,tta:sinceLaunch()});
   if(settings.viz){ const r=el.getBoundingClientRect(); const cv=el.classList.contains('neg')?'--neg':el.classList.contains('pos')?'--pos':'--zero'; viz.note(r.left+r.width/2, r.top+10, cssRgb(cv));
     const mm=freqToMidi(freq), p01=Math.max(0,Math.min(1,(mm-settings.minMidi)/Math.max(1,settings.maxMidi-settings.minMidi))); viz.melody(p01); }
   updateDisplay();
@@ -352,7 +354,7 @@ window.addEventListener("pointermove",e=>{ const p=pointers.get(e.pointerId); if
   const frac=mb>0?Math.min(mag,mb)/mb:0; p.el.style.setProperty("--bend",frac.toFixed(3));
   p.el.classList.toggle("down",down&&mb>0&&frac>0.06); p.el.classList.toggle("bending",frac>0.06); p.el.classList.toggle("bent",mb>0&&mag>=mb);
   const bentNow=mb>0&&mag>=mb;                                      // haptic tick when the bend locks onto its target
-  if(bentNow && !p.bentH){ p.bentH=true; tapHaptic('MEDIUM'); } else if(!bentNow && (mb<=0||mag<mb*0.9)) p.bentH=false;
+  if(bentNow && !p.bentH){ p.bentH=true; tapHaptic('MEDIUM'); trackOnce('bend_used'); } else if(!bentNow && (mb<=0||mag<mb*0.9)) p.bentH=false;
   // live bent pitch: tint the on-screen note and feed the video (big note + ribbon point)
   const p01of=m=>Math.max(0,Math.min(1,(m-settings.minMidi)/Math.max(1,settings.maxMidi-settings.minMidi)));
   if(frac>0.06){
@@ -676,7 +678,7 @@ function startBacking(){ initAudio(); resumeAudio(); accOn=true;
   else if(M.back==='dream'){ startPadDream(); if(settings.backing==='shimmer'){ qStep=0; nextNoteTime=actx.currentTime+0.12; startTicks(dreamScheduler,40); } }
   else if(M.back==='gamelan'){ startGamelanDrone(); qStep=0; nextNoteTime=actx.currentTime+0.12; startTicks(gamelanScheduler,30); }
   else { startPadFlute(); }
-  accBtn.classList.add("on"); accBtn.textContent=t('btn.bgStop'); }
+  accBtn.classList.add("on"); trackOnce('backing_on',{mode:M.id}); accBtn.textContent=t('btn.bgStop'); }
 function stopBacking(){ accOn=false; stopTicks(); stopPad(); liveChordPcs=null; curChord=null; jazzBeatLen=0; setChordChip('',''); refreshKeyLabels();
   accBtn.classList.remove("on"); accBtn.textContent=t('btn.bgStart'); }
 
@@ -943,6 +945,7 @@ onProChange(refreshLocks);   // a purchase unlocks everything in place
 function goHome(){ if(accOn) stopBacking(); overlay.style.display="flex"; }
 document.querySelectorAll(".pick").forEach(p=>p.addEventListener("click",()=>{
   if(modeLocked(p.dataset.mode)){ showPaywall(); return; }
+  track('mode_picked',{mode:p.dataset.mode});
   initAudio(); resumeAudio();
   if(settings.gyro!=='off') enableGyro();   // restored gyro pref needs a user gesture to attach
   if(accOn) stopBacking();              // so the backing doesn't double up on a repeat pick
@@ -982,6 +985,7 @@ setMode('blues');
 refreshLabels();
 refreshLocks();
 initBilling();
+track('app_open');
 document.addEventListener("gesturestart",e=>e.preventDefault());
 document.addEventListener("dblclick",e=>e.preventDefault());   // belt-and-suspenders vs iOS double-tap zoom
 document.addEventListener("contextmenu",e=>e.preventDefault());

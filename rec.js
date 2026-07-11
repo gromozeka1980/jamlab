@@ -3,6 +3,7 @@
 import { t } from './i18n.js';
 import { viz } from './viz.js';
 import { actx, comp, recDest, initAudio, resumeAudio } from './audio.js';
+import { track } from './analytics.js';
 
 const REC_MAX_MS=5*60*1000;
 let mediaRec=null, recChunks=[], recStart=0, recTimer=null, recTracks=null;
@@ -61,14 +62,14 @@ function startRecording(){
   recTracks={a:stream.getAudioTracks().length, v:stream.getVideoTracks().length};
   recChunks=[];
   mediaRec.ondataavailable=e=>{ if(e.data && e.data.size) recChunks.push(e.data); };
-  mediaRec.onstop=()=>{ viz.stopRec(); const durMs=Date.now()-recStart;
+  mediaRec.onstop=()=>{ viz.stopRec(); const durMs=Date.now()-recStart; track('record_done',{sec:Math.round(durMs/1000)});
     const blob=new Blob(recChunks,{type:mediaRec.mimeType||'video/webm'});
     if((blob.type||'').indexOf('mp4')>=0 && blob.arrayBuffer)
       blob.arrayBuffer().then(ab=>finishRecording(patchMp4Duration(ab,durMs)?new Blob([ab],{type:blob.type}):blob))
         .catch(()=>finishRecording(blob));
     else finishRecording(blob);
   };
-  mediaRec.start(500);                              // timeslice — data is collected as it goes
+  track('record_start'); mediaRec.start(500);                              // timeslice — data is collected as it goes
   recStart=Date.now(); recBtn.classList.add('rec');
   recTimer=setInterval(()=>{ const ms=Date.now()-recStart;
     if(ms>=REC_MAX_MS){ stopRecording(); return; }  // chunks live in memory — cap the clip length
@@ -98,7 +99,7 @@ document.getElementById('recShare').addEventListener('click',()=>{   // strictly
   if(!lastFile) return;
   const info=document.getElementById('recInfo');
   if(!(navigator.canShare && navigator.canShare({files:[lastFile]}))){ info.textContent=t('rec.shareUnsupported'); return; }
-  navigator.share({files:[lastFile], title:'Jamlab', text:SHARE_TEXT}).catch(e=>{ if(e && e.name!=='AbortError')
+  navigator.share({files:[lastFile], title:'Jamlab', text:SHARE_TEXT}).then(()=>track('share_done')).catch(e=>{ if(e && e.name!=='AbortError')
     info.textContent = (e.name==='NotAllowedError')
       ? t('rec.shareDenied')
       : t('rec.shareErr',{name:e.name||'',msg:e.message||''}); });
