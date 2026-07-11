@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0e1020">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='14'%20fill='%23120e2e'/%3E%3Cg%20fill='%238f6fff'%3E%3Ccircle%20cx='33'%20cy='13'%20r='3.4'/%3E%3Ccircle%20cx='36'%20cy='21'%20r='2.4'/%3E%3Ccircle%20cx='42'%20cy='26'%20r='3'/%3E%3Ccircle%20cx='45'%20cy='34'%20r='2.2'/%3E%3Ccircle%20cx='43'%20cy='41'%20r='1.6'/%3E%3C/g%3E%3Crect%20x='26'%20y='24'%20width='4'%20height='3'%20rx='1.5'%20fill='%23a78bfa'/%3E%3Crect%20x='27'%20y='26'%20width='7.5'%20height='22'%20rx='3'%20fill='%236d4aff'/%3E%3Cellipse%20cx='25'%20cy='47'%20rx='11'%20ry='8'%20fill='%237c5cff'%20transform='rotate(-16%2025%2047)'/%3E%3Cellipse%20cx='21'%20cy='44'%20rx='3.5'%20ry='2'%20fill='%23cabdff'%20transform='rotate(-16%2021%2044)'/%3E%3C/svg%3E">
+<title>Jamlab</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="viz"></canvas>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="tubelogo" viewBox="200 80 500 885">
+  <defs>
+    <linearGradient id="lg-head" x1="0.15" y1="0" x2="0.85" y2="1"><stop offset="0" stop-color="#a98fff"/><stop offset="0.5" stop-color="#6d4aff"/><stop offset="1" stop-color="#4630b0"/></linearGradient>
+    <linearGradient id="lg-glass" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8f74ff"/><stop offset="0.55" stop-color="#6d4aff"/><stop offset="1" stop-color="#5236c8"/></linearGradient>
+    <linearGradient id="lg-liquid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b39dff"/><stop offset="1" stop-color="#5b3fd4"/></linearGradient>
+    <radialGradient id="lg-bub" cx="0.35" cy="0.3" r="1"><stop offset="0" stop-color="#cfc0ff"/><stop offset="0.55" stop-color="#8f6fff"/><stop offset="1" stop-color="#6647e8"/></radialGradient>
+  </defs>
+  <g transform="translate(512 512) scale(1.56) translate(-551 -448)">
+    <g>
+      <circle cx="509" cy="185" r="6"  fill="url(#lg-bub)"/><circle cx="515" cy="216" r="13" fill="url(#lg-bub)"/><circle cx="528" cy="260" r="23" fill="url(#lg-bub)"/><circle cx="513" cy="311" r="16" fill="url(#lg-bub)"/><circle cx="538" cy="338" r="10" fill="url(#lg-bub)"/><circle cx="523" cy="375" r="23" fill="url(#lg-bub)"/><circle cx="507" cy="417" r="11" fill="url(#lg-bub)"/><circle cx="538" cy="414" r="9"  fill="url(#lg-bub)"/><circle cx="566" cy="280" r="8"  fill="url(#lg-bub)"/><circle cx="562" cy="313" r="16" fill="url(#lg-bub)"/><circle cx="595" cy="304" r="5"  fill="url(#lg-bub)"/><circle cx="603" cy="345" r="19" fill="url(#lg-bub)"/><circle cx="635" cy="357" r="4"  fill="url(#lg-bub)"/><circle cx="629" cy="385" r="15" fill="url(#lg-bub)"/><circle cx="628" cy="419" r="5"  fill="url(#lg-bub)"/><circle cx="651" cy="413" r="9"  fill="url(#lg-bub)"/><circle cx="648" cy="444" r="12" fill="url(#lg-bub)"/><circle cx="644" cy="474" r="10" fill="url(#lg-bub)"/><circle cx="628" cy="495" r="6"  fill="url(#lg-bub)"/><circle cx="611" cy="519" r="4"  fill="url(#lg-bub)"/>
+    </g>
+    <circle cx="521" cy="252" r="7" fill="#e4dcff" opacity="0.9"/><circle cx="516" cy="367" r="7" fill="#e4dcff" opacity="0.85"/><circle cx="597" cy="339" r="6" fill="#e4dcff" opacity="0.8"/><circle cx="624" cy="380" r="5" fill="#e4dcff" opacity="0.75"/><circle cx="644" cy="440" r="4" fill="#e4dcff" opacity="0.7"/><circle cx="557" cy="308" r="5" fill="#e4dcff" opacity="0.75"/>
+    <rect x="489" y="482" width="54" height="186" rx="12" fill="url(#lg-glass)"/>
+    <path d="M 492 512 Q 505 504 516 510 Q 529 517 540 509 L 540 646 a 14 14 0 0 1 -14 14 h -24 a 14 14 0 0 1 -14 -14 Z" fill="url(#lg-liquid)"/>
+    <circle cx="512" cy="540" r="7" fill="#171040" opacity="0.55"/><circle cx="524" cy="572" r="4.5" fill="#171040" opacity="0.5"/><circle cx="503" cy="600" r="4" fill="#171040" opacity="0.45"/>
+    <rect x="495" y="492" width="8" height="160" rx="4" fill="#d9d0ff" opacity="0.55"/>
+    <rect x="480" y="466" width="72" height="24" rx="11" fill="#7c5cff"/><rect x="480" y="466" width="72" height="11" rx="5.5" fill="#a78bfa"/>
+    <ellipse cx="456" cy="661" rx="88" ry="62" fill="url(#lg-head)" transform="rotate(-16 456 661)"/>
+    <ellipse cx="424" cy="637" rx="30" ry="16" fill="#cabdff" opacity="0.75" transform="rotate(-16 424 637)"/>
+  </g>
+</symbol></svg>
+<div id="rotate"><div class="ico">📱↻</div><div data-i18n="rotate.msg">Please rotate your phone upright</div></div>
+<div id="overlay">
+  <svg class="ologo"><use href="#tubelogo"/></svg>
+  <h2 data-i18n="app.title" style="font-size:30px; letter-spacing:.5px; margin:2px 0 0;">Jamlab</h2>
+  <div data-i18n="app.tagline" style="color:var(--muted); font-size:12px; letter-spacing:2.5px; text-transform:uppercase; margin:-4px 0 2px;">Relational instruments</div>
+  <div class="hero" data-i18n="intro.hero">You can't play a wrong note here.</div>
+  <p data-i18n="intro.p">Keys are steps along a scale, not fixed notes. Pick an instrument:</p>
+  <div class="pickers">
+    <!-- free tier first, Jazz (experimental) last · mood line sells the vibe, the small line keeps the theory -->
+    <div class="pick" data-mode="blues"><b data-i18n="pick.blues.t">Blues</b><span class="mood" data-i18n="pick.blues.m">road, garage, whiskey</span><span data-i18n="pick.blues.d">blues scale, bends, 12-bar backing</span></div>
+    <div class="pick" data-mode="vostok"><b data-i18n="pick.vostok.t">East</b><span class="mood" data-i18n="pick.vostok.m">desert, snakes, trance</span><span data-i18n="pick.vostok.d">phrygian dominant, hungarian scale, drone</span></div>
+    <div class="pick" data-mode="koto"><b data-i18n="pick.koto.t">Koto</b><span class="mood" data-i18n="pick.koto.m">a rock garden in the rain</span><span data-i18n="pick.koto.d">Japanese pentatonic, drone/ostinato</span></div>
+    <div class="pick" data-mode="dream"><b data-i18n="pick.dream.t">Dream</b><span class="mood" data-i18n="pick.dream.m">weightlessness</span><span data-i18n="pick.dream.d">whole-tone scale, floating pad</span></div>
+    <div class="pick" data-mode="gamelan"><b data-i18n="pick.gamelan.t">Gamelan</b><span class="mood" data-i18n="pick.gamelan.m">the bronze orchestra of Bali</span><span data-i18n="pick.gamelan.d">pelog/slendro, gong and metallophone</span></div>
+    <div class="pick" data-mode="light"><b data-i18n="pick.light.t">Bright</b><span class="mood" data-i18n="pick.light.m">morning and sunshine</span><span data-i18n="pick.light.d">major/minor pentatonic</span></div>
+    <div class="pick" data-mode="synth"><b data-i18n="pick.synth.t">Synthwave</b><span class="mood" data-i18n="pick.synth.m">neon and a night highway</span><span data-i18n="pick.synth.d">neon minor, pumping bass, four-on-the-floor</span></div>
+    <div class="pick" data-mode="lab"><b data-i18n="pick.lab.t">Lab</b><span class="mood" data-i18n="pick.lab.m">your own sound laboratory</span><span data-i18n="pick.lab.d">build your own scale from the 12 notes</span></div>
+    <div class="pick" data-mode="jazz"><b data-i18n="pick.jazz.t">Jazz</b><span class="mood" data-i18n="pick.jazz.m">smoky basement, upright bass</span><span data-i18n="pick.jazz.d">the scale follows the chords (golden sequence)</span></div>
+    <!-- Dorian, Cosmos, flute and Lo-fi are hidden (code kept in MODES) -->
+  </div>
+  <div class="obtns">
+    <button id="helpBtn" data-i18n="btn.help">❔ Help</button>
+    <button id="settingsBtn" data-i18n="btn.settings">⚙ Settings</button>
+  </div>
+</div>
+
+<div id="settings" class="hidden" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <h3 data-i18n="set.title">⚙ Settings</h3>
+    <div class="srow"><label data-i18n="set.lang">Language</label><select id="langSel"><option value="en">English</option><option value="ru">Русский</option><option value="es">Español</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="fr">Français</option><option value="ja">日本語</option><option value="zh">中文</option></select></div>
+    <div class="srow"><label data-i18n="set.tone">Tone (brightness)</label><input id="tone" type="range" min="600" max="6000" value="2600"><span class="val" id="toneVal">2600</span></div>
+    <div class="srow"><label data-i18n="set.volSolo">Lead volume</label><input id="volSolo" type="range" min="0" max="100" value="80"><span class="val" id="volSoloVal">80%</span></div>
+    <div class="sgroup">
+      <div class="srow"><label data-i18n="set.volAcc">Backing volume</label><input id="volAcc" type="range" min="0" max="100" value="55"><span class="val" id="volAccVal">55%</span></div>
+      <div class="subs">
+        <div class="srow"><label data-i18n="set.bgDrums">Drums</label><input id="bgDrums" type="range" min="0" max="150" value="100"><span class="val" id="bgDrumsVal">100%</span></div>
+        <div class="srow"><label data-i18n="set.bgBass">Bass</label><input id="bgBass" type="range" min="0" max="150" value="100"><span class="val" id="bgBassVal">100%</span></div>
+        <div class="srow"><label data-i18n="set.bgChord">Harmony</label><input id="bgChord" type="range" min="0" max="150" value="100"><span class="val" id="bgChordVal">100%</span></div>
+      </div>
+    </div>
+    <div class="srow"><label data-i18n="set.viz">Visualizer</label><select id="vizSel"><option value="on" data-i18n="opt.on">On</option><option value="off" data-i18n="opt.off">Off</option></select></div>
+    <button id="closeSettings" data-i18n="btn.done">Done</button>
+  </div>
+</div>
+
+<div id="help" class="hidden" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <div id="helpMain">
+      <h3 data-i18n="help.title">How to play</h3>
+      <div style="font-size:13px; line-height:1.55;">
+        <p data-i18n="help.p1" style="margin:0 0 8px;"></p>
+        <ul style="margin:0; padding-left:18px; color:var(--muted); display:flex; flex-direction:column; gap:5px;">
+          <li data-i18n="help.li1"></li>
+          <li data-i18n="help.li2"></li>
+          <li data-i18n="help.li3"></li>
+          <li data-i18n="help.li4"></li>
+          <li data-i18n="help.li5"></li>
+          <li data-i18n="help.li6"></li>
+        </ul>
+      </div>
+    </div>
+    <div id="helpJazz" style="display:none; border-top:1px solid var(--line); padding-top:10px; font-size:13px; line-height:1.5;">
+      <h3 data-i18n="help.jazzTitle" style="font-size:15px; color:var(--accent); margin:0 0 6px;">Jazz settings (experimental)</h3>
+      <ul style="margin:0; padding-left:18px; color:var(--muted); display:flex; flex-direction:column; gap:5px;">
+        <li data-i18n="help.jz1"></li>
+        <li data-i18n="help.jz2"></li>
+        <li data-i18n="help.jz3"></li>
+        <li data-i18n="help.jz4"></li>
+      </ul>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button id="tutReplayBtn" data-i18n="tut.replay" style="flex:1;">🎓 Tutorial</button>
+      <button id="howitBtn" data-i18n="howit.open" style="flex:1;">How does it work?</button>
+    </div>
+    <button id="closeHelp" data-i18n="btn.gotit">Got it</button>
+  </div>
+</div>
+
+<div id="howit" class="hidden" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <h3 data-i18n="howit.title">How it works</h3>
+    <div style="font-size:13px; line-height:1.55; display:flex; flex-direction:column; gap:8px;">
+      <p data-i18n="howit.p1" style="margin:0;"></p>
+      <p data-i18n="howit.p2" style="margin:0;"></p>
+      <p data-i18n="howit.p3" style="margin:0;"></p>
+      <p data-i18n="howit.p4" style="margin:0;"></p>
+      <h4 data-i18n="howit.g" style="margin:6px 0 0; font-size:13px; color:var(--accent);"></h4>
+      <ul style="margin:0; padding-left:18px; color:var(--muted); display:flex; flex-direction:column; gap:4px;">
+        <li data-i18n="howit.g1"></li>
+        <li data-i18n="howit.g2"></li>
+        <li data-i18n="howit.g3"></li>
+        <li data-i18n="howit.g4"></li>
+      </ul>
+    </div>
+    <button id="closeHowit" data-i18n="btn.gotit">Got it</button>
+  </div>
+</div>
+
+<div id="tutov" class="hidden" role="dialog" aria-modal="true">
+  <div class="sheet" style="text-align:center;">
+    <h3 data-i18n="tut.offer.t">First time here?</h3>
+    <p data-i18n="tut.offer.d" style="margin:0; color:var(--muted); font-size:13px;"></p>
+    <div style="display:flex; gap:8px;">
+      <button class="tutpick" data-tmode="koto" data-i18n="pick.koto.t">Koto</button>
+      <button class="tutpick" data-tmode="vostok" data-i18n="pick.vostok.t">East</button>
+      <button class="tutpick" data-tmode="light" data-i18n="pick.light.t">Bright</button>
+    </div>
+    <button id="tutSkip" data-i18n="tut.offer.skip">I'll figure it out myself</button>
+  </div>
+</div>
+
+<div id="recov" class="hidden" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <h3 data-i18n="rec.title">🎬 Recording</h3>
+    <video id="recVid" playsinline controls style="width:100%; max-height:46vh; border-radius:10px; background:#000;"></video>
+    <div id="recInfo" style="color:var(--muted); font-size:12px;"></div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+      <button id="recShare" data-i18n="btn.share">Share</button>
+      <button id="recSave" data-i18n="btn.save">Download</button>
+      <button id="recClose" data-i18n="btn.close">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="labov" class="hidden" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <h3 data-i18n="lab.title">⚗ Scale builder</h3>
+    <div class="srow"><label data-i18n="lab.scaleSel">Scale</label><select id="labScaleSel" style="flex:1;"></select></div>
+    <div style="font-size:12px; color:var(--muted); line-height:1.45;" data-i18n="lab.hint">Pick up to 7 notes (the root is always on). The scale plays relative to the root.</div>
+    <div class="pcgrid" id="labPcs"></div>
+    <div class="srow"><label data-i18n="lab.down">Different scale downwards</label><select id="labDownSel"><option value="off" data-i18n="opt.off">Off</option><option value="on" data-i18n="opt.on">On</option></select></div>
+    <div class="pcgrid" id="labPcsDn" style="display:none"></div>
+    <div style="font-size:12px; color:var(--muted);" data-i18n="lab.arp">Backing arpeggio (tap a step to change it)</div>
+    <div class="arprow" id="labArp"></div>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <button id="labPlayScale" data-i18n="lab.playScale">▶ Scale</button>
+      <button id="labPlayArp" data-i18n="lab.playArp">▶ Arpeggio</button>
+      <div style="flex:1; text-align:right; font-size:12px; color:var(--muted);" id="labCount"></div>
+    </div>
+    <div class="srow"><label data-i18n="lab.name">Name</label><input id="labName" type="text" maxlength="24" style="flex:1; background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-size:13px;"></div>
+    <div style="display:flex; gap:8px; justify-content:space-between;">
+      <button id="labDelete" data-i18n="lab.delete" style="color:#ff8787;">Delete</button>
+      <div style="display:flex; gap:8px;">
+        <button id="labClose" data-i18n="lab.cancel">Cancel</button>
+        <button id="labOk" data-i18n="btn.ok" style="background:var(--accent); border-color:var(--accent); color:#15151f; font-weight:700;">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="paywall" class="hidden" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <h3 data-i18n="pw.title">Unlock everything</h3>
+    <ul style="margin:0; padding-left:18px; color:var(--muted); font-size:13px; line-height:1.55; display:flex; flex-direction:column; gap:5px;">
+      <li data-i18n="pw.li1"></li>
+      <li data-i18n="pw.li2"></li>
+      <li data-i18n="pw.li3"></li>
+      <li data-i18n="pw.li4"></li>
+    </ul>
+    <div id="pwNote" style="color:var(--muted); font-size:12px; min-height:14px;"></div>
+    <button id="pwBuy" style="background:var(--accent); border-color:var(--accent); color:#15151f; font-weight:800; font-size:15px;"></button>
+    <div style="display:flex; gap:8px; justify-content:space-between;">
+      <button id="pwRestore" data-i18n="pw.restore">Restore purchase</button>
+      <button id="pwClose" data-i18n="pw.later">Not now</button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="brand"><svg class="hlogo"><use href="#tubelogo"/></svg><span>Jamlab</span></div>
+  <h1><span id="h1name">—</span> <small id="h1sub"></small></h1>
+</header>
+
+<!-- collapsed config (phones): one summary line; tap to expand the full console -->
+<div id="topsum"><span id="topsumTxt"></span><span class="chev">▾</span></div>
+
+<!-- top bar: perform + per-mode config (instrument is chosen via ⌂ Styles) -->
+<div class="controls" id="topbar">
+  <div class="ctl"><label data-i18n="ctl.root">Root</label><select id="rootSel"></select></div>
+  <div class="ctl" id="ctlTempo"><label data-i18n="ctl.tempo">Tempo</label>
+    <div style="display:flex; align-items:center; gap:6px"><input id="bpm" type="range" min="40" max="160" value="85" style="width:90px"><span class="val" id="bpmVal" style="min-width:22px; font-size:11px; color:var(--muted)">85</span></div>
+  </div>
+  <div class="ctl" id="ctlGyro"><label data-i18n="ctl.gyro">Tilt</label><select id="gyroSel"><option value="off" data-i18n="opt.off">Off</option><option value="vibrato" data-i18n="gyro.vibrato">Vibrato</option><option value="volume" data-i18n="gyro.volume">Volume</option><option value="tone" data-i18n="gyro.tone">Brightness</option></select></div>
+  <div class="ctl" id="ctlJazzHelp"><button id="jazzHelpBtn" class="jhelp" data-i18n="btn.jazzHelp">About Jazz</button></div>
+  <div class="ctl" id="ctlPerc"><label data-i18n="ctl.perc">Percussion</label><select id="percSel"><option value="taiko" data-i18n="perc.taiko">Taiko</option><option value="darbuka" data-i18n="perc.darbuka">Darbuka</option><option value="shaker" data-i18n="perc.shaker">Shaker</option><option value="" data-i18n="perc.none">None</option></select></div>
+  <div class="ctl" id="ctlLab"><button id="labBtn" class="jhelp" data-i18n="btn.lab">⚗ Scale builder</button></div>
+  <div class="ctl" id="ctlBack"><label data-i18n="ctl.back">Backing</label><select id="backSel"></select></div>
+  <div class="ctl" id="ctlHarm"><label data-i18n="ctl.harm">Harmony</label><select id="harmSel"></select></div>
+  <div class="ctl" id="ctlRhythm"><label data-i18n="ctl.rhythm">Rhythm</label><select id="rhythmSel"></select></div>
+  <div class="ctl" id="ctlColor"><label data-i18n="ctl.scale">Scales</label><select id="colorSel"><option value="calm" data-i18n="color.calm">Calmer</option><option value="hot" data-i18n="color.hot">Edgier</option></select></div>
+  <div class="ctl" id="ctlLand"><label data-i18n="ctl.land">Approach</label><select id="landSel"><option value="line" data-i18n="land.line">Lead the line</option><option value="root" data-i18n="land.root">To the root</option></select></div>
+  <div class="ctl" id="ctlPhrase"><label data-i18n="ctl.phrase">Phrasing</label><select id="phraseSel"><option value="free" data-i18n="phrase.free">Free</option><option value="inside" data-i18n="phrase.inside">Inside</option><option value="bebop" data-i18n="phrase.bebop">Bebop</option><option value="outside" data-i18n="phrase.outside">Outside</option></select></div>
+  <div class="ctl" id="ctlTiming"><label data-i18n="ctl.timing">Timing</label><select id="timingSel"><option value="free" data-i18n="timing.off">Off</option><option value="8">1/8</option><option value="16">1/16</option><option value="32">1/32</option></select></div>
+</div>
+
+<div class="display">
+  <div class="note" id="noteName">—</div>
+  <div class="role"><b id="roleName"></b></div>
+  <div class="chords" id="chordBox" style="display:none"><b id="chordNow"></b><span id="chordNext"></span></div>
+</div>
+
+<div class="ladrow" id="ladHost"></div>
+
+<!-- scale strip: the "you are here" ladder — makes the relational keyboard visible -->
+<div class="strip" id="stepStrip"></div>
+
+<!-- centered playfield: empty gutters above & below give bend room both ways -->
+<div class="playfield">
+  <div class="keys">
+    <div class="row top" id="rowTop"></div>
+    <div class="row bottom" id="rowBottom"></div>
+  </div>
+</div>
+
+<!-- bottom bar: things you reach for while playing (perform) -->
+<div class="extra" id="extra"></div>
+<div class="controls actions" id="bottombar">
+  <div class="ctl"><button id="accBtn" class="toggle" data-i18n="btn.bgStart">▶ Backing</button></div>
+  <div class="ctl"><button id="recBtn" data-i18n="btn.rec">⏺ Record</button></div>
+</div>
+<div class="hint" id="hint"></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

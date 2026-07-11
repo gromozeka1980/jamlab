@@ -1,0 +1,248 @@
+:root{
+  --bg:#0e1020; --bg1:#18324f; --panel:#171a2b; --line:#272b40;
+  --neg:#4263eb; --pos:#e8590c; --zero:#2f9e44;
+  --text:#eceaf3; --muted:#9aa0bf; --accent:#ffd43b; --blue:#4dd0e1;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{margin:0; height:100vh; height:100dvh;}   /* dvh — survives the dynamic browser bars of in-app WebViews */
+body{
+  background:radial-gradient(1200px 600px at 50% -10%, var(--bg1) 0%, var(--bg) 62%);
+  color:var(--text); font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  display:flex; flex-direction:column; height:100%; overflow:hidden;
+  user-select:none; -webkit-user-select:none;
+  touch-action:manipulation;   /* kill iOS double-tap-to-zoom (it ignores user-scalable=no) while keeping taps/clicks */
+  transition:background .4s;
+}
+/* block scroll/zoom only on the play surfaces — leave sheets/pickers scrollable */
+.playfield,.row,.ladrow,.key,.extra{touch-action:none;}
+header{padding:max(8px,env(safe-area-inset-top)) 14px 2px; text-align:center; position:relative;}
+h1{font-size:14px; margin:0; font-weight:600; letter-spacing:.3px;}
+h1 small{color:var(--muted); font-weight:400;}
+/* brand mark: top-left on the play screen (for screenshots) */
+.brand{position:absolute; left:12px; top:max(6px,env(safe-area-inset-top)); display:flex; align-items:center; gap:5px; opacity:.82;}
+.brand span{font-size:12px; font-weight:700; letter-spacing:.3px;}
+.hlogo{width:13px; height:23px;}
+/* big logo on the start screen */
+.ologo{width:52px; height:92px; display:block; margin:0 auto;}
+
+.controls{display:flex; flex-wrap:wrap; gap:6px 14px; justify-content:center; align-items:flex-end; padding:6px 12px;}
+.ctl{display:flex; flex-direction:column; gap:2px;}
+.ctl label{color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.5px;}
+select,button{background:var(--panel); color:var(--text); border:1px solid var(--line);
+  border-radius:8px; padding:6px 10px; font-size:13px; cursor:pointer; min-height:44px;}   /* >=44px tap target */
+.touch .key .kb{display:none;}   /* keyboard letter labels are meaningless on touch/native */
+button.toggle.on{background:var(--zero); border-color:var(--zero); color:#04140a; font-weight:600;}
+button#recBtn.rec{background:#e03131; border-color:#e03131; color:#fff; font-weight:600;}
+input[type=range]{width:150px; accent-color:var(--accent);}
+
+.ladrow{display:flex; justify-content:space-between; align-items:stretch; gap:6px; min-height:0;}
+.ladrow:empty{display:none;}
+.ladbtn{flex:1 1 0; min-width:0; padding:9px 8px; font-weight:700; color:var(--muted); border-radius:11px;
+        font-size:clamp(11px,2.6vw,14px); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.ladbtn.active{background:var(--accent); border-color:var(--accent); color:#15151f;}
+.ladbtn:disabled{opacity:.3; pointer-events:none;}
+
+/* collapsed config: on touch the console folds into one summary line (new users see keys, not a mixing desk) */
+#topsum{display:none; margin:6px 10px 0; padding:8px 12px; border:1px solid var(--line); border-radius:11px;
+  background:var(--panel); color:var(--muted); font-size:12px; align-items:center; gap:8px; cursor:pointer;
+  white-space:nowrap; overflow:hidden;}
+#topsum #topsumTxt{overflow:hidden; text-overflow:ellipsis;}
+#topsum .chev{margin-left:auto; transition:transform .2s; flex:0 0 auto;}
+body.cfgopen #topsum .chev{transform:rotate(180deg);}
+.touch #topsum{display:flex;}
+body.touch:not(.cfgopen) #topbar{display:none;}
+body.tut #topsum{opacity:.25; transition:opacity .3s;}
+
+/* scale strip: dots = scale tones across the playable range, roots bigger; the ring marker hops with every key press */
+.strip{position:relative; display:flex; align-items:center; justify-content:space-between; padding:2px 20px 6px; height:18px;}
+.strip:empty{display:none;}
+.strip .sdot{width:5px; height:5px; border-radius:50%; flex:0 0 auto;
+  background:color-mix(in srgb, var(--muted) 40%, transparent); transition:background .15s;}
+.strip .sdot.root{width:9px; height:9px; background:color-mix(in srgb, var(--accent) 55%, transparent);}
+.strip .sdot.cur{background:var(--accent);}
+.strip .smark{position:absolute; top:50%; width:15px; height:15px; margin:-7.5px 0 0 -7.5px; border-radius:50%;
+  border:2px solid var(--accent); box-shadow:0 0 10px color-mix(in srgb, var(--accent) 70%, transparent);
+  pointer-events:none; transition:left .18s cubic-bezier(.3,1.5,.5,1);}
+
+.display{display:flex; gap:14px; justify-content:center; align-items:center; padding:4px 12px 8px; min-height:44px;}
+.note{font-size:28px; font-weight:700; min-width:64px; text-align:center; text-shadow:0 0 18px rgba(255,212,59,.3);}
+.note.bup{color:var(--accent);}     /* bending up: the shown note is the bent pitch */
+.note.bdown{color:var(--blue);}     /* bending down */
+.role{font-size:14px; color:var(--muted); text-align:left; line-height:1.3;}
+.role .tip{color:var(--accent); font-weight:600;}
+.chords{text-align:left; line-height:1.15; min-width:56px;}
+.chords b{display:block; font-size:19px; color:var(--accent); font-weight:700;}
+.chords span{font-size:11px; color:var(--muted);}
+
+.playfield{flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 10px; min-height:0;}  /* centers the keys → drag gutters above & below */
+/* keys fill the playfield and never overflow it (so the octave buttons below never get overlapped) */
+.keys{display:flex; flex-direction:column; gap:6px; width:100%; flex:1; min-height:0; max-height:300px;}
+.row{display:flex; gap:6px;}
+.row.top{height:38%; flex:none;}
+.row.bottom{flex:1; min-height:0;}
+.actions{padding:6px 12px max(8px,env(safe-area-inset-bottom));}
+
+.key{flex:1 1 0; min-width:0; border-radius:14px; border:1px solid var(--line);
+  background:linear-gradient(180deg,#212640,#13162a);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  cursor:pointer; position:relative; overflow:hidden; transition:transform .05s, box-shadow .12s, background .12s;}
+.key .off{font-weight:800; line-height:1;}
+.row.bottom .key .off{font-size:clamp(24px,6vw,46px);}
+.row.top .key .off{font-size:var(--topoff,clamp(14px,3.6vw,26px)); font-weight:700;}
+.key .lead{color:var(--muted); white-space:nowrap; line-height:1.1; margin-top:3px;}
+.row.bottom .key .lead{font-size:clamp(11px,2.6vw,15px);}
+.row.top .key .lead{font-size:var(--toplead,clamp(8px,2.2vw,12px));}
+.key.zero .lead{color:#cfe8d6;}
+.key .kb{position:absolute; top:6px; left:6px; font-size:10px; color:var(--muted);
+  border:1px solid var(--line); border-radius:5px; padding:0 5px; min-width:16px; text-align:center;}
+/* bend direction arrows: big glowing ↑ at the top / ↓ at the bottom of each key */
+.key .arrow{position:absolute; left:0; right:0; text-align:center; font-weight:800; line-height:1;
+  font-size:clamp(15px,4vw,22px); opacity:0; transition:opacity .12s, transform .12s; pointer-events:none;}
+.key .arrow.up{top:3px; color:var(--accent); text-shadow:0 0 10px color-mix(in srgb,var(--accent) 70%,transparent);}
+.key .arrow.dn{bottom:3px; color:var(--blue); text-shadow:0 0 10px color-mix(in srgb,var(--blue) 70%,transparent);}
+.key.canup .arrow.up{opacity:.55;}
+.key.candn .arrow.dn{opacity:.55;}
+.key.bending:not(.down) .arrow.up{opacity:1; transform:scale(1.35);}
+.key.down.bending .arrow.dn{opacity:1; transform:scale(1.35);}
+.key.bent:not(.down) .arrow.up{opacity:1; transform:scale(1.5); text-shadow:0 0 16px var(--accent);}
+.key.down.bent .arrow.dn{opacity:1; transform:scale(1.5); text-shadow:0 0 16px var(--blue);}
+/* current-chord tone highlight (1/3/5/7) */
+.key .dot{position:absolute; top:7px; right:7px; width:11px; height:11px; border-radius:50%; background:transparent; transition:background .12s; box-shadow:0 0 0 1px rgba(0,0,0,.25) inset;}
+.key.t1 .dot{background:#ffd43b;} .key.t3 .dot{background:#ff6b6b;}
+.key.t5 .dot{background:#4dabf7;} .key.t7 .dot{background:#69db7c;}
+.key.neg{border-color:color-mix(in srgb, var(--neg) 45%, transparent);}
+.key.pos{border-color:color-mix(in srgb, var(--pos) 45%, transparent);}
+.key.zero{border-color:color-mix(in srgb, var(--zero) 55%, transparent);}
+.key.active{transform:translateY(2px);}
+.key.neg.active{background:linear-gradient(180deg,var(--neg),#0008); box-shadow:0 0 26px color-mix(in srgb,var(--neg) 60%,transparent);}
+.key.pos.active{background:linear-gradient(180deg,var(--pos),#0008); box-shadow:0 0 26px color-mix(in srgb,var(--pos) 60%,transparent);}
+.key.zero.active{background:linear-gradient(180deg,var(--zero),#0008); box-shadow:0 0 26px color-mix(in srgb,var(--zero) 60%,transparent);}
+.key .bendfill{position:absolute; left:0; right:0; bottom:0; height:calc(var(--bend,0)*100%);
+  background:linear-gradient(0deg, color-mix(in srgb,var(--accent) 55%,transparent), transparent); pointer-events:none;}
+.key.bending{box-shadow:0 0 30px color-mix(in srgb,var(--accent) 70%,transparent) !important;}
+.key.bent{box-shadow:0 0 36px var(--accent) !important; border-color:var(--accent) !important;}
+.key.down .bendfill{top:0; bottom:auto; background:linear-gradient(180deg, color-mix(in srgb,var(--blue) 55%,transparent), transparent);}
+.key.down.bending{box-shadow:0 0 30px color-mix(in srgb,var(--blue) 70%,transparent) !important;}
+.key.down.bent{box-shadow:0 0 36px var(--blue) !important; border-color:var(--blue) !important;}
+
+.extra{display:flex; gap:8px; justify-content:center; padding:0 12px 6px; flex-wrap:wrap;}
+.extra .key{flex:0 0 auto; min-width:88px; max-width:130px; height:44px; border-radius:10px;}
+.extra .key .off{font-size:13px; font-weight:600;}
+.hint{color:var(--muted); font-size:11px; text-align:center; padding:0 12px max(8px,env(safe-area-inset-bottom));}
+#viz{position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:3;}
+/* landscape is not supported on phones — ask to rotate back to portrait */
+#rotate{display:none; position:fixed; inset:0; z-index:100; background:var(--bg); color:var(--text);
+  flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:16px; padding:30px; font-size:16px;}
+#rotate .ico{font-size:48px;}
+@media (orientation:landscape) and (pointer:coarse){ #rotate{display:flex;} }
+
+#overlay,#settings,#recov,#help,#paywall,#howit,#tutov{position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:22px; z-index:10;}
+#paywall{background:rgba(7,8,16,.88); z-index:12;}
+#paywall.hidden{display:none;}
+#overlay{background:rgba(7,8,16,.95); gap:14px; text-align:center;}
+#overlay h2{font-size:22px; margin:0 0 6px;}
+#overlay p{color:var(--muted); max-width:460px; line-height:1.5; margin:0; font-size:14px;}
+.pickers{display:grid; grid-template-columns:1fr 1fr; gap:8px; width:min(460px,100%); margin-top:8px; max-height:70vh; overflow-y:auto;}
+.pick{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px 14px; text-align:left; cursor:pointer; position:relative;}
+.pick.locked{opacity:.72;}
+.pick.locked::after{content:'PRO'; position:absolute; top:8px; right:8px; font-size:9px; font-weight:800; letter-spacing:.6px;
+  color:#15151f; background:var(--accent); border-radius:5px; padding:2px 6px;}
+.pick b{font-size:15px;} .pick span{display:block; color:var(--muted); font-size:11px; margin-top:2px; line-height:1.3;}
+.pick .mood{color:color-mix(in srgb, var(--text) 82%, transparent); font-size:11.5px;}
+.pick span:not(.mood){font-size:10px; opacity:.8;}
+.pick:active{transform:translateY(1px);}
+/* first tap auditions the instrument and arms the card; second tap enters */
+.pick.primed{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent), 0 0 16px color-mix(in srgb, var(--accent) 35%, transparent);}
+.pick.primed::after{content:'▶ ' attr(data-again); position:absolute; top:8px; right:8px; font-size:9px; font-weight:800;
+  color:#15151f; background:var(--accent); border-radius:5px; padding:2px 6px; letter-spacing:.2px;}
+#overlay .hero{font-size:17px; font-weight:700; margin:2px 0 0;}
+.obtns{display:flex; gap:8px; margin-top:12px;}
+.obtns button{padding:8px 22px;}
+.jhelp{border-color:color-mix(in srgb, var(--accent) 60%, transparent); color:var(--accent); font-weight:700;}
+#settings,#recov,#help,#howit,#tutov{background:rgba(7,8,16,.82); z-index:11;}
+#recov,#help,#howit{z-index:11;}
+#tutov{z-index:12;}   /* the first-run chooser sits above the instrument picker */
+#settings.hidden,#recov.hidden,#help.hidden,#howit.hidden,#tutov.hidden{display:none;}
+.tutpick{flex:1 1 0; min-width:0; padding:14px 8px; border-radius:12px; font-weight:700; font-size:15px;
+  border-color:var(--accent); background:color-mix(in srgb, var(--accent) 14%, var(--panel));}
+
+/* ============ Tutorial overlay ============ */
+/* dim everything except the lit target; keys stay playable — the tutorial never blocks input */
+body.tut header, body.tut .ladrow, body.tut .hint{opacity:.25; transition:opacity .3s;}
+body.tut .display{opacity:.55; transition:opacity .3s;}
+body.tut .key:not(.tutlit){opacity:.25; transition:opacity .3s;}
+body.tut .ctl:not(:has(.tutlit)){opacity:.25; transition:opacity .3s;}
+.tutlit{animation:tutpulse 1.2s ease-in-out infinite;}
+@keyframes tutpulse{
+  0%,100%{box-shadow:0 0 0 2px var(--accent), 0 0 16px color-mix(in srgb, var(--accent) 55%, transparent);}
+  50%{box-shadow:0 0 0 4px var(--accent), 0 0 30px var(--accent);}
+}
+#tutbar{display:flex; align-items:center; gap:10px; margin:4px 12px; padding:9px 12px;
+  border:1px solid var(--accent); border-radius:12px; font-size:14px; line-height:1.3;
+  background:color-mix(in srgb, var(--accent) 12%, var(--panel));}
+#tutbar .tuttext{flex:1; text-align:left;}
+#tutbar .tutdots{display:flex; gap:4px; flex:0 0 auto;}
+#tutbar .tutdot{width:7px; height:7px; border-radius:50%; background:var(--line);}
+#tutbar .tutdot.done{background:var(--accent);}
+#tutbar .tutdot.cur{background:var(--accent); box-shadow:0 0 8px var(--accent);}
+#tutbar .tutskip{background:none; border:none; color:var(--muted); font-size:12px; padding:4px 6px; min-height:0;}
+#tutbar.hit{animation:tuthit .45s;}
+@keyframes tuthit{0%{background:color-mix(in srgb, var(--accent) 42%, var(--panel));}100%{background:color-mix(in srgb, var(--accent) 12%, var(--panel));}}
+#tutbar.donefx{border-color:#61e786; background:color-mix(in srgb, #61e786 14%, var(--panel));}
+#tutbar.donefx .tutdot.done{background:#61e786;}
+
+/* transient plain-language description after picking a backing */
+#uxtoast{position:fixed; left:50%; bottom:calc(74px + env(safe-area-inset-bottom));
+  transform:translateX(-50%) translateY(6px); max-width:82vw; text-align:center;
+  background:var(--panel); border:1px solid var(--line); color:var(--muted);
+  border-radius:10px; padding:7px 12px; font-size:12px; line-height:1.4;
+  opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; z-index:9;}
+#uxtoast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+.sheet{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px 20px; width:min(440px,100%); max-height:88vh; overflow-y:auto; display:flex; flex-direction:column; gap:14px;}
+.sheet h3{margin:0 0 4px; font-size:18px;}
+.srow{display:flex; align-items:center; justify-content:space-between; gap:14px; font-size:13px;}
+.srow label{color:var(--muted);} .srow .val{color:var(--text); min-width:42px; text-align:right;}
+/* backing mixer: the master fader with its sub-parts visually nested under it */
+.sgroup{background:rgba(255,255,255,.025); border:1px solid var(--line); border-radius:12px; padding:10px 12px; display:flex; flex-direction:column; gap:10px;}
+.sgroup .subs{margin-left:6px; padding-left:12px; border-left:2px solid var(--line); display:flex; flex-direction:column; gap:10px;}
+.sgroup .subs input[type=range]{width:126px;}
+/* lab: 12 chromatic note toggles */
+.pcgrid{display:grid; grid-template-columns:repeat(6,1fr); gap:6px;}
+.pcbtn{min-height:44px; border-radius:10px; font-weight:700; color:var(--muted);}
+.pcbtn.on{background:var(--accent); border-color:var(--accent); color:#15151f;}
+.pcbtn:disabled{opacity:.55;}
+.arprow{display:grid; grid-template-columns:repeat(8,1fr); gap:6px;}
+.arprow .pcbtn{min-height:38px; font-size:12px;}
+#labov{position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:22px; background:rgba(7,8,16,.85); z-index:11;}
+#labov.hidden{display:none;}
+#closeSettings,#closeHelp{align-self:flex-end; background:var(--zero); border-color:var(--zero); color:#04140a; font-weight:700; padding:9px 22px;}
+
+/* shorter viewports (in-app browsers / smaller phones): tighten the chrome, keep the keys big */
+@media (max-height:760px){
+  header{padding:max(4px,env(safe-area-inset-top)) 12px 0;}
+  .controls{padding:3px 10px; gap:4px 12px;}
+  .display{padding:2px 12px 4px; min-height:0;}
+  .note{font-size:24px;}
+  .extra{padding:0 12px 4px;}
+  .extra .key{height:40px;}
+  .actions{padding:4px 12px max(6px,env(safe-area-inset-bottom));}
+  .hint{font-size:10px; padding:0 10px 3px;}
+}
+/* short viewport (phone landscape): keep two rows, just compact the chrome */
+@media (max-height:520px){
+  header{padding:1px 12px 0;}
+  h1{font-size:11px;}
+  .brand{opacity:.6;}
+  .controls{padding:2px 8px; gap:3px 8px;}
+  .display{padding:1px 12px 2px; min-height:0;}
+  .note{font-size:18px;}
+  .role{font-size:11px;}
+  .playfield{padding:0 8px;}
+  .keys{gap:4px;}
+  .row.bottom .key .off{font-size:clamp(22px,5vw,40px);}
+  .extra{padding:0 12px 3px;}
+  .extra .key{height:34px; min-width:60px;}
+  select,button{min-height:36px;}
+  .actions{padding:3px 12px;}
+  .hint{font-size:10px; padding:0 10px 2px;}   /* keep the gesture hint visible, just compact */
+}
