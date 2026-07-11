@@ -11,6 +11,7 @@ import { viz, cssRgb } from './viz.js';
 import { refreshRecLabel } from './rec.js';
 import { isPro, modeLocked, showPaywall, onProChange, initBilling } from './paywall.js';
 import { initTutorial } from './tutorial.js';
+import { track, trackOnce, sinceLaunch } from './analytics.js';
 
 // true inside the native Capacitor app (vs the plain web build)
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
@@ -247,6 +248,7 @@ function noteOn(id,offset,el){ initAudio(); resumeAudio(); if(activeVoices.has(i
   if(playedMidi!=null) elNote.textContent=midiToName(playedMidi);
   else if(SCALEDN && offset<0) elNote.textContent=midiToName(Math.round(freqToMidi(freq)));
   document.dispatchEvent(new CustomEvent('jl:note',{detail:{offset}}));   // tutorial listens
+  trackOnce('first_note',{mode:M.id,tta:sinceLaunch()});                  // tta = seconds from launch to first sound
   return v; }
 function noteOff(id,el){ stopVoice(id);
   heldNotes.delete(id); viz.keysHeld([...heldNotes.values()]);
@@ -391,7 +393,7 @@ window.addEventListener("pointermove",e=>{ const p=pointers.get(e.pointerId); if
   p.el.classList.toggle("down",down&&mb>0&&frac>0.06); p.el.classList.toggle("bending",frac>0.06); p.el.classList.toggle("bent",mb>0&&mag>=mb);
   const bentNow=mb>0&&mag>=mb;                                      // haptic tick when the bend locks onto its target
   if(bentNow && !p.bentH){ p.bentH=true; tapHaptic('MEDIUM'); } else if(!bentNow && (mb<=0||mag<mb*0.9)) p.bentH=false;
-  if(frac>0.6 && !p.evBend){ p.evBend=true; document.dispatchEvent(new Event('jl:bend')); }   // tutorial: a real bend happened
+  if(frac>0.6 && !p.evBend){ p.evBend=true; document.dispatchEvent(new Event('jl:bend')); trackOnce('bend_used'); }   // tutorial: a real bend happened
   // live bent pitch: tint the on-screen note and feed the video (big note + ribbon point)
   const p01of=m=>Math.max(0,Math.min(1,(m-settings.minMidi)/Math.max(1,settings.maxMidi-settings.minMidi)));
   if(frac>0.06){
@@ -716,7 +718,8 @@ function startBacking(){ initAudio(); resumeAudio(); accOn=true;
   else if(M.back==='gamelan'){ startGamelanDrone(); qStep=0; nextNoteTime=actx.currentTime+0.12; startTicks(gamelanScheduler,30); }
   else { startPadFlute(); }
   accBtn.classList.add("on"); accBtn.textContent=t('btn.bgStop');
-  document.dispatchEvent(new Event('jl:backing')); }   // tutorial listens
+  document.dispatchEvent(new Event('jl:backing'));     // tutorial listens
+  trackOnce('backing_on',{mode:M.id}); }
 function stopBacking(){ accOn=false; stopTicks(); stopPad(); liveChordPcs=null; curChord=null; jazzBeatLen=0; setChordChip('',''); refreshKeyLabels();
   accBtn.classList.remove("on"); accBtn.textContent=t('btn.bgStart'); }
 
@@ -1013,7 +1016,8 @@ document.querySelectorAll(".pick").forEach(p=>p.addEventListener("click",()=>{
     return;
   }
   disarmPicks(); stopPreview();             // second tap: enter
-  if(modeLocked(id)){ showPaywall(); return; }
+  if(modeLocked(id)){ showPaywall(); return; }   // paywall_view is tracked inside showPaywall
+  track('mode_picked',{mode:id});
   initAudio(); resumeAudio();
   if(settings.gyro!=='off') enableGyro();   // restored gyro pref needs a user gesture to attach
   if(accOn) stopBacking();              // so the backing doesn't double up on a repeat pick
@@ -1053,8 +1057,10 @@ initBilling();
 // tutorial entry: like a picker tap, but no auto-backing (the tutorial's last step turns the band on)
 // and no lock check — a guided taste of koto/bright is deliberate
 initTutorial({ enterMode:(id)=>{ initAudio(); resumeAudio(); stopPreview(); disarmPicks(); if(accOn) stopBacking();
+  track('mode_picked',{mode:id,via:'tutorial'});
   setMode(id); overlay.style.display='none'; if(!NATIVE) history.pushState({jam:1},'');
   updateDisplay(); } });
+track('app_open');
 document.addEventListener("gesturestart",e=>e.preventDefault());
 document.addEventListener("dblclick",e=>e.preventDefault());   // belt-and-suspenders vs iOS double-tap zoom
 document.addEventListener("contextmenu",e=>e.preventDefault());

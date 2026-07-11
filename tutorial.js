@@ -2,6 +2,7 @@
 // Self-contained: app.js only dispatches jl:note / jl:bend / jl:backing events and passes
 // an enterMode(id) hook (mode entry without auto-backing — the tutorial turns the band on itself).
 import { I18N, t } from './i18n.js';
+import { track } from './analytics.js';
 
 /* ============ Strings (merged into I18N; t() falls back to en) ============ */
 const X = {
@@ -345,7 +346,7 @@ function barText(){ if(!barEl) return;
 function makeBar(){
   barEl=document.createElement('div'); barEl.id='tutbar';
   barEl.innerHTML=`<div class="tutdots">${STEPS.map(()=>'<span class="tutdot"></span>').join('')}</div><div class="tuttext"></div><button class="tutskip">${t('tut.skip')}</button>`;
-  barEl.querySelector('.tutskip').addEventListener('click',stopTutorial);
+  barEl.querySelector('.tutskip').addEventListener('click',()=>{ track('tut_skip',{step:stepI}); stopTutorial(); });
   document.querySelector('.display').before(barEl);
 }
 function pulseBar(){ if(barEl){ barEl.classList.remove('hit'); void barEl.offsetWidth; barEl.classList.add('hit'); } }
@@ -363,6 +364,7 @@ function nextStep(){ advancing=false; stepI++; hits=0;
   light(st.target()); barText();
 }
 function celebrate(){ active=false; light(null); document.body.classList.remove('tut'); unlisten(); markDone();
+  track('tut_done');
   if(barEl){ const b=barEl; barEl=null; b.classList.add('donefx');
     b.querySelector('.tuttext').textContent=t('tut.done');
     const sk=b.querySelector('.tutskip'); if(sk) sk.remove();
@@ -393,6 +395,7 @@ export function initTutorial(h){ hooks=h;
   const tutov=document.getElementById('tutov');
   tutov.querySelectorAll('.tutpick').forEach(b=>b.addEventListener('click',()=>{
     tutov.classList.add('hidden'); markDone();
+    track('tut_start',{mode:b.dataset.tmode});
     hooks.enterMode(b.dataset.tmode);                 // tutorial entry: no auto-backing, lock bypassed (guided taste)
     setTimeout(startTutorial,350);
   }));
@@ -407,5 +410,5 @@ export function initTutorial(h){ hooks=h;
   document.getElementById('closeHowit').addEventListener('click',()=>document.getElementById('howit').classList.add('hidden'));
   document.getElementById('backSel').addEventListener('change',e=>showBackDesc(e.target.value));
   let first=false; try{ first=!localStorage.getItem('jamlab.tutDone'); }catch(e){}
-  if(first) showChooser();
+  if(first){ track('tut_offer'); showChooser(); }
 }
