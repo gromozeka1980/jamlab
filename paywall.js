@@ -1,6 +1,8 @@
 // Paywall: free-tier gating + RevenueCat billing glue (via the Capacitor bridge, no bundler).
-// Free tier: Blues and East, complete. Everything else is Pro.
-// The web build stays fully open (it is the demo); add ?paywall to the URL to preview the locks in a browser.
+// Free tier: Blues and East, complete. Everything else is Pro (playable as a 60s taste — see app.js).
+// The open web build is a temporary private preview, NOT a public demo (the product ships as a paid app);
+// add ?paywall to the URL to preview the locks in a browser.
+// RC is the source of truth: initBilling() re-checks the entitlement on every start, localStorage only caches it.
 import { t } from './i18n.js';
 import { track } from './analytics.js';
 
@@ -39,7 +41,9 @@ export async function initBilling(){
 
 /* --- sheet UI --- */
 const pwEl=document.getElementById('paywall'), pwNote=document.getElementById('pwNote'), pwBuy=document.getElementById('pwBuy');
-export function showPaywall(){ track('paywall_view');
+export function showPaywall(tasteName){ track('paywall_view', tasteName?{via:'taste'}:undefined);
+  // after a taste the offer is personal: "Enjoying Gamelan?" instead of the generic title
+  pwEl.querySelector('h3').textContent = tasteName ? t('pw.tasteT',{name:tasteName}) : t('pw.title');
   pwBuy.textContent=t('pw.buy',{price:priceStr});
   pwNote.textContent = !NATIVE ? t('pw.webNote') : (!RC_API_KEY ? t('pw.soon') : '');
   pwEl.classList.remove('hidden');

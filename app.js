@@ -1022,11 +1022,8 @@ document.getElementById('labDelete').addEventListener('click',()=>{
 const overlay=document.getElementById("overlay");
 function refreshLocks(){ document.querySelectorAll('.pick').forEach(p=>p.classList.toggle('locked', modeLocked(p.dataset.mode))); }
 onProChange(refreshLocks);   // a purchase unlocks everything in place
-function goHome(){ if(accOn) stopBacking(); overlay.style.display="flex"; }
-document.querySelectorAll(".pick").forEach(p=>p.addEventListener("click",()=>{
-  const id=p.dataset.mode;
-  if(modeLocked(id)){ showPaywall(); return; }   // paywall_view is tracked inside showPaywall
-  track('mode_picked',{mode:id});
+function goHome(){ if(accOn) stopBacking(); clearTaste(); overlay.style.display="flex"; }
+function enterPlay(id){
   initAudio(); resumeAudio();
   if(settings.gyro!=='off') enableGyro();   // restored gyro pref needs a user gesture to attach
   if(accOn) stopBacking();              // so the backing doesn't double up on a repeat pick
@@ -1038,7 +1035,51 @@ document.querySelectorAll(".pick").forEach(p=>p.addEventListener("click",()=>{
     const firstJazz=id==='jazz' && !localStorage.getItem('jamlab.jazzHelpSeen');
     if(firstJazz){ localStorage.setItem('jamlab.jazzHelpSeen','1'); showHelp(false,true); }
   }catch(e){}
+}
+document.querySelectorAll(".pick").forEach(p=>p.addEventListener("click",()=>{
+  const id=p.dataset.mode;
+  if(modeLocked(id)){                       // locked: taste it for real first, wall only on the rerun
+    if(tasteAvailable(id)) startTaste(id); else showPaywall();
+    return;
+  }
+  track('mode_picked',{mode:id});
+  enterPlay(id);
 }));
+
+/* ============ Tasting paywall: a locked instrument gives 60s of real play, then a soft offer ============ */
+const TASTE_MS=((+new URLSearchParams(location.search).get('taste'))||60)*1000;   // ?taste=5 → 5s, for QA
+const TASTE_COOLDOWN=24*3600*1000;                   // one taste per instrument per day
+function tasteAvailable(id){ try{ return Date.now()-(+localStorage.getItem('jamlab.taste.'+id)||0)>TASTE_COOLDOWN; }catch(e){ return true; } }
+const tasteBar=document.createElement('div'); tasteBar.id='tastebar';
+tasteBar.innerHTML='<span class="tlabel"></span><span class="tleft"></span><i></i>';
+document.body.appendChild(tasteBar);
+let tasteState=null, tasteAfterPaywall=false;
+function tasteHUD(on){ tasteBar.classList.toggle('on',!!on);
+  const rb=document.getElementById('recBtn'); if(rb) rb.disabled=!!on; }   // recording is the pro perk — off during a taste
+function startTaste(id){
+  try{ localStorage.setItem('jamlab.taste.'+id, String(Date.now())); }catch(e){}   // marked at start: no restart-loops
+  track('taste_start',{mode:id});
+  enterPlay(id);
+  tasteBar.querySelector('.tlabel').textContent=t('taste.label');
+  tasteState={ mode:id, end:Date.now()+TASTE_MS,
+    timer:setTimeout(endTaste,TASTE_MS),
+    tick:setInterval(()=>{ if(!tasteState) return; const left=Math.max(0,tasteState.end-Date.now());
+      tasteBar.querySelector('.tleft').textContent=Math.floor(left/60000)+':'+String(Math.floor(left/1000)%60).padStart(2,'0');
+      tasteBar.querySelector('i').style.width=(left/TASTE_MS*100)+'%'; },250) };
+  tasteHUD(true);
+}
+function clearTaste(){ if(!tasteState) return; clearTimeout(tasteState.timer); clearInterval(tasteState.tick); tasteState=null; tasteHUD(false); }
+function endTaste(){ if(!tasteState) return;
+  const name=t(MODES[tasteState.mode].name);
+  track('taste_end',{mode:tasteState.mode});
+  clearTaste();
+  if(accOn) stopBacking();
+  tasteAfterPaywall=true; showPaywall(name);
+}
+// when the post-taste offer is dismissed without buying → back to the picker
+new MutationObserver(()=>{ const pw=document.getElementById('paywall');
+  if(tasteAfterPaywall && pw.classList.contains('hidden')){ tasteAfterPaywall=false; if(!isPro()) goHome(); }
+}).observe(document.getElementById('paywall'),{attributes:true,attributeFilter:['class']});
 // Android back button: open sheet → close it (recording preview acts like Cancel);
 // play screen → style picker; style picker → leave the app
 function closeTopSheet(){
