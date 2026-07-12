@@ -9,7 +9,7 @@ import { actx, comp, leadBus, leadFilter, leadOut, accBus, busPerc, busBass, bus
          initAudio, resumeAudio, accGain } from './audio.js';
 import { viz, cssRgb } from './viz.js';
 import { refreshRecLabel } from './rec.js';
-import { isPro, modeLocked, showPaywall, onProChange, initBilling } from './paywall.js';
+import { isPro, modeLocked, showPaywall, onProChange, initBilling, KITCHEN } from './paywall.js';
 import { initTutorial } from './tutorial.js';
 import { track, trackOnce, sinceLaunch } from './analytics.js';
 
@@ -1039,7 +1039,7 @@ function enterPlay(id){
 document.querySelectorAll(".pick").forEach(p=>p.addEventListener("click",()=>{
   const id=p.dataset.mode;
   if(modeLocked(id)){                       // locked: taste it for real first, wall only on the rerun
-    if(tasteAvailable(id)) startTaste(id); else showPaywall();
+    if(!KITCHEN.has(id) && tasteAvailable(id)) startTaste(id); else showPaywall();   // the kitchen doesn't do tastings
     return;
   }
   track('mode_picked',{mode:id});
