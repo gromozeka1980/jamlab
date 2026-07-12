@@ -1,5 +1,8 @@
 // Paywall: free-tier gating + RevenueCat billing glue (via the Capacitor bridge, no bundler).
-// Free tier: Blues and East, complete. Everything else is Pro (playable as a 60s taste — see app.js).
+// Free tier: Bright and Koto — the friendly daily playground (decision 2026-07-12: the crown jewels
+// moved behind the wall because the 60s taste took over the shop-window job). Everything else is Pro,
+// playable as a taste (see app.js) — except the KITCHEN: Jazz & Lab are the insider experiments,
+// pitched as "keys to the lab", no window-licking.
 // The open web build is a temporary private preview, NOT a public demo (the product ships as a paid app);
 // add ?paywall to the URL to preview the locks in a browser.
 // RC is the source of truth: initBilling() re-checks the entitlement on every start, localStorage only caches it.
@@ -11,7 +14,8 @@ const RC = (NATIVE && window.Capacitor.Plugins) ? window.Capacitor.Plugins.Purch
 const RC_API_KEY = '';                       // TODO: RevenueCat public Google key (goog_…) once the account is wired up
 const ENTITLEMENT = 'pro';
 
-export const FREE_MODES = new Set(['blues','vostok']);
+export const FREE_MODES = new Set(['light','koto']);
+export const KITCHEN = new Set(['jazz','lab']);      // pro-only experiments: no taste, straight to the offer
 const GATED = NATIVE || new URLSearchParams(location.search).has('paywall');
 
 let pro=false; try{ pro = localStorage.getItem('jamlab.pro')==='1'; }catch(e){}

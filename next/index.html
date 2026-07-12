@@ -49,8 +49,8 @@
     <div class="pick" data-mode="gamelan"><b data-i18n="pick.gamelan.t">Gamelan</b><span class="mood" data-i18n="pick.gamelan.m">the bronze orchestra of Bali</span><span data-i18n="pick.gamelan.d">pelog/slendro, gong and metallophone</span></div>
     <div class="pick" data-mode="light"><b data-i18n="pick.light.t">Bright</b><span class="mood" data-i18n="pick.light.m">morning and sunshine</span><span data-i18n="pick.light.d">major/minor pentatonic</span></div>
     <div class="pick" data-mode="synth"><b data-i18n="pick.synth.t">Synthwave</b><span class="mood" data-i18n="pick.synth.m">neon and a night highway</span><span data-i18n="pick.synth.d">neon minor, pumping bass, four-on-the-floor</span></div>
-    <div class="pick" data-mode="lab"><b data-i18n="pick.lab.t">Lab</b><span class="mood" data-i18n="pick.lab.m">your own sound laboratory</span><span data-i18n="pick.lab.d">build your own scale from the 12 notes</span></div>
-    <div class="pick" data-mode="jazz"><b data-i18n="pick.jazz.t">Jazz</b><span class="mood" data-i18n="pick.jazz.m">smoky basement, upright bass</span><span data-i18n="pick.jazz.d">the scale follows the chords (golden sequence)</span></div>
+    <div class="pick kitchen" data-mode="lab"><b data-i18n="pick.lab.t">Lab</b><span class="mood" data-i18n="pick.lab.m">your own sound laboratory</span><span data-i18n="pick.lab.d">🧪 the inner kitchen — build your own scale from the 12 notes</span></div>
+    <div class="pick kitchen" data-mode="jazz"><b data-i18n="pick.jazz.t">Jazz</b><span class="mood" data-i18n="pick.jazz.m">smoky basement, upright bass</span><span data-i18n="pick.jazz.d">🧪 the inner kitchen — the scale follows the chords; you see it first</span></div>
     <!-- Dorian, Cosmos, flute and Lo-fi are hidden (code kept in MODES) -->
   </div>
   <div class="obtns">
@@ -136,8 +136,8 @@
     <h3 data-i18n="tut.offer.t">First time here?</h3>
     <p data-i18n="tut.offer.d" style="margin:0; color:var(--muted); font-size:13px;"></p>
     <div style="display:flex; gap:8px;">
+      <!-- free instruments only: the tutorial ends in "keep playing", so it must land where playing is free -->
       <button class="tutpick" data-tmode="koto" data-i18n="pick.koto.t">Koto</button>
-      <button class="tutpick" data-tmode="vostok" data-i18n="pick.vostok.t">East</button>
       <button class="tutpick" data-tmode="light" data-i18n="pick.light.t">Bright</button>
     </div>
     <button id="tutSkip" data-i18n="tut.offer.skip">I'll figure it out myself</button>
