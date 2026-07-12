@@ -336,7 +336,8 @@ function updateDisplay(){
   if(M.id==='jazz') role=jazzLabel;
   else if(M.kind==='harmonic') role=t('ord',{n:lab.deg})+" "+t('role.harmonicWord');
   else { const len=SCALE.length, step=((currentIndex%len)+len)%len, oct=Math.floor(currentIndex/len);
-    role=degName(SCALE[step])+(oct? " · "+t('role.oct')+" "+(oct>0?"+":"")+oct : ""); }
+    // plain scale-degree number (matches the key labels) — interval names (fifth/tritone/...) confused non-musicians
+    role=t('role.stepN',{n:step+1})+(oct? " · "+t('role.oct')+" "+(oct>0?"+":"")+oct : ""); }
   elRole.textContent=role;
   refreshKeyLabels();
   stripRender();
