@@ -161,6 +161,15 @@ body.tut #topsum{opacity:.25; transition:opacity .3s;}
 .pick span:not(.mood){font-size:10px; opacity:.8;}
 .pick:active{transform:translateY(1px);}
 #overlay .hero{font-size:17px; font-weight:700; margin:2px 0 0;}
+/* tasting HUD: a small pill with a countdown + draining underline */
+#tastebar{position:fixed; left:50%; transform:translateX(-50%); top:calc(max(8px,env(safe-area-inset-top)) + 40px);
+  display:none; align-items:center; gap:8px; padding:6px 14px 8px; border-radius:999px; z-index:9; overflow:hidden;
+  background:color-mix(in srgb, var(--panel) 90%, transparent); border:1px solid var(--accent); font-size:12px;}
+#tastebar.on{display:flex;}
+#tastebar .tlabel{color:var(--accent); font-weight:700;}
+#tastebar .tleft{color:var(--muted); font-variant-numeric:tabular-nums;}
+#tastebar i{position:absolute; left:0; bottom:0; height:2px; background:var(--accent); width:100%; transition:width .25s linear;}
+#recBtn:disabled{opacity:.45;}
 .obtns{display:flex; gap:8px; margin-top:12px;}
 .obtns button{padding:8px 22px;}
 .jhelp{border-color:color-mix(in srgb, var(--accent) 60%, transparent); color:var(--accent); font-weight:700;}
