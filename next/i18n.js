@@ -1,7 +1,7 @@
 // UI strings (en/ru) + the t() lookup and language state.
 export const I18N = {
   en: {
-    'app.title':'Jamlab','app.tagline':'Relational instruments',
+    'app.title':'JamBrew','app.tagline':'Relational instruments',
     'intro.p':"Keys are steps along a scale, not separate notes — you can't play a wrong one. Pick an instrument:",
     'rotate.msg':'Please rotate your phone upright',
     'pick.blues.t':'Blues','pick.blues.d':'blues scale, bends, 12-bar backing',
@@ -107,7 +107,7 @@ export const I18N = {
     'rec.shareErr':'Share: {name} — {msg}',
   },
   ru: {
-    'app.title':'Jamlab','app.tagline':'Реляционные инструменты',
+    'app.title':'JamBrew','app.tagline':'Реляционные инструменты',
     'intro.p':'Клавиши — это шаги по гамме, а не отдельные ноты. Промахнуться нельзя. Выбери инструмент:',
     'rotate.msg':'Поверни телефон вертикально',
     'pick.blues.t':'Блюз','pick.blues.d':'блюзовая гамма, бенды, 12-тактовый бэк',
@@ -213,7 +213,7 @@ export const I18N = {
     'rec.shareErr':'Шеринг: {name} — {msg}',
   },
   es: {
-    'app.title':'Jamlab','app.tagline':'Instrumentos relacionales',
+    'app.title':'JamBrew','app.tagline':'Instrumentos relacionales',
     'intro.p':'Las teclas son pasos de una escala, no notas sueltas: es imposible tocar mal. Elige un instrumento:',
     'rotate.msg':'Gira el teléfono en vertical',
     'pick.blues.t':'Blues','pick.blues.d':'escala de blues, bends, base de 12 compases',
@@ -311,7 +311,7 @@ export const I18N = {
     'rec.shareErr':'Compartir: {name} — {msg}',
   },
   pt: {
-    'app.title':'Jamlab','app.tagline':'Instrumentos relacionais',
+    'app.title':'JamBrew','app.tagline':'Instrumentos relacionais',
     'intro.p':'As teclas são passos de uma escala, não notas soltas — é impossível errar. Escolha um instrumento:',
     'rotate.msg':'Gire o celular na vertical',
     'pick.blues.t':'Blues','pick.blues.d':'escala de blues, bends, base de 12 compassos',
@@ -409,7 +409,7 @@ export const I18N = {
     'rec.shareErr':'Compartilhar: {name} — {msg}',
   },
   de: {
-    'app.title':'Jamlab','app.tagline':'Relationale Instrumente',
+    'app.title':'JamBrew','app.tagline':'Relationale Instrumente',
     'intro.p':'Die Tasten sind Schritte auf einer Skala, keine einzelnen Noten — danebengreifen ist unmöglich. Wähle ein Instrument:',
     'rotate.msg':'Bitte das Handy hochkant drehen',
     'pick.blues.t':'Blues','pick.blues.d':'Blues-Skala, Bends, 12-Takt-Begleitung',
@@ -507,7 +507,7 @@ export const I18N = {
     'rec.shareErr':'Teilen: {name} — {msg}',
   },
   fr: {
-    'app.title':'Jamlab','app.tagline':'Instruments relationnels',
+    'app.title':'JamBrew','app.tagline':'Instruments relationnels',
     'intro.p':'Les touches sont des pas sur une gamme, pas des notes isolées — impossible de jouer faux. Choisis un instrument :',
     'rotate.msg':'Tourne le téléphone à la verticale',
     'pick.blues.t':'Blues','pick.blues.d':'gamme blues, bends, accompagnement 12 mesures',
@@ -605,7 +605,7 @@ export const I18N = {
     'rec.shareErr':'Partage : {name} — {msg}',
   },
   ja: {
-    'app.title':'Jamlab','app.tagline':'リレーショナル楽器',
+    'app.title':'JamBrew','app.tagline':'リレーショナル楽器',
     'intro.p':'キーは音階のステップ。単独の音ではないので、外すことがありません。楽器を選んでください：',
     'rotate.msg':'スマホを縦向きにしてください',
     'pick.blues.t':'ブルース','pick.blues.d':'ブルーススケール、ベンド、12小節の伴奏',
@@ -703,7 +703,7 @@ export const I18N = {
     'rec.shareErr':'共有: {name} — {msg}',
   },
   zh: {
-    'app.title':'Jamlab','app.tagline':'关系型乐器',
+    'app.title':'JamBrew','app.tagline':'关系型乐器',
     'intro.p':'琴键是音阶上的台阶，而不是孤立的音符——不可能弹错。选择一件乐器：',
     'rotate.msg':'请将手机竖屏使用',
     'pick.blues.t':'布鲁斯','pick.blues.d':'布鲁斯音阶、推弦、12小节伴奏',
