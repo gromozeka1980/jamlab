@@ -94,12 +94,12 @@ function finishRecording(blob){
   document.getElementById('recov').classList.remove('hidden');
 }
 const SHARE_URL='https://gromozeka1980.github.io/jamlab/';   // TODO: swap for the Play Store link after release
-const SHARE_TEXT="My jam in Jamlab — an instrument where you can't hit a wrong note 🎶 "+SHARE_URL;
+const SHARE_TEXT="My jam in JamBrew — an instrument where you can't hit a wrong note 🎶 "+SHARE_URL;
 document.getElementById('recShare').addEventListener('click',()=>{   // strictly synchronous call inside the gesture
   if(!lastFile) return;
   const info=document.getElementById('recInfo');
   if(!(navigator.canShare && navigator.canShare({files:[lastFile]}))){ info.textContent=t('rec.shareUnsupported'); return; }
-  navigator.share({files:[lastFile], title:'Jamlab', text:SHARE_TEXT}).then(()=>track('share_done')).catch(e=>{ if(e && e.name!=='AbortError')
+  navigator.share({files:[lastFile], title:'JamBrew', text:SHARE_TEXT}).then(()=>track('share_done')).catch(e=>{ if(e && e.name!=='AbortError')
     info.textContent = (e.name==='NotAllowedError')
       ? t('rec.shareDenied')
       : t('rec.shareErr',{name:e.name||'',msg:e.message||''}); });

@@ -110,7 +110,7 @@ export const viz=(()=>{
     c.fillText((document.getElementById('h1sub').textContent||'').replace(/^·\s*/,''), RW/2, 48*s);
     // watermark: test-tube note logo + wordmark
     c.globalAlpha=0.82; c.font='700 '+Math.round(16*s)+'px system-ui,sans-serif'; c.textAlign='left'; c.textBaseline='middle';
-    const wmTxt='Jamlab', tw=c.measureText(wmTxt).width, k=1.25*s, lw=11*k, gap=9*s, x0=(RW-(lw+gap+tw))/2, wmY=RH-24*s;
+    const wmTxt='JamBrew', tw=c.measureText(wmTxt).width, k=1.25*s, lw=11*k, gap=9*s, x0=(RW-(lw+gap+tw))/2, wmY=RH-24*s;
     drawTubeNote(c, x0+lw*0.5, wmY-4*s, k);
     c.globalAlpha=0.82; c.fillStyle='#eceaf3'; c.fillText(wmTxt, x0+lw+gap, wmY-4*s);
     c.globalAlpha=1;

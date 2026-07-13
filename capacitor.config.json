@@ -1,6 +1,6 @@
 {
-  "appId": "app.gromozeka.jamlab",
-  "appName": "Jamlab",
+  "appId": "app.jambrew",
+  "appName": "JamBrew",
   "webDir": "www",
   "backgroundColor": "#0e1020",
   "server": {
