@@ -93,7 +93,7 @@ function finishRecording(blob){
   sh.style.display = (navigator.canShare && navigator.canShare({files:[lastFile]})) ? '' : 'none';
   document.getElementById('recov').classList.remove('hidden');
 }
-const SHARE_URL='https://gromozeka1980.github.io/jamlab/';   // TODO: swap for the Play Store link after release
+const SHARE_URL='https://jambrew.app';   // the domain routes viewers (landing/store) — never the Pages URL that will be closed
 const SHARE_TEXT="My jam in JamBrew — an instrument where you can't hit a wrong note 🎶 "+SHARE_URL;
 document.getElementById('recShare').addEventListener('click',()=>{   // strictly synchronous call inside the gesture
   if(!lastFile) return;
