@@ -15,6 +15,10 @@ import { track, trackOnce, sinceLaunch } from './analytics.js';
 
 // true inside the native Capacitor app (vs the plain web build)
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+// Teaser mode (?teaser): the landing page embeds the real engine — koto/hira only, no recording,
+// no picker, no config. Everything musical (backing, bends, glissando, viz) stays honest.
+const TEASER = new URLSearchParams(location.search).has('teaser');
+if(TEASER) document.body.classList.add('teaser');
 const TOUCH = NATIVE || (window.matchMedia && matchMedia('(pointer:coarse)').matches);
 if(TOUCH) document.body.classList.add('touch');   // hide keyboard hints/labels on touch
 
@@ -1023,7 +1027,7 @@ document.getElementById('labDelete').addEventListener('click',()=>{
 const overlay=document.getElementById("overlay");
 function refreshLocks(){ document.querySelectorAll('.pick').forEach(p=>p.classList.toggle('locked', modeLocked(p.dataset.mode))); }
 onProChange(refreshLocks);   // a purchase unlocks everything in place
-function goHome(){ if(accOn) stopBacking(); clearTaste(); overlay.style.display="flex"; }
+function goHome(){ if(TEASER) return; if(accOn) stopBacking(); clearTaste(); overlay.style.display="flex"; }
 function enterPlay(id){
   initAudio(); resumeAudio();
   if(settings.gyro!=='off') enableGyro();   // restored gyro pref needs a user gesture to attach
@@ -1107,11 +1111,16 @@ refreshLocks();
 initBilling();
 // tutorial entry: like a picker tap, but no auto-backing (the tutorial's last step turns the band on)
 // and no lock check — a guided taste of koto/bright is deliberate
-initTutorial({ enterMode:(id)=>{ initAudio(); resumeAudio(); if(accOn) stopBacking();
+if(!TEASER) initTutorial({ enterMode:(id)=>{ initAudio(); resumeAudio(); if(accOn) stopBacking();
   track('mode_picked',{mode:id,via:'tutorial'});
   setMode(id); overlay.style.display='none'; if(!NATIVE) history.pushState({jam:1},'');
   updateDisplay(); } });
-track('app_open');
+track('app_open', TEASER?{src:'teaser'}:undefined);
+if(TEASER){                                   // straight into the instrument: no picker, no chrome
+  setMode('koto');
+  overlay.style.display='none';
+  updateDisplay();
+}
 document.addEventListener("gesturestart",e=>e.preventDefault());
 document.addEventListener("dblclick",e=>e.preventDefault());   // belt-and-suspenders vs iOS double-tap zoom
 document.addEventListener("contextmenu",e=>e.preventDefault());

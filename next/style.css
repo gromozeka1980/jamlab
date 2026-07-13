@@ -171,6 +171,9 @@ body.tut #topsum{opacity:.25; transition:opacity .3s;}
 #tastebar .tleft{color:var(--muted); font-variant-numeric:tabular-nums;}
 #tastebar i{position:absolute; left:0; bottom:0; height:2px; background:var(--accent); width:100%; transition:width .25s linear;}
 #recBtn:disabled{opacity:.45;}
+/* teaser mode (?teaser, embedded on the landing): the instrument and nothing else */
+body.teaser #topsum, body.teaser #topbar, body.teaser .ladrow,
+body.teaser #recBtn, body.teaser #tastebar{display:none !important;}
 .obtns{display:flex; gap:8px; margin-top:12px;}
 .obtns button{padding:8px 22px;}
 .jhelp{border-color:color-mix(in srgb, var(--accent) 60%, transparent); color:var(--accent); font-weight:700;}
