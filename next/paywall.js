@@ -11,8 +11,8 @@ import { track } from './analytics.js';
 
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 const RC = (NATIVE && window.Capacitor.Plugins) ? window.Capacitor.Plugins.Purchases : null;
-const RC_API_KEY = '';                       // TODO: RevenueCat public Google key (goog_…) once the account is wired up
-const ENTITLEMENT = 'pro';
+const RC_API_KEY = 'goog_JbBQSnxeHEiPhmMwPoFugVoUCYO';   // RevenueCat public Play key (safe to ship in the client)
+const ENTITLEMENT = 'Jambrew Pro';           // matches the entitlement identifier created in the RC dashboard
 
 export const FREE_MODES = new Set(['light','koto']);
 export const KITCHEN = new Set(['jazz','lab']);      // pro-only experiments: no taste, straight to the offer
