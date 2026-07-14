@@ -802,7 +802,9 @@ export const I18N = {
   },
 };
 
-export let LANG = (()=>{ try{ const s=localStorage.getItem('jamlab.lang'); if(I18N[s]) return s; }catch(e){}
+export let LANG = (()=>{
+  try{ const u=new URLSearchParams(location.search).get('lang'); if(I18N[u]) return u; }catch(e){}   // ?lang= wins (landing teaser passes it in)
+  try{ const s=localStorage.getItem('jamlab.lang'); if(I18N[s]) return s; }catch(e){}
   const nav=(navigator.language||'en').toLowerCase().slice(0,2); return I18N[nav]?nav:'en'; })();   // first run: follow the device language
 export function setLangCode(l){ if(!I18N[l]) l='en'; LANG=l; try{localStorage.setItem('jamlab.lang',l);}catch(e){} return l; }
 export function t(k,vars){

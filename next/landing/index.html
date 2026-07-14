@@ -153,9 +153,12 @@ footer .sep{margin:0 8px; opacity:.5;}
 </footer>
 
 <script>
-/* the teaser app: /play/ on the production site, ../ on the github.io dev preview */
-document.getElementById('tFrame').src =
-  location.hostname.endsWith('github.io') || location.port ? '../?teaser' : 'play/?teaser';
+/* the teaser app: /play/ on the production site, ../ on the github.io dev preview.
+   the current language is passed in via ?lang= and the frame is reloaded when it changes. */
+function syncFrame(){
+  const base = (location.hostname.endsWith('github.io') || location.port) ? '../?teaser' : 'play/?teaser';
+  document.getElementById('tFrame').src = base + '&lang=' + lang;
+}
 
 /* ---------------- i18n: the app's 8 languages, default from the browser ---------------- */
 const L={
@@ -292,6 +295,7 @@ function applyLang(){
   document.documentElement.lang=lang; document.title=d.title;
   document.querySelectorAll('[data-i]').forEach(el=>{ const k=el.getAttribute('data-i');
     if(d[k]==null) return; if(k==='let3') el.innerHTML=d[k]; else el.textContent=d[k]; });
+  syncFrame();   // reload the teaser in the chosen language (initial load + every change)
 }
 applyLang();
 </script>
