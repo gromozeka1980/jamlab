@@ -17,10 +17,11 @@ import { track, trackOnce, sinceLaunch } from './analytics.js';
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 // Teaser mode (?teaser): the landing page embeds the real engine — koto/hira only, no recording,
 // no picker, no config. Everything musical (backing, bends, glissando, viz) stays honest.
-// On the public domain the app exists ONLY as the teaser (the full product ships in the stores),
-// so jambrew.app forces teaser mode no matter how the page was reached.
+// On the public site the app exists ONLY as the teaser (the full product ships in the stores),
+// so the live domain and its Cloudflare Pages host force teaser mode however the page was reached.
 const TEASER = new URLSearchParams(location.search).has('teaser')
-  || /(^|\.)jambrew\.app$/.test(location.hostname);
+  || /(^|\.)jambrew\.app$/.test(location.hostname)
+  || /\.pages\.dev$/.test(location.hostname);
 if(TEASER) document.body.classList.add('teaser');
 const TOUCH = NATIVE || (window.matchMedia && matchMedia('(pointer:coarse)').matches);
 if(TOUCH) document.body.classList.add('touch');   // hide keyboard hints/labels on touch

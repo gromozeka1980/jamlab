@@ -12,98 +12,142 @@
   main{max-width:720px; margin:0 auto;}
   h1{font-size:26px; margin:0 0 4px;}
   h2{font-size:18px; margin:28px 0 6px; color:var(--accent);}
-  .sub{color:var(--muted); font-size:13px; margin:0 0 24px;}
+  .sub{color:var(--muted); font-size:13px; margin:0 0 10px;}
+  .note{color:var(--muted); font-size:12.5px; margin:0 0 24px; font-style:italic;}
   p,li{color:#dcdae8;}
-  a{color:#a78bfa;}
-  .muted{color:var(--muted); font-size:13px;}
+  a{color:var(--accent);}
+  .muted{color:var(--muted); font-size:13px; margin-top:40px;}
   .lang{position:fixed; top:14px; right:16px;}
-  .lang button{background:none; border:1px solid var(--line); color:var(--muted); border-radius:8px; padding:4px 10px; font-size:12px; cursor:pointer;}
-  .lang button.on{color:var(--text); border-color:var(--accent);}
-  [data-lang]{display:none;}
+  .lang select{background:#161227; border:1px solid var(--line); color:var(--muted); border-radius:8px; padding:5px 8px; font-size:12px; cursor:pointer; outline:none;}
 </style>
 </head>
 <body>
-<div class="lang"><button id="pEN">EN</button> <button id="pRU">RU</button></div>
-
-<main data-lang="en">
-  <h1>Privacy Policy</h1>
-  <p class="sub">JamBrew (Relational Instruments) · Last updated: 14 July 2026</p>
-
-  <p>JamBrew is a musical-instrument app. It is built to know as little about you as possible: <strong>we collect no personal data</strong> — no accounts, no advertising, no tracking across apps or sites.</p>
-
-  <h2>Anonymous usage statistics</h2>
-  <p>To understand which instruments and features are actually used, the app sends anonymous usage events (for example: "app opened", "instrument picked", "recording made") to <a href="https://aptabase.com">Aptabase</a>, a privacy-first analytics service hosted in the EU. Each event carries only coarse technical context: app version, operating system name, device language, and a random session identifier that is generated anew every launch. There is no persistent user ID, no advertising ID, and no personal identifiers — we cannot tell who you are, and neither can Aptabase.</p>
-
-  <h2>Purchases</h2>
-  <p>In-app purchases are processed by Google Play; we never see your payment details. To validate purchases the app uses <a href="https://www.revenuecat.com/privacy">RevenueCat</a>, which receives the purchase token and an anonymous app-generated identifier — no name, email, or payment data.</p>
-
-  <h2>Data stored on your device</h2>
-  <p>Your preferences (language, volumes, instrument settings, saved custom scales) are stored locally on your device and never leave it. Removing the app removes them.</p>
-
-  <h2>Microphone, camera, location, contacts</h2>
-  <p>The app does <strong>not</strong> request or use the microphone, camera, location, contacts, or any other sensitive device permission.</p>
-
-  <h2>Recording &amp; sharing</h2>
-  <p>The app can record a short audio/video clip of your own performance. The clip is created entirely on your device. If you choose to save or share it, that happens through your device's own system features and goes only where you send it — it is never uploaded to us.</p>
-
-  <h2>Children</h2>
-  <p>The app is suitable for all ages. It collects no personal data from anyone, including children; the anonymous statistics described above contain nothing that could identify a person.</p>
-
-  <h2>Changes</h2>
-  <p>If this policy changes, the updated version will be posted on this page with a new date.</p>
-
-  <h2>Contact</h2>
-  <p>Questions about this policy: <a href="mailto:hello@jambrew.app">hello@jambrew.app</a></p>
-
-  <p class="muted" style="margin-top:40px;">JamBrew · jambrew.app</p>
-</main>
-
-<main data-lang="ru">
-  <h1>Политика конфиденциальности</h1>
-  <p class="sub">JamBrew (Реляционные инструменты) · Обновлено: 14 июля 2026</p>
-
-  <p>JamBrew — приложение-музыкальный инструмент. Оно устроено так, чтобы знать о вас как можно меньше: <strong>мы не собираем персональных данных</strong> — нет учётных записей, рекламы и трекинга между приложениями и сайтами.</p>
-
-  <h2>Анонимная статистика использования</h2>
-  <p>Чтобы понимать, какими инструментами и функциями реально пользуются, приложение отправляет анонимные события (например: «приложение открыто», «выбран инструмент», «сделана запись») в <a href="https://aptabase.com">Aptabase</a> — privacy-first сервис аналитики с серверами в ЕС. Событие несёт только грубый технический контекст: версию приложения, название ОС, язык устройства и случайный идентификатор сессии, который создаётся заново при каждом запуске. Нет постоянного ID пользователя, рекламного ID и персональных идентификаторов — ни мы, ни Aptabase не можем узнать, кто вы.</p>
-
-  <h2>Покупки</h2>
-  <p>Встроенные покупки обрабатывает Google Play; платёжные данные мы не видим. Для проверки покупок приложение использует <a href="https://www.revenuecat.com/privacy">RevenueCat</a>: он получает токен покупки и анонимный идентификатор, созданный приложением, — без имени, почты и платёжных данных.</p>
-
-  <h2>Данные на вашем устройстве</h2>
-  <p>Настройки (язык, громкости, параметры инструментов, сохранённые звукоряды) хранятся локально на устройстве и не покидают его. Удаление приложения удаляет их.</p>
-
-  <h2>Микрофон, камера, геолокация, контакты</h2>
-  <p>Приложение <strong>не</strong> запрашивает и не использует микрофон, камеру, геолокацию, контакты и другие чувствительные разрешения.</p>
-
-  <h2>Запись и публикация</h2>
-  <p>Приложение может записать короткий аудио/видео-клип вашей игры. Клип создаётся целиком на устройстве. Если вы решите сохранить его или поделиться — это происходит через системные функции устройства и идёт только туда, куда отправите вы; нам он не загружается.</p>
-
-  <h2>Дети</h2>
-  <p>Приложение подходит для любого возраста. Персональные данные не собираются ни у кого, включая детей; описанная выше анонимная статистика не содержит ничего, что могло бы идентифицировать человека.</p>
-
-  <h2>Изменения</h2>
-  <p>Если политика изменится, обновлённая версия появится на этой странице с новой датой.</p>
-
-  <h2>Контакт</h2>
-  <p>Вопросы по политике: <a href="mailto:hello@jambrew.app">hello@jambrew.app</a></p>
-
-  <p class="muted" style="margin-top:40px;">JamBrew · jambrew.app</p>
-</main>
+<div class="lang"><select id="langSel" aria-label="Language"></select></div>
+<main id="doc"></main>
 
 <script>
-let lang=(()=>{ try{ const s=localStorage.getItem('jb.lang'); if(s) return s==='ru'?'ru':'en'; }catch(e){}
-  return (navigator.language||'en').toLowerCase().startsWith('ru')?'ru':'en'; })();
-function show(){
-  document.querySelectorAll('[data-lang]').forEach(m=>m.style.display=m.getAttribute('data-lang')===lang?'block':'none');
-  document.getElementById('pEN').classList.toggle('on',lang==='en');
-  document.getElementById('pRU').classList.toggle('on',lang==='ru');
+const L = {
+  en:{ dir:'en', title:'Privacy Policy', updated:'Last updated: 14 July 2026', note:'',
+    intro:'JamBrew is a musical-instrument app. It is built to know as little about you as possible: <strong>we collect no personal data</strong> — no accounts, no advertising, no tracking across apps or sites.',
+    s:[
+    ['Anonymous usage statistics','To understand which instruments and features are actually used, the app sends anonymous usage events (for example: “app opened”, “instrument picked”, “recording made”) to <a href="https://aptabase.com">Aptabase</a>, a privacy-first analytics service hosted in the EU. Each event carries only coarse technical context: app version, operating-system name, device language, and a random session identifier generated anew every launch. There is no persistent user ID, no advertising ID, and no personal identifiers — we cannot tell who you are, and neither can Aptabase.'],
+    ['Purchases','In-app purchases are processed by Google Play; we never see your payment details. To validate purchases the app uses <a href="https://www.revenuecat.com/privacy">RevenueCat</a>, which receives the purchase token and an anonymous app-generated identifier — no name, email, or payment data.'],
+    ['Data stored on your device','Your preferences (language, volumes, instrument settings, saved custom scales) are stored locally on your device and never leave it. Removing the app removes them.'],
+    ['Microphone, camera, location, contacts','The app does <strong>not</strong> request or use the microphone, camera, location, contacts, or any other sensitive device permission.'],
+    ['Recording &amp; sharing','The app can record a short audio/video clip of your own performance. The clip is created entirely on your device. If you choose to save or share it, that happens through your device’s own system features and goes only where you send it — it is never uploaded to us.'],
+    ['Children','The app is suitable for all ages. It collects no personal data from anyone, including children; the anonymous statistics above contain nothing that could identify a person.'],
+    ['Changes','If this policy changes, the updated version will be posted on this page with a new date.'],
+    ['Contact','Questions about this policy: <a href="mailto:hello@jambrew.app">hello@jambrew.app</a>']]},
+
+  ru:{ dir:'ru', title:'Политика конфиденциальности', updated:'Обновлено: 14 июля 2026',
+    note:'Юридически авторитетна английская версия этой политики; перевод предоставлен для удобства.',
+    intro:'JamBrew — приложение-музыкальный инструмент. Оно устроено так, чтобы знать о вас как можно меньше: <strong>мы не собираем персональных данных</strong> — нет учётных записей, рекламы и трекинга между приложениями и сайтами.',
+    s:[
+    ['Анонимная статистика использования','Чтобы понимать, какими инструментами и функциями реально пользуются, приложение отправляет анонимные события (например: «приложение открыто», «выбран инструмент», «сделана запись») в <a href="https://aptabase.com">Aptabase</a> — privacy-first сервис аналитики с серверами в ЕС. Событие несёт только грубый технический контекст: версию приложения, название ОС, язык устройства и случайный идентификатор сессии, создаваемый заново при каждом запуске. Нет постоянного ID пользователя, рекламного ID и персональных идентификаторов — ни мы, ни Aptabase не можем узнать, кто вы.'],
+    ['Покупки','Встроенные покупки обрабатывает Google Play; платёжные данные мы не видим. Для проверки покупок приложение использует <a href="https://www.revenuecat.com/privacy">RevenueCat</a>: он получает токен покупки и анонимный идентификатор, созданный приложением, — без имени, почты и платёжных данных.'],
+    ['Данные на вашем устройстве','Настройки (язык, громкости, параметры инструментов, сохранённые звукоряды) хранятся локально на устройстве и не покидают его. Удаление приложения удаляет их.'],
+    ['Микрофон, камера, геолокация, контакты','Приложение <strong>не</strong> запрашивает и не использует микрофон, камеру, геолокацию, контакты и другие чувствительные разрешения.'],
+    ['Запись и публикация','Приложение может записать короткий аудио/видео-клип вашей игры. Клип создаётся целиком на устройстве. Если вы решите сохранить его или поделиться — это происходит через системные функции устройства и идёт только туда, куда отправите вы; нам он не загружается.'],
+    ['Дети','Приложение подходит для любого возраста. Персональные данные не собираются ни у кого, включая детей; описанная выше анонимная статистика не содержит ничего, что могло бы идентифицировать человека.'],
+    ['Изменения','Если политика изменится, обновлённая версия появится на этой странице с новой датой.'],
+    ['Контакт','Вопросы по политике: <a href="mailto:hello@jambrew.app">hello@jambrew.app</a>']]},
+
+  es:{ dir:'es', title:'Política de privacidad', updated:'Última actualización: 14 de julio de 2026',
+    note:'La versión en inglés de esta política es la jurídicamente válida; la traducción se ofrece por comodidad.',
+    intro:'JamBrew es una app de instrumento musical. Está hecha para saber lo menos posible de ti: <strong>no recopilamos datos personales</strong> — sin cuentas, sin publicidad y sin seguimiento entre apps o sitios.',
+    s:[
+    ['Estadísticas de uso anónimas','Para saber qué instrumentos y funciones se usan de verdad, la app envía eventos anónimos (por ejemplo: «app abierta», «instrumento elegido», «grabación hecha») a <a href="https://aptabase.com">Aptabase</a>, un servicio de analítica respetuoso con la privacidad alojado en la UE. Cada evento lleva solo contexto técnico general: versión de la app, nombre del sistema operativo, idioma del dispositivo y un identificador de sesión aleatorio que se genera de nuevo en cada arranque. No hay ID de usuario persistente, ni ID publicitario, ni identificadores personales — ni nosotros ni Aptabase podemos saber quién eres.'],
+    ['Compras','Las compras dentro de la app las procesa Google Play; nunca vemos tus datos de pago. Para validar las compras la app usa <a href="https://www.revenuecat.com/privacy">RevenueCat</a>, que recibe el token de compra y un identificador anónimo generado por la app — sin nombre, correo ni datos de pago.'],
+    ['Datos guardados en tu dispositivo','Tus preferencias (idioma, volúmenes, ajustes de instrumento, escalas guardadas) se almacenan localmente en tu dispositivo y nunca salen de él. Desinstalar la app las elimina.'],
+    ['Micrófono, cámara, ubicación, contactos','La app <strong>no</strong> solicita ni usa el micrófono, la cámara, la ubicación, los contactos ni ningún otro permiso sensible.'],
+    ['Grabación y compartir','La app puede grabar un breve clip de audio/vídeo de tu propia interpretación. El clip se crea íntegramente en tu dispositivo. Si eliges guardarlo o compartirlo, eso ocurre a través de las funciones del sistema de tu dispositivo y va solo a donde tú lo envíes — nunca se sube a nosotros.'],
+    ['Menores','La app es apta para todas las edades. No recopila datos personales de nadie, incluidos los menores; las estadísticas anónimas anteriores no contienen nada que pueda identificar a una persona.'],
+    ['Cambios','Si esta política cambia, la versión actualizada se publicará en esta página con una fecha nueva.'],
+    ['Contacto','Dudas sobre esta política: <a href="mailto:hello@jambrew.app">hello@jambrew.app</a>']]},
+
+  pt:{ dir:'pt', title:'Política de Privacidade', updated:'Última atualização: 14 de julho de 2026',
+    note:'A versão em inglês desta política é a juridicamente válida; a tradução é oferecida por conveniência.',
+    intro:'O JamBrew é um app de instrumento musical. Ele é feito para saber o mínimo possível sobre você: <strong>não coletamos dados pessoais</strong> — sem contas, sem publicidade e sem rastreamento entre apps ou sites.',
+    s:[
+    ['Estatísticas de uso anônimas','Para entender quais instrumentos e recursos são realmente usados, o app envia eventos anônimos (por exemplo: “app aberto”, “instrumento escolhido”, “gravação feita”) para o <a href="https://aptabase.com">Aptabase</a>, um serviço de análise focado em privacidade hospedado na UE. Cada evento carrega apenas contexto técnico geral: versão do app, nome do sistema operacional, idioma do dispositivo e um identificador de sessão aleatório gerado a cada abertura. Não há ID de usuário persistente, nem ID de publicidade, nem identificadores pessoais — nem nós nem o Aptabase conseguimos saber quem você é.'],
+    ['Compras','As compras no app são processadas pelo Google Play; nunca vemos seus dados de pagamento. Para validar as compras o app usa o <a href="https://www.revenuecat.com/privacy">RevenueCat</a>, que recebe o token da compra e um identificador anônimo gerado pelo app — sem nome, e-mail ou dados de pagamento.'],
+    ['Dados guardados no seu dispositivo','Suas preferências (idioma, volumes, ajustes de instrumento, escalas salvas) ficam armazenadas localmente no seu dispositivo e nunca saem dele. Desinstalar o app as remove.'],
+    ['Microfone, câmera, localização, contatos','O app <strong>não</strong> solicita nem usa o microfone, a câmera, a localização, os contatos ou qualquer outra permissão sensível.'],
+    ['Gravação e compartilhamento','O app pode gravar um curto clipe de áudio/vídeo da sua própria execução. O clipe é criado inteiramente no seu dispositivo. Se você optar por salvar ou compartilhar, isso acontece pelas funções do sistema do seu dispositivo e vai apenas para onde você enviar — nunca é enviado a nós.'],
+    ['Crianças','O app é adequado para todas as idades. Não coleta dados pessoais de ninguém, incluindo crianças; as estatísticas anônimas acima não contêm nada que possa identificar uma pessoa.'],
+    ['Alterações','Se esta política mudar, a versão atualizada será publicada nesta página com uma nova data.'],
+    ['Contato','Dúvidas sobre esta política: <a href="mailto:hello@jambrew.app">hello@jambrew.app</a>']]},
+
+  de:{ dir:'de', title:'Datenschutzerklärung', updated:'Zuletzt aktualisiert: 14. Juli 2026',
+    note:'Rechtlich maßgeblich ist die englische Fassung dieser Erklärung; die Übersetzung dient der Bequemlichkeit.',
+    intro:'JamBrew ist eine App für ein Musikinstrument. Sie ist so gebaut, dass sie so wenig wie möglich über dich weiß: <strong>wir erheben keine personenbezogenen Daten</strong> — keine Konten, keine Werbung, kein app- oder seitenübergreifendes Tracking.',
+    s:[
+    ['Anonyme Nutzungsstatistik','Um zu verstehen, welche Instrumente und Funktionen tatsächlich genutzt werden, sendet die App anonyme Ereignisse (zum Beispiel: „App geöffnet“, „Instrument gewählt“, „Aufnahme gemacht“) an <a href="https://aptabase.com">Aptabase</a>, einen datenschutzfreundlichen Analysedienst mit Servern in der EU. Jedes Ereignis enthält nur groben technischen Kontext: App-Version, Name des Betriebssystems, Gerätesprache und eine zufällige Sitzungs-ID, die bei jedem Start neu erzeugt wird. Es gibt keine dauerhafte Nutzer-ID, keine Werbe-ID und keine personenbezogenen Kennungen — weder wir noch Aptabase können erkennen, wer du bist.'],
+    ['Käufe','In-App-Käufe werden von Google Play abgewickelt; deine Zahlungsdaten sehen wir nie. Zur Prüfung der Käufe nutzt die App <a href="https://www.revenuecat.com/privacy">RevenueCat</a>, das den Kauf-Token und eine anonyme, von der App erzeugte Kennung erhält — kein Name, keine E-Mail, keine Zahlungsdaten.'],
+    ['Auf deinem Gerät gespeicherte Daten','Deine Einstellungen (Sprache, Lautstärken, Instrument-Einstellungen, gespeicherte Skalen) werden lokal auf deinem Gerät gespeichert und verlassen es nie. Das Entfernen der App löscht sie.'],
+    ['Mikrofon, Kamera, Standort, Kontakte','Die App fordert oder nutzt <strong>kein</strong> Mikrofon, keine Kamera, keinen Standort, keine Kontakte und keine andere sensible Geräteberechtigung.'],
+    ['Aufnehmen &amp; Teilen','Die App kann einen kurzen Audio-/Videoclip deines eigenen Spiels aufnehmen. Der Clip entsteht vollständig auf deinem Gerät. Wenn du ihn speicherst oder teilst, geschieht das über die Systemfunktionen deines Geräts und geht nur dorthin, wohin du ihn sendest — zu uns wird er nie hochgeladen.'],
+    ['Kinder','Die App ist für jedes Alter geeignet. Sie erhebt von niemandem personenbezogene Daten, auch nicht von Kindern; die obige anonyme Statistik enthält nichts, womit sich eine Person identifizieren ließe.'],
+    ['Änderungen','Ändert sich diese Erklärung, wird die aktualisierte Fassung mit neuem Datum auf dieser Seite veröffentlicht.'],
+    ['Kontakt','Fragen zu dieser Erklärung: <a href="mailto:hello@jambrew.app">hello@jambrew.app</a>']]},
+
+  fr:{ dir:'fr', title:'Politique de confidentialité', updated:'Dernière mise à jour : 14 juillet 2026',
+    note:'La version anglaise de cette politique fait foi juridiquement ; la traduction est fournie pour votre confort.',
+    intro:'JamBrew est une app d’instrument de musique. Elle est conçue pour en savoir le moins possible sur toi : <strong>nous ne collectons aucune donnée personnelle</strong> — pas de comptes, pas de publicité, pas de suivi entre applis ou sites.',
+    s:[
+    ['Statistiques d’usage anonymes','Pour comprendre quels instruments et fonctions sont réellement utilisés, l’app envoie des événements anonymes (par exemple : « app ouverte », « instrument choisi », « enregistrement fait ») à <a href="https://aptabase.com">Aptabase</a>, un service d’analytique respectueux de la vie privée hébergé dans l’UE. Chaque événement ne porte qu’un contexte technique général : version de l’app, nom du système d’exploitation, langue de l’appareil et un identifiant de session aléatoire régénéré à chaque lancement. Aucun identifiant utilisateur persistant, aucun identifiant publicitaire, aucun identifiant personnel — ni nous ni Aptabase ne pouvons savoir qui tu es.'],
+    ['Achats','Les achats intégrés sont traités par Google Play ; nous ne voyons jamais tes données de paiement. Pour valider les achats, l’app utilise <a href="https://www.revenuecat.com/privacy">RevenueCat</a>, qui reçoit le jeton d’achat et un identifiant anonyme généré par l’app — sans nom, e-mail ni données de paiement.'],
+    ['Données stockées sur ton appareil','Tes préférences (langue, volumes, réglages d’instrument, gammes enregistrées) sont stockées localement sur ton appareil et n’en sortent jamais. Supprimer l’app les efface.'],
+    ['Micro, caméra, localisation, contacts','L’app ne demande ni n’utilise <strong>aucun</strong> micro, caméra, localisation, contact ni autre autorisation sensible.'],
+    ['Enregistrement et partage','L’app peut enregistrer un court clip audio/vidéo de ta propre interprétation. Le clip est créé entièrement sur ton appareil. Si tu choisis de l’enregistrer ou de le partager, cela passe par les fonctions système de ton appareil et ne va que là où tu l’envoies — il n’est jamais téléversé vers nous.'],
+    ['Enfants','L’app convient à tous les âges. Elle ne collecte aucune donnée personnelle de qui que ce soit, y compris des enfants ; les statistiques anonymes ci-dessus ne contiennent rien qui puisse identifier une personne.'],
+    ['Modifications','Si cette politique change, la version mise à jour sera publiée sur cette page avec une nouvelle date.'],
+    ['Contact','Questions sur cette politique : <a href="mailto:hello@jambrew.app">hello@jambrew.app</a>']]},
+
+  ja:{ dir:'ja', title:'プライバシーポリシー', updated:'最終更新：2026年7月14日',
+    note:'このポリシーは英語版が法的に有効です。翻訳は便宜のために提供しています。',
+    intro:'JamBrew は楽器アプリです。あなたのことをできるだけ知らないように作られています。<strong>個人データは収集しません</strong> — アカウントも、広告も、アプリやサイトをまたぐtrackingもありません。',
+    s:[
+    ['匿名の利用統計','どの楽器や機能が実際に使われているかを把握するため、アプリは匿名のイベント（例：「アプリ起動」「楽器を選択」「録画した」）を、EU にサーバーを置くプライバシー重視の解析サービス <a href="https://aptabase.com">Aptabase</a> に送信します。各イベントに含まれるのは大まかな技術情報のみです：アプリのバージョン、OS名、端末の言語、そして起動ごとに新しく生成されるランダムなセッションID。永続的なユーザーIDも、広告IDも、個人を特定する識別子もありません — 私たちにも Aptabase にも、あなたが誰かは分かりません。'],
+    ['購入','アプリ内購入は Google Play が処理し、支払い情報を当方が見ることはありません。購入の検証にはアプリが <a href="https://www.revenuecat.com/privacy">RevenueCat</a> を使用します。RevenueCat が受け取るのは購入トークンとアプリが生成した匿名の識別子だけで、氏名・メール・支払い情報は含まれません。'],
+    ['端末に保存されるデータ','設定（言語、音量、楽器の設定、保存した音階）は端末内にローカル保存され、外に出ることはありません。アプリを削除すれば消えます。'],
+    ['マイク・カメラ・位置情報・連絡先','アプリはマイク、カメラ、位置情報、連絡先、その他の機密性の高い権限を<strong>要求も使用もしません</strong>。'],
+    ['録画と共有','アプリはあなた自身の演奏を短い音声／動画クリップとして録画できます。クリップは端末内だけで作られます。保存や共有を選んだ場合は端末のシステム機能を通じて行われ、あなたが送る先にのみ届きます — 当方にアップロードされることはありません。'],
+    ['子ども','本アプリは全年齢に適しています。子どもを含め、誰からも個人データを収集しません。上記の匿名統計に個人を特定できるものは含まれません。'],
+    ['変更','本ポリシーが変更された場合、更新版を新しい日付とともにこのページに掲載します。'],
+    ['連絡先','本ポリシーに関するお問い合わせ：<a href="mailto:hello@jambrew.app">hello@jambrew.app</a>']]},
+
+  zh:{ dir:'zh', title:'隐私政策', updated:'最后更新：2026年7月14日',
+    note:'本政策以英文版为法律准据；译文仅供参考。',
+    intro:'JamBrew 是一款乐器应用。它的设计目标是尽可能少地了解你：<strong>我们不收集任何个人数据</strong>——没有账户、没有广告，也不跨应用或网站追踪。',
+    s:[
+    ['匿名使用统计','为了了解哪些乐器和功能真正被使用，应用会向 <a href="https://aptabase.com">Aptabase</a>（一家注重隐私、服务器位于欧盟的分析服务）发送匿名事件（例如「打开应用」「选择乐器」「完成录制」）。每个事件仅携带粗略的技术信息：应用版本、操作系统名称、设备语言，以及每次启动都重新生成的随机会话标识。没有持久的用户ID、没有广告ID、没有个人标识符——我们和 Aptabase 都无法知道你是谁。'],
+    ['购买','应用内购买由 Google Play 处理，我们绝不会看到你的支付信息。为验证购买，应用使用 <a href="https://www.revenuecat.com/privacy">RevenueCat</a>，它只接收购买凭据和应用生成的匿名标识符——没有姓名、邮箱或支付数据。'],
+    ['存储在你设备上的数据','你的偏好设置（语言、音量、乐器设置、保存的音阶）都保存在你的设备本地，绝不外传。卸载应用即会删除。'],
+    ['麦克风、摄像头、位置、通讯录','本应用<strong>不</strong>请求也不使用麦克风、摄像头、位置、通讯录或任何其他敏感权限。'],
+    ['录制与分享','应用可以把你自己的演奏录制成一小段音频/视频。该片段完全在你的设备上生成。如果你选择保存或分享，都是通过你设备自身的系统功能进行，只会发往你指定的地方——绝不会上传给我们。'],
+    ['儿童','本应用适合所有年龄。它不向任何人（包括儿童）收集个人数据；上述匿名统计不含任何可识别个人的信息。'],
+    ['变更','若本政策变更，更新版本将连同新日期发布在本页面。'],
+    ['联系方式','有关本政策的问题：<a href="mailto:hello@jambrew.app">hello@jambrew.app</a>']]},
+};
+const LANGS=[['en','English'],['ru','Русский'],['es','Español'],['pt','Português'],['de','Deutsch'],['fr','Français'],['ja','日本語'],['zh','中文']];
+let lang=(()=>{ try{ const s=localStorage.getItem('jb.lang'); if(L[s]) return s; }catch(e){}
+  const n=(navigator.language||'en').toLowerCase().slice(0,2); return L[n]?n:'en'; })();
+const sel=document.getElementById('langSel');
+LANGS.forEach(([v,n])=>sel.appendChild(new Option(n,v)));
+function render(){
+  const d=L[lang]; sel.value=lang;
   document.documentElement.lang=lang;
-  document.title = lang==='ru' ? 'JamBrew — Политика конфиденциальности' : 'JamBrew — Privacy Policy';
+  document.title='JamBrew — '+d.title;
+  let html='<h1>'+d.title+'</h1><p class="sub">JamBrew (Relational Instruments) · '+d.updated+'</p>';
+  if(d.note) html+='<p class="note">'+d.note+'</p>'; else html+='<div style="height:14px"></div>';
+  html+='<p>'+d.intro+'</p>';
+  for(const [h,p] of d.s) html+='<h2>'+h+'</h2><p>'+p+'</p>';
+  html+='<p class="muted">JamBrew · jambrew.app</p>';
+  document.getElementById('doc').innerHTML=html;
 }
-document.getElementById('pEN').onclick=()=>{ lang='en'; show(); };
-document.getElementById('pRU').onclick=()=>{ lang='ru'; show(); };
-show();
+sel.addEventListener('change',()=>{ lang=sel.value; try{localStorage.setItem('jb.lang',lang);}catch(e){} render(); });
+render();
 </script>
 </body>
 </html>
