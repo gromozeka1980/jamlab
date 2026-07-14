@@ -114,7 +114,8 @@ footer .sep{margin:0 8px; opacity:.5;}
 <div class="wrap">
   <div class="teaser">
     <p class="try" data-i="try">Try it right here — the real koto from the app (hirajōshi scale):</p>
-    <div class="frame"><iframe id="tFrame" src="../?teaser" title="JamBrew — playable teaser" allow="autoplay"></iframe></div>
+    <!-- iframe src is set by script: on jambrew.app the app lives at /play/, on the dev preview at ../ -->
+    <div class="frame"><iframe id="tFrame" title="JamBrew — playable teaser" allow="autoplay"></iframe></div>
     <p class="tfoot" data-i="tfoot">Tap the keys — every press is in tune. ▶ brings in the band. Drag a key upwards — that’s a bend. Slide a finger along the dots — a glissando. This is one instrument of nine, locked to one scale, with no video recording — the rest lives in the app.</p>
   </div>
 
@@ -152,6 +153,10 @@ footer .sep{margin:0 8px; opacity:.5;}
 </footer>
 
 <script>
+/* the teaser app: /play/ on the production site, ../ on the github.io dev preview */
+document.getElementById('tFrame').src =
+  location.hostname.endsWith('github.io') || location.port ? '../?teaser' : 'play/?teaser';
+
 /* ---------------- i18n: the app's 8 languages, default from the browser ---------------- */
 const L={
 en:{tagsub:'Relational instruments', h1:'You can’t play a wrong note here.',
