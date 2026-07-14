@@ -6,6 +6,12 @@
 <meta name="theme-color" content="#0a0818">
 <title>JamBrew — an instrument where you can't hit a wrong note</title>
 <meta name="description" content="A pocket instrument where keys are steps along a scale, not notes. Whatever you press is in tune. Blues, koto, gamelan, synthwave and more.">
+<meta property="og:title" content="JamBrew — an instrument where you can’t hit a wrong note">
+<meta property="og:description" content="Keys are steps along a scale, not notes. Whatever you press is in tune. Play it right on this page.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://jambrew.app/">
+<meta property="og:image" content="https://jambrew.app/og.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='14'%20fill='%23120e2e'/%3E%3Cg%20fill='%238f6fff'%3E%3Ccircle%20cx='33'%20cy='13'%20r='3.4'/%3E%3Ccircle%20cx='36'%20cy='21'%20r='2.4'/%3E%3Ccircle%20cx='42'%20cy='26'%20r='3'/%3E%3Ccircle%20cx='45'%20cy='34'%20r='2.2'/%3E%3Ccircle%20cx='43'%20cy='41'%20r='1.6'/%3E%3C/g%3E%3Crect%20x='26'%20y='24'%20width='4'%20height='3'%20rx='1.5'%20fill='%23a78bfa'/%3E%3Crect%20x='27'%20y='26'%20width='7.5'%20height='22'%20rx='3'%20fill='%236d4aff'/%3E%3Cellipse%20cx='25'%20cy='47'%20rx='11'%20ry='8'%20fill='%237c5cff'%20transform='rotate(-16%2025%2047)'/%3E%3Cellipse%20cx='21'%20cy='44'%20rx='3.5'%20ry='2'%20fill='%23cabdff'%20transform='rotate(-16%2021%2044)'/%3E%3C/svg%3E">
 <style>
 :root{
@@ -29,9 +35,8 @@ header{padding:64px 0 8px; text-align:center;}
 h1{font-size:clamp(26px,5.4vw,36px); line-height:1.25; font-weight:800; margin:0 0 14px;}
 .lede{color:var(--muted); font-size:17px; max-width:520px; margin:0 auto 8px;}
 .lang{position:fixed; top:14px; right:16px; z-index:5;}
-.lang button{background:none; border:1px solid var(--line); color:var(--muted); border-radius:8px;
-  padding:4px 10px; font-size:12px; cursor:pointer;}
-.lang button.on{color:var(--text); border-color:var(--accent);}
+.lang select{background:var(--panel); border:1px solid var(--line); color:var(--muted); border-radius:8px;
+  padding:5px 8px; font-size:12px; cursor:pointer; outline:none;}
 
 /* ---------- teaser: the real engine in a frame ---------- */
 .teaser{margin:40px 0 10px; background:linear-gradient(180deg, #151030, #100c22);
@@ -60,10 +65,6 @@ h2{font-size:22px; margin:0 0 22px; text-align:center;}
 .block{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px;}
 .block b{display:block; font-size:15px; margin-bottom:8px;}
 .block p{margin:0; color:var(--muted); font-size:13.5px; line-height:1.55;}
-
-.modes{display:flex; flex-wrap:wrap; gap:8px; justify-content:center;}
-.mode{border:1px solid var(--line); border-radius:999px; padding:7px 14px; font-size:13px; color:var(--muted);}
-.mode b{color:var(--text); font-weight:700; margin-right:6px;}
 
 /* ---------- letter ---------- */
 .letter{background:linear-gradient(180deg,#151030,#120e26); border:1px solid var(--line); border-radius:20px;
@@ -100,7 +101,7 @@ footer .sep{margin:0 8px; opacity:.5;}
   </g>
 </symbol></svg>
 
-<div class="lang"><button id="langEN">EN</button> <button id="langRU">RU</button></div>
+<div class="lang"><select id="langSel" aria-label="Language"></select></div>
 
 <header class="wrap">
   <svg class="logo"><use href="#tubelogo"/></svg>
@@ -135,21 +136,6 @@ footer .sep{margin:0 8px; opacity:.5;}
 </section>
 
 <section class="wrap">
-  <h2 data-i="modesT">The instruments</h2>
-  <div class="modes">
-    <span class="mode"><b>Koto</b><span data-i="m_koto">a rock garden in the rain</span></span>
-    <span class="mode"><b>Bright</b><span data-i="m_light">morning and sunshine</span></span>
-    <span class="mode"><b>Blues</b><span data-i="m_blues">road, garage, whiskey</span></span>
-    <span class="mode"><b>East</b><span data-i="m_vostok">desert, snakes, trance</span></span>
-    <span class="mode"><b>Dream</b><span data-i="m_dream">weightlessness</span></span>
-    <span class="mode"><b>Gamelan</b><span data-i="m_gamelan">the bronze orchestra of Bali</span></span>
-    <span class="mode"><b>Synthwave</b><span data-i="m_synth">neon and a night highway</span></span>
-    <span class="mode"><b>Lab 🧪</b><span data-i="m_lab">build your own scale</span></span>
-    <span class="mode"><b>Jazz 🧪</b><span data-i="m_jazz">smoky basement, upright bass</span></span>
-  </div>
-</section>
-
-<section class="wrap">
   <h2 data-i="letT">A note from the developer</h2>
   <div class="letter">
     <p data-i="let1">I build JamBrew myself, and I’m building it for the long run. This is not a weekend experiment — it’s an instrument I want to keep alive and growing for years.</p>
@@ -166,60 +152,142 @@ footer .sep{margin:0 8px; opacity:.5;}
 </footer>
 
 <script>
-/* ---------------- i18n (EN default, RU auto/toggle) ---------------- */
+/* ---------------- i18n: the app's 8 languages, default from the browser ---------------- */
 const L={
 en:{tagsub:'Relational instruments', h1:'You can’t play a wrong note here.',
   lede:'JamBrew is a pocket instrument where keys are steps along a scale — not fixed notes. Whatever you press is in tune. Just play.',
   try:'Try it right here — the real koto from the app (hirajōshi scale):',
-  tfoot:'Tap the keys — every press is in tune. ▶ brings in the band. Drag a key upwards — that’s a bend. Slide a finger along the dots — a glissando. This is one of nine instruments, locked to one scale, with no video recording — the rest lives in the app.',
+  tfoot:'Tap the keys — every press is in tune. ▶ brings in the band. Drag a key upwards — that’s a bend. Slide a finger along the dots — a glissando. This is one instrument with one scale and no video recording — the rest lives in the app.',
   gp:'Coming soon', as:'A bit later', soon:'soon',
   howT:'How it works',
   b1t:'Steps, not notes', b1:'A piano has 12 notes per octave and most of them are wrong for your solo. Here a key means “one step up” or “three steps down” — along the scale of the style you chose. There is nowhere to miss.',
-  b2t:'Nine worlds', b2:'Blues with real bends, a koto in the rain, desert trance of the East, the bronze of a gamelan, synthwave neon… Each style brings its own scale, its own voice and its own backing band.',
+  b2t:'Blues, East, Koto…', b2:'Blues with real bends, the desert trance of the East, a koto in the rain — and that’s just the start: there are many instruments inside, and new ones keep arriving.',
   b3t:'Record and show off', b3:'One button turns your improvisation into a video with a live visualizer — ready for any messenger or feed.',
-  modesT:'The instruments',
-  m_koto:'a rock garden in the rain', m_light:'morning and sunshine', m_blues:'road, garage, whiskey',
-  m_vostok:'desert, snakes, trance', m_dream:'weightlessness', m_gamelan:'the bronze orchestra of Bali',
-  m_synth:'neon and a night highway', m_lab:'build your own scale', m_jazz:'smoky basement, upright bass',
   letT:'A note from the developer',
-  let1:'I build JamBrew myself, and I’m building it for the long run. This is not a weekend experiment — it’s an instrument I want to keep alive and growing for years.',
-  let2:'Bug reports get fixed fast — usually in the next update. Feature requests are read, every one of them: half of the best ideas in the app came from conversations with the first players.',
+  let1:'JamBrew is here for the long run. It isn’t a weekend experiment — it’s an instrument meant to live and grow for years.',
+  let2:'Bug reports get fixed fast — usually in the next update. Feature requests are read, every single one: half of the best ideas in the app came from conversations with the first players.',
   let3:'Write to me: <a href="mailto:hello@jambrew.app">hello@jambrew.app</a>',
   sig:'— Michael, the author of JamBrew', priv:'Privacy policy',
   title:'JamBrew — an instrument where you can’t hit a wrong note'},
 ru:{tagsub:'Реляционные инструменты', h1:'Здесь нельзя сыграть неправильную ноту.',
   lede:'JamBrew — карманный инструмент, где клавиши — шаги по гамме, а не фиксированные ноты. Любое нажатие — в тон. Просто играй.',
   try:'Попробуй прямо здесь — настоящий кото из приложения (гамма хирадзёси):',
-  tfoot:'Тапай клавиши — любое нажатие в тон. ▶ включает группу. Потяни клавишу вверх — это бенд. Проведи пальцем по точкам-лесенке — глиссандо. Здесь один инструмент из девяти, одна гамма и без записи видео — остальное в приложении.',
+  tfoot:'Тапай клавиши — любое нажатие в тон. ▶ включает группу. Потяни клавишу вверх — это бенд. Проведи пальцем по точкам-лесенке — глиссандо. Здесь один инструмент, одна гамма и без записи видео — остальное в приложении.',
   gp:'Скоро', as:'Чуть позже', soon:'скоро',
   howT:'Как это устроено',
   b1t:'Шаги, а не ноты', b1:'На пианино 12 нот в октаве, и большинство — мимо твоего соло. Здесь клавиша значит «на шаг выше» или «на три ниже» — по гамме выбранного стиля. Промахнуться некуда.',
-  b2t:'Девять миров', b2:'Блюз с настоящими бендами, кото под дождём, пустынный транс Востока, бронза гамелана, неон синтвейва… У каждого стиля своя гамма, свой голос и своя группа.',
+  b2t:'Блюз, Восток, Кото…', b2:'Блюз с настоящими бендами, пустынный транс Востока, кото под дождём — и это только начало: инструментов внутри много, и новые продолжают появляться.',
   b3t:'Запиши и покажи', b3:'Одна кнопка — и твоя импровизация становится видео с живой визуализацией, готовым для любого мессенджера.',
-  modesT:'Инструменты',
-  m_koto:'сад камней под дождём', m_light:'утро и солнце', m_blues:'дорога, гараж, виски',
-  m_vostok:'пустыня, змеи, транс', m_dream:'невесомость', m_gamelan:'бронзовый оркестр Бали',
-  m_synth:'неон и ночная трасса', m_lab:'собери свою гамму', m_jazz:'дымный подвал, контрабас',
   letT:'Письмо от разработчика',
-  let1:'JamBrew я делаю сам — и делаю надолго. Это не эксперимент на выходные, а инструмент, который я собираюсь растить и поддерживать годами.',
+  let1:'JamBrew — это надолго. Не эксперимент на выходные, а инструмент, который будет жить и расти годами.',
   let2:'На багрепорты отвечаю быстро — исправление обычно выходит в ближайшем обновлении. Пожелания читаю все до одного: половина лучших идей в приложении — из разговоров с первыми игроками.',
   let3:'Пишите мне: <a href="mailto:hello@jambrew.app">hello@jambrew.app</a>',
   sig:'— Михаил, автор JamBrew', priv:'Политика конфиденциальности',
   title:'JamBrew — инструмент, на котором нельзя ошибиться'},
+es:{tagsub:'Instrumentos relacionales', h1:'Aquí no existe la nota equivocada.',
+  lede:'JamBrew es un instrumento de bolsillo donde las teclas son pasos por la escala, no notas fijas. Toques lo que toques, suena bien. Solo toca.',
+  try:'Pruébalo aquí mismo — el koto real de la app (escala hirajōshi):',
+  tfoot:'Toca las teclas — cada pulsación afina. ▶ trae a la banda. Arrastra una tecla hacia arriba — un bend. Desliza el dedo por los puntos — un glissando. Aquí hay un instrumento, una escala y sin grabación de vídeo — el resto vive en la app.',
+  gp:'Muy pronto', as:'Un poco después', soon:'pronto',
+  howT:'Cómo funciona',
+  b1t:'Pasos, no notas', b1:'Un piano tiene 12 notas por octava y la mayoría no sirven para tu solo. Aquí una tecla significa «un paso arriba» o «tres abajo» — por la escala del estilo elegido. No hay dónde fallar.',
+  b2t:'Blues, Oriente, Koto…', b2:'Blues con bends de verdad, el trance desértico de Oriente, un koto bajo la lluvia — y eso es solo el comienzo: dentro hay muchos instrumentos y siguen llegando nuevos.',
+  b3t:'Graba y presume', b3:'Un botón convierte tu improvisación en un vídeo con visualizador en vivo — listo para cualquier mensajero.',
+  letT:'Nota del desarrollador',
+  let1:'JamBrew está aquí para quedarse. No es un experimento de fin de semana — es un instrumento pensado para vivir y crecer durante años.',
+  let2:'Los informes de errores se corrigen rápido — normalmente en la siguiente actualización. Las sugerencias se leen todas: la mitad de las mejores ideas de la app salieron de charlas con los primeros jugadores.',
+  let3:'Escríbeme: <a href="mailto:hello@jambrew.app">hello@jambrew.app</a>',
+  sig:'— Michael, autor de JamBrew', priv:'Política de privacidad',
+  title:'JamBrew — un instrumento donde no existe la nota equivocada'},
+pt:{tagsub:'Instrumentos relacionais', h1:'Aqui não existe nota errada.',
+  lede:'O JamBrew é um instrumento de bolso onde as teclas são passos pela escala, não notas fixas. O que você tocar, está no tom. Apenas toque.',
+  try:'Experimente aqui — o koto real do app (escala hirajōshi):',
+  tfoot:'Toque nas teclas — cada toque afina. ▶ traz a banda. Arraste uma tecla para cima — um bend. Deslize o dedo pelos pontos — um glissando. Aqui há um instrumento, uma escala e sem gravação de vídeo — o resto vive no app.',
+  gp:'Em breve', as:'Um pouco depois', soon:'breve',
+  howT:'Como funciona',
+  b1t:'Passos, não notas', b1:'Um piano tem 12 notas por oitava e a maioria está errada para o seu solo. Aqui uma tecla significa “um passo acima” ou “três abaixo” — pela escala do estilo escolhido. Não há onde errar.',
+  b2t:'Blues, Oriente, Koto…', b2:'Blues com bends de verdade, o transe do deserto do Oriente, um koto na chuva — e isso é só o começo: há muitos instrumentos dentro, e novos continuam chegando.',
+  b3t:'Grave e mostre', b3:'Um botão transforma sua improvisação em um vídeo com visualizador ao vivo — pronto para qualquer mensageiro.',
+  letT:'Nota do desenvolvedor',
+  let1:'O JamBrew veio para ficar. Não é um experimento de fim de semana — é um instrumento feito para viver e crescer por anos.',
+  let2:'Bugs reportados são corrigidos rápido — geralmente na próxima atualização. Sugestões são lidas, todas: metade das melhores ideias do app veio de conversas com os primeiros jogadores.',
+  let3:'Escreva para mim: <a href="mailto:hello@jambrew.app">hello@jambrew.app</a>',
+  sig:'— Michael, autor do JamBrew', priv:'Política de privacidade',
+  title:'JamBrew — um instrumento onde não existe nota errada'},
+de:{tagsub:'Relationale Instrumente', h1:'Hier gibt es keinen falschen Ton.',
+  lede:'JamBrew ist ein Tascheninstrument, bei dem Tasten Schritte auf der Tonleiter sind — keine festen Töne. Was immer du drückst, stimmt. Spiel einfach.',
+  try:'Probier es gleich hier — das echte Koto aus der App (Hirajōshi-Skala):',
+  tfoot:'Tippe die Tasten — jeder Druck stimmt. ▶ holt die Band. Zieh eine Taste nach oben — ein Bend. Fahre mit dem Finger über die Punkte — ein Glissando. Hier: ein Instrument, eine Skala, keine Videoaufnahme — der Rest lebt in der App.',
+  gp:'Bald', as:'Etwas später', soon:'bald',
+  howT:'Wie es funktioniert',
+  b1t:'Schritte statt Töne', b1:'Ein Klavier hat 12 Töne pro Oktave, die meisten davon falsch für dein Solo. Hier heißt eine Taste „einen Schritt hoch“ oder „drei runter“ — entlang der Skala deines Stils. Danebengreifen ist unmöglich.',
+  b2t:'Blues, Orient, Koto …', b2:'Blues mit echten Bends, Wüstentrance des Orients, ein Koto im Regen — und das ist erst der Anfang: drinnen warten viele Instrumente, und es kommen laufend neue dazu.',
+  b3t:'Aufnehmen und zeigen', b3:'Ein Knopf macht aus deiner Improvisation ein Video mit Live-Visualizer — bereit für jeden Messenger.',
+  letT:'Eine Notiz vom Entwickler',
+  let1:'JamBrew ist auf lange Sicht angelegt. Kein Wochenendexperiment, sondern ein Instrument, das über Jahre leben und wachsen soll.',
+  let2:'Bug-Reports werden schnell behoben — meist schon im nächsten Update. Feature-Wünsche werden alle gelesen: die Hälfte der besten Ideen der App stammt aus Gesprächen mit den ersten Spielern.',
+  let3:'Schreib mir: <a href="mailto:hello@jambrew.app">hello@jambrew.app</a>',
+  sig:'— Michael, der Autor von JamBrew', priv:'Datenschutz',
+  title:'JamBrew — ein Instrument ohne falsche Töne'},
+fr:{tagsub:'Instruments relationnels', h1:'Ici, la fausse note n’existe pas.',
+  lede:'JamBrew est un instrument de poche où les touches sont des pas le long de la gamme, pas des notes fixes. Quoi que tu presses, c’est juste. Joue, c’est tout.',
+  try:'Essaie ici même — le vrai koto de l’appli (gamme hirajōshi) :',
+  tfoot:'Tape les touches — chaque pression est juste. ▶ lance le groupe. Tire une touche vers le haut — un bend. Glisse le doigt sur les points — un glissando. Ici : un seul instrument, une seule gamme, pas d’enregistrement vidéo — le reste vit dans l’appli.',
+  gp:'Bientôt', as:'Un peu plus tard', soon:'bientôt',
+  howT:'Comment ça marche',
+  b1t:'Des pas, pas des notes', b1:'Un piano a 12 notes par octave, la plupart fausses pour ton solo. Ici une touche veut dire « un pas plus haut » ou « trois plus bas » — le long de la gamme du style choisi. Impossible de se tromper.',
+  b2t:'Blues, Orient, Koto…', b2:'Un blues avec de vrais bends, la transe du désert de l’Orient, un koto sous la pluie — et ce n’est que le début : il y a beaucoup d’instruments, et il en arrive sans cesse.',
+  b3t:'Enregistre et montre', b3:'Un bouton transforme ton impro en vidéo avec visualiseur — prête pour n’importe quelle messagerie.',
+  letT:'Un mot du développeur',
+  let1:'JamBrew est là pour durer. Ce n’est pas une expérience d’un week-end — c’est un instrument fait pour vivre et grandir pendant des années.',
+  let2:'Les bugs signalés sont corrigés vite — en général dès la mise à jour suivante. Les demandes de fonctionnalités sont toutes lues : la moitié des meilleures idées de l’appli viennent des premiers joueurs.',
+  let3:'Écris-moi : <a href="mailto:hello@jambrew.app">hello@jambrew.app</a>',
+  sig:'— Michael, l’auteur de JamBrew', priv:'Confidentialité',
+  title:'JamBrew — un instrument sans fausses notes'},
+ja:{tagsub:'リレーショナル楽器', h1:'ここに間違った音はありません。',
+  lede:'JamBrewはポケットの楽器。キーは固定の音ではなく、音階の歩みです。何を押しても音は合っています。ただ弾くだけ。',
+  try:'ここで試してみて — アプリの本物の琴（平調子）：',
+  tfoot:'キーをタップ — どれも音が合います。▶でバンドが入ります。キーを上へドラッグ — ベンド。点の上で指をすべらせる — グリッサンド。ここにあるのは1つの楽器、1つの音階、録画なし — 残りはアプリの中に。',
+  gp:'近日公開', as:'少しあとで', soon:'近日',
+  howT:'仕組み',
+  b1t:'音ではなく歩み', b1:'ピアノは1オクターブに12音、その大半はソロでは「外れ」。ここではキーは「1歩上へ」「3歩下へ」— 選んだスタイルの音階に沿って動きます。外しようがありません。',
+  b2t:'ブルース、東方、琴…', b2:'本物のベンドのあるブルース、東方の砂漠のトランス、雨の琴 — それは始まりにすぎません。中にはたくさんの楽器があり、新しいものが増え続けます。',
+  b3t:'録画してシェア', b3:'ボタンひとつで、即興がビジュアライザー付きの動画になります — そのままメッセンジャーへ。',
+  letT:'開発者からひとこと',
+  let1:'JamBrewは長く続けるためのプロジェクトです。週末の実験ではなく、何年もかけて育てていく楽器です。',
+  let2:'バグ報告はすぐ直します — たいてい次のアップデートで。要望はすべて読みます。アプリのベストなアイデアの半分は、最初のプレイヤーとの会話から生まれました。',
+  let3:'連絡はこちら：<a href="mailto:hello@jambrew.app">hello@jambrew.app</a>',
+  sig:'— Michael（JamBrew作者）', priv:'プライバシーポリシー',
+  title:'JamBrew — 間違った音のない楽器'},
+zh:{tagsub:'关系型乐器', h1:'在这里不存在错音。',
+  lede:'JamBrew 是一件口袋乐器：琴键是沿音阶走的步子，而不是固定的音。随便按，都在调上。尽管弹。',
+  try:'就在这里试试——应用里真正的古筝（平调子音阶）：',
+  tfoot:'点击琴键——每一下都在调上。▶ 召来乐队。把琴键往上拖——推弦。手指划过圆点——刮奏。这里只有一件乐器、一条音阶、无法录像——其余都在应用里。',
+  gp:'即将上线', as:'稍后', soon:'即将',
+  howT:'工作原理',
+  b1t:'步子，而不是音符', b1:'钢琴每个八度有12个音，大多数都不适合你的独奏。在这里，琴键的含义是「上一步」或「下三步」——沿着所选风格的音阶。想弹错都难。',
+  b2t:'布鲁斯、东方、古筝……', b2:'带真实推弦的布鲁斯、东方的沙漠出神、雨中的古筝——这只是开始：里面还有许多乐器，而且不断有新乐器加入。',
+  b3t:'录下来炫一下', b3:'一个按钮，你的即兴就变成带可视化效果的视频——直接发给任何聊天工具。',
+  letT:'开发者的话',
+  let1:'JamBrew 是长期项目。它不是周末实验，而是一件要活很多年、不断成长的乐器。',
+  let2:'错误报告会很快修复——通常在下一次更新中。功能建议每一条都会看：应用里最好的想法，有一半来自与最早玩家的交流。',
+  let3:'写信给我：<a href="mailto:hello@jambrew.app">hello@jambrew.app</a>',
+  sig:'——Michael，JamBrew 作者', priv:'隐私政策',
+  title:'JamBrew——不存在错音的乐器'},
 };
-let lang=(()=>{ try{ const s=localStorage.getItem('jb.lang'); if(s) return s; }catch(e){}
-  return (navigator.language||'en').toLowerCase().startsWith('ru')?'ru':'en'; })();
+const LANGS=[['en','English'],['ru','Русский'],['es','Español'],['pt','Português'],['de','Deutsch'],['fr','Français'],['ja','日本語'],['zh','中文']];
+let lang=(()=>{ try{ const s=localStorage.getItem('jb.lang'); if(L[s]) return s; }catch(e){}
+  const n=(navigator.language||'en').toLowerCase().slice(0,2); return L[n]?n:'en'; })();
+const sel=document.getElementById('langSel');
+LANGS.forEach(([v,n])=>sel.appendChild(new Option(n,v)));
+sel.value=lang;
+sel.addEventListener('change',()=>{ lang=sel.value; try{localStorage.setItem('jb.lang',lang);}catch(e){} applyLang(); });
 function applyLang(){
   const d=L[lang];
   document.documentElement.lang=lang; document.title=d.title;
   document.querySelectorAll('[data-i]').forEach(el=>{ const k=el.getAttribute('data-i');
     if(d[k]==null) return; if(k==='let3') el.innerHTML=d[k]; else el.textContent=d[k]; });
-  document.getElementById('langEN').classList.toggle('on',lang==='en');
-  document.getElementById('langRU').classList.toggle('on',lang==='ru');
 }
-document.getElementById('langEN').onclick=()=>{ lang='en'; try{localStorage.setItem('jb.lang','en');}catch(e){} applyLang(); };
-document.getElementById('langRU').onclick=()=>{ lang='ru'; try{localStorage.setItem('jb.lang','ru');}catch(e){} applyLang(); };
-
 applyLang();
 </script>
 </body>
