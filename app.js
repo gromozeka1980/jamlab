@@ -876,7 +876,7 @@ document.getElementById("jazzHelpBtn").addEventListener("click",()=>showHelp(fal
 document.getElementById("closeHelp").addEventListener("click",()=>helpEl.classList.add("hidden"));
 accBtn.addEventListener("click",()=> accOn?stopBacking():startBacking());
 // close any open sheet with Escape or a tap on the backdrop
-const SHEETS=["settings","help","recov","paywall","labov","howit","tutov"];
+const SHEETS=["settings","help","recov","paywall","labov","howit","tutov","kitchen"];
 document.addEventListener("keydown",e=>{ if(e.key!=="Escape") return;
   let closed=false;
   SHEETS.forEach(id=>{ const el=document.getElementById(id); if(!el.classList.contains("hidden")){ el.classList.add("hidden"); closed=true; } });
@@ -1041,6 +1041,10 @@ function enterPlay(id){
     if(firstJazz){ localStorage.setItem('jamlab.jazzHelpSeen','1'); showHelp(false,true); }
   }catch(e){}
 }
+const kitchenEl=document.getElementById('kitchen');
+document.getElementById('kitchenDoor').addEventListener('click',()=>{
+  track('kitchen_open'); kitchenEl.classList.remove('hidden'); });
+document.getElementById('kitchenBack').addEventListener('click',()=>kitchenEl.classList.add('hidden'));
 document.querySelectorAll(".pick").forEach(p=>p.addEventListener("click",()=>{
   const id=p.dataset.mode;
   if(modeLocked(id)){                       // locked: taste it for real first, wall only on the rerun
@@ -1048,6 +1052,7 @@ document.querySelectorAll(".pick").forEach(p=>p.addEventListener("click",()=>{
     return;
   }
   track('mode_picked',{mode:id});
+  kitchenEl.classList.add('hidden');        // entering from the kitchen closes it behind you
   enterPlay(id);
 }));
 
