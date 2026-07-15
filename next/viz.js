@@ -1,5 +1,6 @@
 // Visualizer: live overlay (transparent, on top of the UI) + the opaque recording scene
 // (sounding note, melody ribbon, watermark) rendered on an offscreen ~720p canvas.
+import { t } from './i18n.js';
 
 export function hexToRgb(h){ h=(h||'').trim().replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join(''); const n=parseInt(h||'888888',16); return [(n>>16)&255,(n>>8)&255,n&255]; }
 export function cssRgb(v){ return hexToRgb(getComputedStyle(document.documentElement).getPropertyValue(v)); }
@@ -108,11 +109,22 @@ export const viz=(()=>{
     c.fillText(document.getElementById('h1name').textContent||'', RW/2, 30*s);
     c.fillStyle='rgba(230,232,245,0.55)'; c.font='400 '+Math.round(11*s)+'px system-ui,sans-serif';
     c.fillText((document.getElementById('h1sub').textContent||'').replace(/^·\s*/,''), RW/2, 48*s);
-    // watermark: test-tube note logo + wordmark
-    c.globalAlpha=0.82; c.font='700 '+Math.round(16*s)+'px system-ui,sans-serif'; c.textAlign='left'; c.textBaseline='middle';
-    const wmTxt='jambrew.app', tw=c.measureText(wmTxt).width, k=1.25*s, lw=11*k, gap=9*s, x0=(RW-(lw+gap+tw))/2, wmY=RH-24*s;
-    drawTubeNote(c, x0+lw*0.5, wmY-4*s, k);
-    c.globalAlpha=0.82; c.fillStyle='#eceaf3'; c.fillText(wmTxt, x0+lw+gap, wmY-4*s);
+    // watermark: recruiting tagline + (test-tube logo + domain), lifted out of the bottom UI zone
+    // (TikTok/Reels put caption, handle and progress bar in the bottom ~11%) and horizontally centred
+    // (clears the right-edge button rail).
+    const bottomSafe = Math.max(46*s, RH*0.11);
+    const domY = RH - bottomSafe;
+    // tagline line (localised, above the domain)
+    const tag = t('wm.tag');
+    if(tag){ c.globalAlpha=0.72; c.textAlign='center'; c.textBaseline='middle';
+      c.font='600 '+Math.round(12.5*s)+'px system-ui,sans-serif';
+      const ac=cssRgb('--accent'); c.fillStyle='rgb('+ac[0]+','+ac[1]+','+ac[2]+')';
+      c.fillText(tag, RW/2, domY - 22*s); }
+    // logo + wordmark
+    c.globalAlpha=0.85; c.font='700 '+Math.round(16*s)+'px system-ui,sans-serif'; c.textAlign='left'; c.textBaseline='middle';
+    const wmTxt='jambrew.app', tw=c.measureText(wmTxt).width, k=1.25*s, lw=11*k, gap=9*s, x0=(RW-(lw+gap+tw))/2;
+    drawTubeNote(c, x0+lw*0.5, domY, k);
+    c.fillStyle='#eceaf3'; c.fillText(wmTxt, x0+lw+gap, domY);
     c.globalAlpha=1;
   }
   function frame(){ size();
