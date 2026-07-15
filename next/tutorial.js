@@ -12,7 +12,7 @@ const X = {
     'tut.s1':'Press and hold the glowing key','tut.s2':"Tap it again and again — you're climbing the scale",
     'tut.s3':'Now walk back down','tut.s4':'Same step — just three at once',
     'tut.sstrip':"Slide your finger along the ladder — it's the map of the scale",
-    'tut.s5':"Hold the key and drag up — that's a bend",'tut.s6':'Now bring in the backing',
+    'tut.s5':"Hold the key and drag up or down — that's a bend",'tut.s6':'Now bring in the backing',
     'tut.done':"🎓 Tutorial complete — keep playing. You can't hit a wrong note here.",
     'tut.skip':'Skip','tut.replay':'🎓 Tutorial',
     'howit.open':'How does it work?','howit.title':'How it works',
@@ -61,7 +61,7 @@ const X = {
     'tut.s1':'Нажми светящуюся клавишу и подержи','tut.s2':'Жми её ещё и ещё — ты поднимаешься по гамме',
     'tut.s3':'А теперь спустись обратно','tut.s4':'Тот же шаг — просто три сразу',
     'tut.sstrip':'Проведи пальцем по лесенке — это карта гаммы',
-    'tut.s5':'Зажми клавишу и потяни вверх — это бенд','tut.s6':'Теперь включай аккомпанемент',
+    'tut.s5':'Зажми клавишу и потяни вверх или вниз — это бенд','tut.s6':'Теперь включай аккомпанемент',
     'tut.done':'🎓 Обучение пройдено — просто продолжай играть. Ошибиться здесь невозможно.',
     'tut.skip':'Пропустить','tut.replay':'🎓 Обучение',
     'howit.open':'Как это устроено?','howit.title':'Как это устроено',
@@ -110,7 +110,7 @@ const X = {
     'tut.s1':'Pulsa y mantén la tecla iluminada','tut.s2':'Púlsala una y otra vez — subes por la escala',
     'tut.s3':'Ahora baja de vuelta','tut.s4':'El mismo paso — solo que tres de golpe',
     'tut.sstrip':'Desliza el dedo por la escalera — es el mapa de la escala',
-    'tut.s5':'Mantén la tecla y arrastra hacia arriba — eso es un bend','tut.s6':'Ahora activa la base',
+    'tut.s5':'Mantén la tecla y arrástrala arriba o abajo — eso es un bend','tut.s6':'Ahora activa la base',
     'tut.done':'🎓 Tutorial completado — sigue tocando. Aquí no existe la nota equivocada.',
     'tut.skip':'Saltar','tut.replay':'🎓 Tutorial',
     'howit.open':'¿Cómo funciona?','howit.title':'Cómo funciona',
@@ -159,7 +159,7 @@ const X = {
     'tut.s1':'Pressione e segure a tecla iluminada','tut.s2':'Toque nela várias vezes — você está subindo a escala',
     'tut.s3':'Agora desça de volta','tut.s4':'O mesmo passo — só que três de uma vez',
     'tut.sstrip':'Deslize o dedo pela escadinha — é o mapa da escala',
-    'tut.s5':'Segure a tecla e arraste para cima — isso é um bend','tut.s6':'Agora ligue a base',
+    'tut.s5':'Segure a tecla e arraste para cima ou para baixo — isso é um bend','tut.s6':'Agora ligue a base',
     'tut.done':'🎓 Tutorial concluído — continue tocando. Aqui não existe nota errada.',
     'tut.skip':'Pular','tut.replay':'🎓 Tutorial',
     'howit.open':'Como funciona?','howit.title':'Como funciona',
@@ -208,7 +208,7 @@ const X = {
     'tut.s1':'Drücke und halte die leuchtende Taste','tut.s2':'Tippe sie wieder und wieder — du steigst die Tonleiter hinauf',
     'tut.s3':'Jetzt geh wieder hinunter','tut.s4':'Derselbe Schritt — nur drei auf einmal',
     'tut.sstrip':'Fahre mit dem Finger die Leiter entlang — sie ist die Karte der Tonleiter',
-    'tut.s5':'Halte die Taste und zieh nach oben — das ist ein Bend','tut.s6':'Jetzt starte die Begleitung',
+    'tut.s5':'Halte die Taste und zieh sie nach oben oder unten — das ist ein Bend','tut.s6':'Jetzt starte die Begleitung',
     'tut.done':"🎓 Tutorial geschafft — spiel einfach weiter. Einen falschen Ton gibt es hier nicht.",
     'tut.skip':'Überspringen','tut.replay':'🎓 Tutorial',
     'howit.open':'Wie funktioniert das?','howit.title':'Wie es funktioniert',
@@ -257,7 +257,7 @@ const X = {
     'tut.s1':'Appuie sur la touche lumineuse et maintiens-la','tut.s2':'Tape-la encore et encore — tu montes la gamme',
     'tut.s3':'Maintenant redescends','tut.s4':"Le même pas — juste trois d'un coup",
     'tut.sstrip':"Fais glisser ton doigt le long de l'échelle — c'est la carte de la gamme",
-    'tut.s5':"Maintiens la touche et glisse vers le haut — c'est un bend",'tut.s6':"Maintenant lance l'accompagnement",
+    'tut.s5':"Maintiens la touche et glisse vers le haut ou le bas — c'est un bend",'tut.s6':"Maintenant lance l'accompagnement",
     'tut.done':"🎓 Tutoriel terminé — continue de jouer. Ici, la fausse note n'existe pas.",
     'tut.skip':'Passer','tut.replay':'🎓 Tutoriel',
     'howit.open':'Comment ça marche ?','howit.title':'Comment ça marche',
@@ -306,7 +306,7 @@ const X = {
     'tut.s1':'光っているキーを押さえたままにして','tut.s2':'何度も押してみて — 音階を上っています',
     'tut.s3':'今度は下りてみましょう','tut.s4':'同じ一歩 — ただし3歩ぶんいっぺんに',
     'tut.sstrip':'はしごに沿って指をすべらせて — 音階の地図です',
-    'tut.s5':'キーを押さえたまま上へドラッグ — これがベンド','tut.s6':'伴奏を入れましょう',
+    'tut.s5':'キーを押さえたまま上または下へドラッグ — これがベンド','tut.s6':'伴奏を入れましょう',
     'tut.done':'🎓 チュートリアル完了 — そのまま弾き続けよう。ここに間違った音はありません。',
     'tut.skip':'スキップ','tut.replay':'🎓 チュートリアル',
     'howit.open':'仕組みは？','howit.title':'仕組み',
@@ -355,7 +355,7 @@ const X = {
     'tut.s1':'按住发光的琴键','tut.s2':'再按几次——你正沿着音阶往上走',
     'tut.s3':'现在往回走','tut.s4':'同样的一步——只是一次跨三步',
     'tut.sstrip':'沿着梯子滑动手指——这是音阶的地图',
-    'tut.s5':'按住琴键往上拖——这就是推弦','tut.s6':'现在开启伴奏',
+    'tut.s5':'按住琴键往上或往下拖——这就是推弦','tut.s6':'现在开启伴奏',
     'tut.done':'🎓 教程完成——继续弹吧。在这里不存在错音。',
     'tut.skip':'跳过','tut.replay':'🎓 教程',
     'howit.open':'它是怎么工作的？','howit.title':'工作原理',
@@ -415,8 +415,8 @@ const STEPS=[
   {key:'tut.s3', target:()=>keyEl(-1), ev:'jl:note',    ok:d=>d&&d.offset===-1, need:2},
   {key:'tut.s4', target:()=>keyEl(3),  ev:'jl:note',    ok:d=>d&&d.offset===3,  need:1},
   {key:'tut.sstrip', target:()=>document.getElementById('stepStrip'), ev:'jl:strip', ok:()=>true, need:4},   // a short slide or a few taps
-  // aim at a key that can actually bend up right now (after the glissando the position may sit on a bendless degree)
-  {key:'tut.s5', target:()=>document.querySelector('.keys .key.canup')||keyEl(0), ev:'jl:bend', ok:()=>true, need:1},
+  // aim at a key that can actually bend right now (either direction); re-aimed on every stray tap (see onEvent)
+  {key:'tut.s5', target:()=>document.querySelector('.keys .key.canup, .keys .key.candn')||keyEl(0), ev:'jl:bend', ok:()=>true, need:1},
   {key:'tut.s6', target:()=>document.getElementById('accBtn'), ev:'jl:backing', ok:()=>true, need:1},
 ];
 let hooks=null, active=false, stepI=0, hits=0, advancing=false, barEl=null, lit=null;
@@ -435,6 +435,7 @@ function pulseBar(){ if(barEl){ barEl.classList.remove('hit'); void barEl.offset
 function onEvent(name,e){ if(!active||advancing) return;
   if(lit && !lit.isConnected) light(STEPS[stepI].target());   // keys were rebuilt (variant change) — re-aim
   const st=STEPS[stepI];
+  if(st.ev==='jl:bend' && name==='jl:note') light(st.target());   // stray taps moved the position → re-aim glow at a still-bendable key
   if(st.ev!==name || !st.ok(e.detail)) return;
   hits++; pulseBar();
   if(hits>=st.need){ advancing=true; setTimeout(nextStep,650); }
