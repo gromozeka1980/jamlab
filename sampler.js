@@ -6,13 +6,31 @@ import { actx } from './audio.js';
 const BASE='https://gleitz.github.io/midi-js-soundfonts/FluidR3_GM/';
 // visible name key (i18n: instr.<id>) → GM slug
 export const SAMPLER_INSTRUMENTS=[
-  {id:'piano',   slug:'acoustic_grand_piano'},
-  {id:'epiano',  slug:'electric_piano_1'},
-  {id:'strings', slug:'string_ensemble_1'},
-  {id:'marimba', slug:'marimba'},
-  {id:'vibes',   slug:'vibraphone'},
-  {id:'nylon',   slug:'acoustic_guitar_nylon'},
-  {id:'flute',   slug:'flute'},
+  {id:'piano',    slug:'acoustic_grand_piano'},
+  {id:'epiano',   slug:'electric_piano_1'},
+  {id:'harpsi',   slug:'harpsichord'},
+  {id:'celesta',  slug:'celesta'},
+  {id:'musicbox', slug:'music_box'},
+  {id:'vibes',    slug:'vibraphone'},
+  {id:'marimba',  slug:'marimba'},
+  {id:'glock',    slug:'glockenspiel'},
+  {id:'kalimba',  slug:'kalimba'},
+  {id:'organ',    slug:'church_organ'},
+  {id:'accordion',slug:'accordion'},
+  {id:'nylon',    slug:'acoustic_guitar_nylon'},
+  {id:'steel',    slug:'acoustic_guitar_steel'},
+  {id:'harp',     slug:'orchestral_harp'},
+  {id:'sitar',    slug:'sitar'},
+  {id:'koto',     slug:'koto'},
+  {id:'shamisen', slug:'shamisen'},
+  {id:'strings',  slug:'string_ensemble_1'},
+  {id:'choir',    slug:'choir_aahs'},
+  {id:'flute',    slug:'flute'},
+  {id:'panflute', slug:'pan_flute'},
+  {id:'shaku',    slug:'shakuhachi'},
+  {id:'clarinet', slug:'clarinet'},
+  {id:'sax',      slug:'alto_sax'},
+  {id:'trumpet',  slug:'trumpet'},
 ];
 const FLAT=['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];   // gleitz keys use flats (Bb, not A#)
 function midiName(m){ return FLAT[((m%12)+12)%12]+(Math.floor(m/12)-1); }

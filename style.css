@@ -59,6 +59,20 @@ input[type=range]{width:150px; accent-color:var(--accent);}
 body.cfgopen #topsum .chev{transform:rotate(180deg);}
 .touch #topsum{display:flex;}
 body.touch:not(.cfgopen) #topbar{display:none;}
+/* config open on touch = settings OR instrument, never both: hide the instrument surface, keep only the console
+   (backing keeps sounding; its ▶ toggle stays). The expanded console scrolls if it's taller than the screen. */
+body.touch.cfgopen .display,
+body.touch.cfgopen .ladrow,
+body.touch.cfgopen #stepStrip,
+body.touch.cfgopen .playfield,
+body.touch.cfgopen .extra,
+body.touch.cfgopen #recBtn,
+body.touch.cfgopen .hint{display:none !important;}
+body.touch.cfgopen #topbar{flex:1 1 auto; overflow-y:auto; align-content:flex-start;}
+/* volume sliders relocated into the console */
+.ctl.vol .vrow{display:flex; align-items:center; gap:6px;}
+.ctl.vol input[type=range]{width:118px;}
+.ctl.vol .val{min-width:30px; font-size:11px; color:var(--muted); text-align:right;}
 body.tut #topsum{opacity:.25; transition:opacity .3s;}
 
 /* scale strip: dots = scale tones across the playable range, roots bigger; the ring marker hops with every key press */
