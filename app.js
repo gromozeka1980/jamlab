@@ -46,6 +46,7 @@ const activeVoices = new Map();
 let kbBend=0;
 let liteNote=false;                                // set around glissando noteOn: build a lightweight voice
 let curLeadInstr='';                               // '' = the mode's synth voice; else a sampled GM instrument id (any style)
+const MODE_INSTR_DEFAULT={ koto:'koto', blues:'trumpet' };   // default sampled lead per style (user can override → saved)
 
 function vizBeat(time,s){ if(settings.viz && actx) setTimeout(()=>viz.pulse(s), Math.max(0,(time-actx.currentTime)*1000)); }
 
@@ -387,11 +388,8 @@ function updateTopsum(){ if(!topsumTxt) return;
     const bk=M.backings && M.backings.find(b=>b.id===settings.backing); if(bk) parts.push(t(bk.label)); }
   topsumTxt.textContent=parts.join(' · ');
 }
-function toggleCfg(){ const o=!document.body.classList.contains('cfgopen');
-  document.body.classList.toggle('cfgopen',o); try{ localStorage.setItem('jamlab.cfgOpen',o?'1':'0'); }catch(e){} }
-if(topsumEl){ let cfgOpen=false; try{ cfgOpen=localStorage.getItem('jamlab.cfgOpen')==='1'; }catch(e){}
-  document.body.classList.toggle('cfgopen',cfgOpen);
-  topsumEl.addEventListener('click',toggleCfg); }
+function toggleCfg(){ document.body.classList.toggle('cfgopen'); }   // not persisted — always open on the instrument
+if(topsumEl) topsumEl.addEventListener('click',toggleCfg);
 // the title is a toggle too — active exactly when the collapsed-config chip is (touch layouts)
 document.querySelector('header h1').addEventListener('click',()=>{
   if(topsumEl && getComputedStyle(topsumEl).display!=='none') toggleCfg(); });
@@ -835,7 +833,10 @@ function setMode(id){ const was=accOn; if(actx) stopBacking();
   // lead-instrument selector: available in every scale mode (not the overtone flute)
   const showInstr = M.kind!=='harmonic';
   document.getElementById("ctlInstr").style.display = showInstr?'':'none';
-  if(showInstr){ buildInstrOptions(); curLeadInstr=leadInstrMap[M.id]||''; instrSel.value=curLeadInstr;
+  if(showInstr){ buildInstrOptions();
+    // per-mode lead voice: the user's saved pick (incl. an explicit 'Original' = '') wins; otherwise the mode's default
+    curLeadInstr = Object.prototype.hasOwnProperty.call(leadInstrMap,M.id) ? leadInstrMap[M.id] : (MODE_INSTR_DEFAULT[M.id]||'');
+    instrSel.value=curLeadInstr;
     if(curLeadInstr){ initAudio(); resumeAudio(); loadSampler(curLeadInstr,36,88).catch(()=>{}); } }
   else curLeadInstr='';
   if(isBlues){ settings.harmony='major'; settings.rhythm='shuffle'; harmSel.value='major'; rhythmSel.value='shuffle'; }

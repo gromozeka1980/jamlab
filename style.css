@@ -54,7 +54,9 @@ input[type=range]{width:150px; accent-color:var(--accent);}
 #topsum{display:none; margin:6px 10px 0; padding:8px 12px; border:1px solid var(--line); border-radius:11px;
   background:var(--panel); color:var(--muted); font-size:12px; align-items:center; gap:8px; cursor:pointer;
   white-space:nowrap; overflow:hidden;}
-#topsum #topsumTxt{overflow:hidden; text-overflow:ellipsis;}
+#topsum .gear{color:var(--accent); font-size:14px; flex:0 0 auto;}
+#topsum .tslabel{color:var(--accent); font-weight:700; flex:0 0 auto;}
+#topsum #topsumTxt{overflow:hidden; text-overflow:ellipsis; opacity:.75;}
 #topsum .chev{margin-left:auto; transition:transform .2s; flex:0 0 auto;}
 body.cfgopen #topsum .chev{transform:rotate(180deg);}
 .touch #topsum{display:flex;}
