@@ -10,6 +10,7 @@ import { actx, comp, leadBus, leadFilter, leadOut, accBus, busPerc, busBass, bus
 import { viz, cssRgb } from './viz.js';
 import { refreshRecLabel } from './rec.js';
 import { isPro, modeLocked, showPaywall, onProChange, initBilling, KITCHEN } from './paywall.js';
+import { loadSampler, sampleBuffer, sampleBaseMidi, samplerReady, SAMPLER_INSTRUMENTS } from './sampler.js';
 import { initTutorial } from './tutorial.js';
 import { track, trackOnce, sinceLaunch } from './analytics.js';
 
@@ -150,7 +151,19 @@ function makeVoice(freq,maxUp,maxDown,approach,when){
     const nf=actx.createBiquadFilter(); nf.type='bandpass'; nf.frequency.value=bpFreq; nf.Q.value=Q;
     const ng=actx.createGain(); ng.gain.setValueAtTime(amp,t0); ng.gain.exponentialRampToValueAtTime(0.0006,t0+dur);
     nz.connect(nf); nf.connect(g); nz.start(t0); nz.stop(t0+dur+0.02); v.stops.push(nz); };
-  if(M.voice==='saw'){
+  if(M.voice==='sample'){               // kitchen sampler: play a decoded GM note, pitch-shifted; bend via playbackRate (shimmed into freqNodes)
+    const midi=Math.round(freqToMidi(freq)), buf=sampleBuffer(midi);
+    if(buf){
+      const baseRate=Math.pow(2,(midi-sampleBaseMidi(midi))/12);
+      const src=actx.createBufferSource(); src.buffer=buf; src.playbackRate.value=baseRate;
+      vibG.connect(src.detune);                                 // vibrato (cents) on the sample
+      src.connect(g); src.start(t0); v.stops.push(src);
+      v.freqNodes.push({osc:{frequency:src.playbackRate}, mult:baseRate/freq});   // bend: applyBend sets playbackRate = baseRate * 2^(semis/12)
+      g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.85,t0+0.008);  // the sample carries its own decay; just avoid a click
+    } else {                                                    // instrument not loaded yet → a soft placeholder tone
+      addOsc('sine',1,0,1); g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.2,t0+0.01); g.gain.exponentialRampToValueAtTime(.05,t0+0.6);
+    }
+  } else if(M.voice==='saw'){
     addOsc('sawtooth',1,0,1); addOsc('sawtooth',1,8,1);
     g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.30,t0+0.012); g.gain.exponentialRampToValueAtTime(.2,t0+0.3);
   } else if(M.voice==='pluck'){         // generic pluck (vostok/jazz/light/lab) — the original voice
@@ -816,8 +829,10 @@ function setMode(id){ const was=accOn; if(actx) stopBacking();
   document.getElementById("ctlPhrase").style.display = isJazz?'':'none';
   document.getElementById("ctlTiming").style.display = isJazz?'':'none';
   document.getElementById("ctlJazzHelp").style.display = isJazz?'':'none';
-  document.getElementById("ctlPerc").style.display = M.lab?'':'none';
+  document.getElementById("ctlPerc").style.display = (M.lab||M.sampler)?'':'none';
   document.getElementById("ctlLab").style.display = M.lab?'':'none';
+  document.getElementById("ctlInstr").style.display = M.sampler?'':'none';
+  if(M.sampler){ buildInstrOptions(); loadSamplerInstrument(settings.samplerInstr||SAMPLER_INSTRUMENTS[0].id); }
   if(isBlues){ settings.harmony='major'; settings.rhythm='shuffle'; harmSel.value='major'; rhythmSel.value='shuffle'; }
   else { settings.backing=M.defBacking; buildBackingOptions(); }
   if(isJazz){ colorSel.value=settings.jazzColor; landSel.value=settings.jazzLand; phraseSel.value=settings.jazzPhrase; timingSel.value=settings.jazzTiming; }
@@ -938,7 +953,20 @@ function rebuildLabMode(){ const m=MODES.lab; m.scales={}; m.downScales={}; m.ar
 }
 rebuildLabMode();
 const percSel=document.getElementById('percSel');
-percSel.addEventListener('change',()=>{ if(M.lab){ M.perc=percSel.value; try{ localStorage.setItem('jamlab.labPerc',percSel.value); }catch(e){} } });
+percSel.addEventListener('change',()=>{ if(M.lab||M.sampler){ M.perc=percSel.value; try{ localStorage.setItem('jamlab.labPerc',percSel.value); }catch(e){} } });
+
+/* ---- kitchen sampler: GM instrument selector + on-demand load ---- */
+const instrSel=document.getElementById('instrSel');
+function buildInstrOptions(){ if(instrSel.options.length===SAMPLER_INSTRUMENTS.length) return;
+  instrSel.innerHTML=''; SAMPLER_INSTRUMENTS.forEach(o=>instrSel.appendChild(new Option(t('instr.'+o.id),o.id))); }
+function loadSamplerInstrument(id){
+  settings.samplerInstr=id; instrSel.value=id; try{ localStorage.setItem('jamlab.samplerInstr',id); }catch(e){}
+  initAudio(); resumeAudio();
+  const hintEl=document.getElementById('hint'); hintEl.textContent=t('instr.loading');
+  loadSampler(id, 36, 88).then(()=>{ if(M.sampler) setHint(); }).catch(()=>{ if(M.sampler) hintEl.textContent=t('instr.failed'); });
+}
+instrSel.addEventListener('change',()=>loadSamplerInstrument(instrSel.value));
+try{ const si=localStorage.getItem('jamlab.samplerInstr'); if(si) settings.samplerInstr=si; }catch(e){}
 const labov=document.getElementById('labov'), labPcs=document.getElementById('labPcs'), labPcsDn=document.getElementById('labPcsDn'),
       labDownSel=document.getElementById('labDownSel'), labArpEl=document.getElementById('labArp'),
       labName=document.getElementById('labName'), labCount=document.getElementById('labCount');
