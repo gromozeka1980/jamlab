@@ -15,7 +15,7 @@ const RC_API_KEY = 'goog_JbBQSnxeHEiPhmMwPoFugVoUCYO';   // RevenueCat public Pl
 const ENTITLEMENT = 'Jambrew Pro';           // matches the entitlement identifier created in the RC dashboard
 
 export const FREE_MODES = new Set(['light','koto']);
-export const KITCHEN = new Set(['jazz','lab']);      // pro-only experiments: no taste, straight to the offer
+export const KITCHEN = new Set(['jazz','lab','sampler']);   // pro-only experiments: no taste, straight to the offer
 const GATED = NATIVE || new URLSearchParams(location.search).has('paywall');
 
 let pro=false; try{ pro = localStorage.getItem('jamlab.pro')==='1'; }catch(e){}
