@@ -69,6 +69,9 @@ body.tut #topsum{opacity:.25; transition:opacity .3s;}
   background:color-mix(in srgb, var(--muted) 40%, transparent); transition:background .15s;}
 .strip .sdot.root{width:9px; height:9px; background:color-mix(in srgb, var(--accent) 55%, transparent);}
 .strip .sdot.cur{background:var(--accent);}
+/* jazz: the note the phrasing pulled to a chord tone — gold pulse, distinct from the accent cur/marker */
+.strip .sdot.snap{background:#ffd43b; box-shadow:0 0 9px #ffd43b; animation:snappulse .5s ease;}
+@keyframes snappulse{0%{transform:scale(1);}40%{transform:scale(2.2);}100%{transform:scale(1.5);}}
 .strip .smark{position:absolute; top:50%; width:15px; height:15px; margin:-7.5px 0 0 -7.5px; border-radius:50%;
   border:2px solid var(--accent); box-shadow:0 0 10px color-mix(in srgb, var(--accent) 70%, transparent);
   pointer-events:none; transition:left .18s cubic-bezier(.3,1.5,.5,1);}

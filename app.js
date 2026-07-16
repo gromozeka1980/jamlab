@@ -262,6 +262,8 @@ function noteOn(id,offset,el){ initAudio(); resumeAudio(); if(activeVoices.has(i
   updateDisplay();
   if(playedMidi!=null) elNote.textContent=midiToName(playedMidi);
   else if(SCALEDN && offset<0) elNote.textContent=midiToName(Math.round(freqToMidi(freq)));
+  // jazz: if phrasing pulled the note to a chord tone, flag the pulled note on the ladder (distinct from the cur marker)
+  if(M.id==='jazz' && playedMidi!=null && playedMidi!==indexToMidi(currentIndex)) stripSnap(playedMidi);
   document.dispatchEvent(new CustomEvent('jl:note',{detail:{offset}}));   // tutorial listens
   trackOnce('first_note',{mode:M.id,tta:sinceLaunch()});                  // tta = seconds from launch to first sound
   return v; }
@@ -307,6 +309,14 @@ function stripRender(){ if(!stripEl) return;
   if(cur && stripMark) stripMark.style.left=(cur.el.offsetLeft + cur.el.offsetWidth/2)+'px';
 }
 window.addEventListener('resize',()=>{ stripSig=''; stripRender(); });   // dot positions shift with the viewport
+let snapTimer=null;
+function stripSnap(midi){                                   // jazz: briefly light the dot the phrasing pulled the note to
+  if(!stripDots.length) return;
+  stripDots.forEach(d=>d.el.classList.remove('snap'));
+  const d=stripDots.find(x=>indexToMidi(x.i)===midi); if(!d) return;   // chord tone usually is a scale dot; if not, nothing to show
+  d.el.classList.add('snap');
+  clearTimeout(snapTimer); snapTimer=setTimeout(()=>d.el.classList.remove('snap'), 700);
+}
 
 // The strip is playable: tap a dot to teleport there (sounds like pressing "0" at the new spot),
 // slide the finger along it for a glissando over the scale. Snaps to the nearest dot — no precision needed.
