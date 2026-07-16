@@ -45,6 +45,7 @@ let currentIndex = 0;
 const activeVoices = new Map();
 let kbBend=0;
 let liteNote=false;                                // set around glissando noteOn: build a lightweight voice
+let curLeadInstr='';                               // '' = the mode's synth voice; else a sampled GM instrument id (any style)
 
 function vizBeat(time,s){ if(settings.viz && actx) setTimeout(()=>viz.pulse(s), Math.max(0,(time-actx.currentTime)*1000)); }
 
@@ -151,7 +152,7 @@ function makeVoice(freq,maxUp,maxDown,approach,when){
     const nf=actx.createBiquadFilter(); nf.type='bandpass'; nf.frequency.value=bpFreq; nf.Q.value=Q;
     const ng=actx.createGain(); ng.gain.setValueAtTime(amp,t0); ng.gain.exponentialRampToValueAtTime(0.0006,t0+dur);
     nz.connect(nf); nf.connect(g); nz.start(t0); nz.stop(t0+dur+0.02); v.stops.push(nz); };
-  if(M.voice==='sample'){               // kitchen sampler: play a decoded GM note, pitch-shifted; bend via playbackRate (shimmed into freqNodes)
+  if(curLeadInstr && samplerReady()){   // lead swapped for a sampled GM instrument: decoded note, pitch-shifted; bend via playbackRate (shimmed into freqNodes)
     const midi=Math.round(freqToMidi(freq)), buf=sampleBuffer(midi);
     if(buf){
       const baseRate=Math.pow(2,(midi-sampleBaseMidi(midi))/12);
@@ -829,10 +830,14 @@ function setMode(id){ const was=accOn; if(actx) stopBacking();
   document.getElementById("ctlPhrase").style.display = isJazz?'':'none';
   document.getElementById("ctlTiming").style.display = isJazz?'':'none';
   document.getElementById("ctlJazzHelp").style.display = isJazz?'':'none';
-  document.getElementById("ctlPerc").style.display = (M.lab||M.sampler)?'':'none';
+  document.getElementById("ctlPerc").style.display = M.lab?'':'none';
   document.getElementById("ctlLab").style.display = M.lab?'':'none';
-  document.getElementById("ctlInstr").style.display = M.sampler?'':'none';
-  if(M.sampler){ buildInstrOptions(); loadSamplerInstrument(settings.samplerInstr||SAMPLER_INSTRUMENTS[0].id); }
+  // lead-instrument selector: available in every scale mode (not the overtone flute)
+  const showInstr = M.kind!=='harmonic';
+  document.getElementById("ctlInstr").style.display = showInstr?'':'none';
+  if(showInstr){ buildInstrOptions(); curLeadInstr=leadInstrMap[M.id]||''; instrSel.value=curLeadInstr;
+    if(curLeadInstr){ initAudio(); resumeAudio(); loadSampler(curLeadInstr,36,88).catch(()=>{}); } }
+  else curLeadInstr='';
   if(isBlues){ settings.harmony='major'; settings.rhythm='shuffle'; harmSel.value='major'; rhythmSel.value='shuffle'; }
   else { settings.backing=M.defBacking; buildBackingOptions(); }
   if(isJazz){ colorSel.value=settings.jazzColor; landSel.value=settings.jazzLand; phraseSel.value=settings.jazzPhrase; timingSel.value=settings.jazzTiming; }
@@ -953,20 +958,23 @@ function rebuildLabMode(){ const m=MODES.lab; m.scales={}; m.downScales={}; m.ar
 }
 rebuildLabMode();
 const percSel=document.getElementById('percSel');
-percSel.addEventListener('change',()=>{ if(M.lab||M.sampler){ M.perc=percSel.value; try{ localStorage.setItem('jamlab.labPerc',percSel.value); }catch(e){} } });
+percSel.addEventListener('change',()=>{ if(M.lab){ M.perc=percSel.value; try{ localStorage.setItem('jamlab.labPerc',percSel.value); }catch(e){} } });
 
-/* ---- kitchen sampler: GM instrument selector + on-demand load ---- */
+/* ---- lead instrument: any style can swap its synth voice for a sampled GM instrument (per-mode choice) ---- */
+let leadInstrMap={}; try{ leadInstrMap=JSON.parse(localStorage.getItem('jamlab.leadInstr')||'{}')||{}; }catch(e){}
 const instrSel=document.getElementById('instrSel');
-function buildInstrOptions(){ if(instrSel.options.length===SAMPLER_INSTRUMENTS.length) return;
-  instrSel.innerHTML=''; SAMPLER_INSTRUMENTS.forEach(o=>instrSel.appendChild(new Option(t('instr.'+o.id),o.id))); }
-function loadSamplerInstrument(id){
-  settings.samplerInstr=id; instrSel.value=id; try{ localStorage.setItem('jamlab.samplerInstr',id); }catch(e){}
+function buildInstrOptions(){ if(instrSel.options.length===SAMPLER_INSTRUMENTS.length+1) return;
+  instrSel.innerHTML=''; instrSel.appendChild(new Option(t('instr.original'),''));   // '' = the mode's own synth voice
+  SAMPLER_INSTRUMENTS.forEach(o=>instrSel.appendChild(new Option(t('instr.'+o.id),o.id))); }
+function applyLeadInstr(id){                                // '' → native synth; else load & use the sampled instrument
+  curLeadInstr=id; instrSel.value=id;
+  leadInstrMap[M.id]=id; try{ localStorage.setItem('jamlab.leadInstr',JSON.stringify(leadInstrMap)); }catch(e){}
+  if(!id) return;
   initAudio(); resumeAudio();
   const hintEl=document.getElementById('hint'); hintEl.textContent=t('instr.loading');
-  loadSampler(id, 36, 88).then(()=>{ if(M.sampler) setHint(); }).catch(()=>{ if(M.sampler) hintEl.textContent=t('instr.failed'); });
+  loadSampler(id, 36, 88).then(()=>{ setHint(); }).catch(()=>{ hintEl.textContent=t('instr.failed'); });
 }
-instrSel.addEventListener('change',()=>loadSamplerInstrument(instrSel.value));
-try{ const si=localStorage.getItem('jamlab.samplerInstr'); if(si) settings.samplerInstr=si; }catch(e){}
+instrSel.addEventListener('change',()=>applyLeadInstr(instrSel.value));
 const labov=document.getElementById('labov'), labPcs=document.getElementById('labPcs'), labPcsDn=document.getElementById('labPcsDn'),
       labDownSel=document.getElementById('labDownSel'), labArpEl=document.getElementById('labArp'),
       labName=document.getElementById('labName'), labCount=document.getElementById('labCount');

@@ -58,14 +58,6 @@ export const MODES = {
     variants:[{id:'major',label:'variant.light.major'},{id:'minor',label:'variant.light.minor'}], defVariant:'major',
     backings:[{id:'drone',label:'backing.drone',pad:1},{id:'arp',label:'backing.arp',arp:1},{id:'padperc',label:'backing.light.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.light.arpperc',arp:1,perc:1,bass:1}], defBacking:'arpperc',
   },
-  sampler: {   // kitchen experiment: Bright's pentatonics played by sampled GM instruments (see sampler.js)
-    id:'sampler', name:'mode.sampler.name', sub:'mode.sampler.sub', voice:'sample', back:'koto', perc:'shaker', sampler:true,
-    theme:{bg1:'#2a2150', accent:'#c0f0d0', zero:'#37b24d', neg:'#4dabf7', pos:'#ffa94d', blue:'#66d9e8'},
-    kind:'scale',
-    scales:{major:[0,2,4,7,9], minor:[0,3,5,7,10]},
-    variants:[{id:'major',label:'variant.light.major'},{id:'minor',label:'variant.light.minor'}], defVariant:'major',
-    backings:[{id:'drone',label:'backing.drone',pad:1},{id:'arp',label:'backing.arp',arp:1},{id:'padperc',label:'backing.light.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.light.arpperc',arp:1,perc:1,bass:1}], defBacking:'drone',
-  },
   synth: {
     id:'synth', name:'mode.synth.name', sub:'mode.synth.sub', voice:'saw', back:'synth', defBpm:108,
     theme:{bg1:'#2b1055', accent:'#ff6ec7', zero:'#9d4edd', neg:'#4cc9f0', pos:'#f72585', blue:'#4cc9f0'},
