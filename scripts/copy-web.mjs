@@ -10,7 +10,7 @@ const www = resolve(root, 'www');
 
 // Static assets to ship inside the native bundle.
 // Add new entries here (icons, audio packs, etc.) as they appear.
-const ASSETS = ['index.html', 'style.css', 'app.js', 'i18n.js', 'settings.js', 'modes.js', 'audio.js', 'viz.js', 'rec.js', 'paywall.js', 'tutorial.js', 'analytics.js', 'sampler.js', 'drums.js', 'bass.js'];
+const ASSETS = ['index.html', 'style.css', 'app.js', 'i18n.js', 'settings.js', 'modes.js', 'audio.js', 'viz.js', 'rec.js', 'paywall.js', 'tutorial.js', 'analytics.js', 'sampler.js', 'drums.js', 'bass.js', 'arp.js'];
 
 await rm(www, { recursive: true, force: true });
 await mkdir(www, { recursive: true });
