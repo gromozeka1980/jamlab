@@ -78,58 +78,44 @@ body.touch.cfgopen .hint{display:none !important;}
 #mixGroup{display:contents;}
 #mixHead{display:none;}
 
-/* ---- Phone: the expanded console as one calm, single-column, right-aligned list ---- */
+/* ---- Phone: the expanded console as a compact 2-column grid ---- */
 body.touch.cfgopen #topbar{
-  flex:0 1 auto; min-height:0; overflow-y:auto;
-  flex-direction:column; flex-wrap:nowrap; align-items:stretch; gap:0;
-  width:100%; max-width:560px; margin:0 auto; padding:2px 16px 18px;
+  display:grid; grid-template-columns:1fr 1fr; gap:12px 14px; align-content:start; align-items:start;
+  min-height:0; overflow-y:auto;
+  width:100%; max-width:560px; margin:0 auto; padding:10px 16px 20px;
 }
 body.touch.cfgopen #topbar > .ctl,
-body.touch.cfgopen #mixGroup > .ctl{
-  flex-direction:column; align-items:stretch; gap:6px;
-  padding:12px 2px; border-top:1px solid rgba(255,255,255,.06);
-}
-body.touch.cfgopen #topbar > .ctl:first-child{border-top:none;}
-body.touch.cfgopen #topbar .ctl label{font-size:11px;}
+body.touch.cfgopen #mixGroup > .ctl{ flex-direction:column; align-items:stretch; gap:4px; min-width:0; }
+body.touch.cfgopen #topbar .ctl label{font-size:10.5px;}
 body.touch.cfgopen #topbar select{width:100%;}
-/* full-width sliders; every value snaps to one right-hand column (tabular figures) */
-body.touch.cfgopen #topbar .vrow{gap:14px;}
+/* the instrument block and the reset button span the full width */
+body.touch.cfgopen #ctlInstr, body.touch.cfgopen #ctlReset{ grid-column:1 / -1; }
+/* sliders fill their cell; value snaps to the right (tabular figures) */
+body.touch.cfgopen #topbar .vrow{gap:8px;}
 body.touch.cfgopen #topbar .vrow input[type=range]{flex:1 1 auto; width:auto; min-width:0;}
 body.touch.cfgopen #topbar .vrow .val{
-  flex:0 0 auto; min-width:52px; font-size:13px; color:var(--text); font-variant-numeric:tabular-nums;
+  flex:0 0 auto; min-width:30px; font-size:12px; color:var(--text); font-variant-numeric:tabular-nums; text-align:right;
 }
-body.touch.cfgopen #ctlTempo .val::after{content:' BPM'; color:var(--muted); font-size:11px;}
-/* volumes group: header + collapse (collapsed by default — the console opens short, not as a mixing desk) */
-body.touch.cfgopen #mixHead{
-  display:flex; align-items:center; gap:8px; cursor:pointer;
-  padding:13px 2px; border-top:1px solid rgba(255,255,255,.06);
-  color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.6px; font-weight:700;
-}
-body.touch.cfgopen #mixHead .chev{margin-left:auto; transition:transform .2s;}
-body.mixopen #mixHead .chev{transform:rotate(180deg);}
-body.touch.cfgopen:not(.mixopen) #mixGroup > .ctl{display:none;}
-/* Drums/Bass/Harmony are parts OF the backing — indent them under "Backing volume" with a bracket rule */
-body.touch.cfgopen #mixGroup > .subvol{
-  border-top:none; padding-left:16px; margin-left:4px; border-left:2px solid rgba(255,255,255,.12);
-}
-body.touch.cfgopen #mixGroup > .subvol label{color:var(--muted); font-size:10px;}
+body.touch.cfgopen #ctlTempo .val::after{content:' BPM'; color:var(--muted); font-size:10px;}
+/* Drums/Bass/Harmony read as parts of the backing — a faint left rule */
+body.touch.cfgopen #mixGroup > .subvol{ padding-left:8px; border-left:2px solid rgba(255,255,255,.11); }
+body.touch.cfgopen #mixGroup > .subvol label{color:var(--muted);}
+/* reset-to-defaults button */
+#resetCfg{width:100%; border-color:var(--line); color:var(--muted);}
 /* config screen: an explicit "back to instrument" button beside Backing (hidden on the play screen) */
 #ctlCfgDone{display:none;}
 body.touch.cfgopen #ctlCfgDone{display:block;}
 #cfgDone{border-color:var(--accent); color:var(--accent); font-weight:600;}
-/* instrument picker: family select + instrument select */
+/* instrument picker: family select + instrument select side by side, bank under */
 .irow{display:flex; gap:6px;}
 .irow select{flex:1 1 0; min-width:0;}
 body.synthlead #instrSel{display:none;}                 /* Synth chosen → no instrument sub-list */
-body.touch.cfgopen .irow{flex-direction:column; gap:8px;}
-body.touch.cfgopen .irow select{width:100%;}
-/* per-style sound bank picker, tucked under the instrument */
 .brow{display:flex; align-items:center; gap:8px; margin-top:4px;}
 .brow label{color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.5px;}
-.brow select{flex:0 1 auto;}
+.brow select{flex:1 1 auto;}
 body.synthlead #ctlInstr .brow{display:none;}           /* Synth voice has no sample bank */
-body.touch.cfgopen .brow{margin-top:8px;}
-body.touch.cfgopen .brow select{flex:1 1 auto;}
+/* language picker on the start screen (replaces the old Settings sheet) */
+.langsel{min-height:44px;}
 body.tut #topsum{opacity:.25; transition:opacity .3s;}
 
 /* scale strip: dots = scale tones across the playable range, roots bigger; the ring marker hops with every key press */

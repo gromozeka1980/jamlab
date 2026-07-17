@@ -421,8 +421,6 @@ function updateTopsum(){ if(!topsumTxt) return;
 }
 function toggleCfg(){ document.body.classList.toggle('cfgopen'); }   // not persisted — always open on the instrument
 if(topsumEl) topsumEl.addEventListener('click',toggleCfg);
-const mixHeadEl=document.getElementById('mixHead');                  // phones: expand/collapse the volume faders
-if(mixHeadEl) mixHeadEl.addEventListener('click',()=>document.body.classList.toggle('mixopen'));
 const cfgDoneEl=document.getElementById('cfgDone');                  // config screen: explicit "back to the instrument"
 if(cfgDoneEl) cfgDoneEl.addEventListener('click',()=>document.body.classList.remove('cfgopen'));
 // the title is a toggle too — active exactly when the collapsed-config chip is (touch layouts)
@@ -949,9 +947,22 @@ function applyPrefsToControls(){
   vizSel.value=settings.viz?'on':'off'; gyroSel.value=settings.gyro;
   colorSel.value=settings.jazzColor; landSel.value=settings.jazzLand; phraseSel.value=settings.jazzPhrase; timingSel.value=settings.jazzTiming;
 }
-const settingsEl=document.getElementById("settings");
-document.getElementById("settingsBtn").addEventListener("click",()=>settingsEl.classList.remove("hidden"));
-document.getElementById("closeSettings").addEventListener("click",()=>settingsEl.classList.add("hidden"));
+// reset this style's settings to the defaults (global prefs + drop the style's saved instrument/bank), then rebuild
+function resetToDefaults(){
+  settings.tone=2600; settings.viz=true; settings.gyro='off';
+  settings.volSolo=0.8; settings.volAcc=0.55; settings.bgDrums=1; settings.bgBass=1; settings.bgChord=1;
+  saveSettings();
+  delete leadInstrMap[M.id]; try{ localStorage.setItem('jamlab.leadInstr',JSON.stringify(leadInstrMap)); }catch(e){}
+  delete leadBankMap[M.id]; try{ localStorage.setItem('jamlab.leadBank',JSON.stringify(leadBankMap)); }catch(e){}
+  applyPrefsToControls();
+  if(leadOut) leadOut.gain.value=settings.volSolo; if(leadFilter) leadFilter.frequency.value=settings.tone;
+  if(accBus) accBus.gain.value=settings.volAcc; if(busPerc) busPerc.gain.value=settings.bgDrums;
+  if(busBass) busBass.gain.value=settings.bgBass; if(busChord) busChord.gain.value=settings.bgChord;
+  setMode(M.id);           // tempo / variant / backing / instrument / bank → this style's defaults
+  tapHaptic('MEDIUM');
+}
+const resetCfgEl=document.getElementById('resetCfg');
+if(resetCfgEl) resetCfgEl.addEventListener('click',resetToDefaults);
 const helpEl=document.getElementById("help");
 function showHelp(withMain,withJazz){
   document.getElementById("helpMain").style.display=withMain?'block':'none';
@@ -962,7 +973,7 @@ document.getElementById("jazzHelpBtn").addEventListener("click",()=>showHelp(fal
 document.getElementById("closeHelp").addEventListener("click",()=>helpEl.classList.add("hidden"));
 accBtn.addEventListener("click",()=> accOn?stopBacking():startBacking());
 // close any open sheet with Escape or a tap on the backdrop
-const SHEETS=["settings","help","recov","paywall","labov","howit","tutov","kitchen"];
+const SHEETS=["help","recov","paywall","labov","howit","tutov","kitchen"];
 document.addEventListener("keydown",e=>{ if(e.key!=="Escape") return;
   let closed=false;
   SHEETS.forEach(id=>{ const el=document.getElementById(id); if(!el.classList.contains("hidden")){ el.classList.add("hidden"); closed=true; } });

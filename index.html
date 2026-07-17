@@ -58,7 +58,7 @@
   </div>
   <div class="obtns">
     <button id="helpBtn" data-i18n="btn.help">❔ Help</button>
-    <button id="settingsBtn" data-i18n="btn.settings">⚙ Settings</button>
+    <select id="langSel" aria-label="Language" class="langsel"><option value="en">English</option><option value="ru">Русский</option><option value="es">Español</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="fr">Français</option><option value="ja">日本語</option><option value="zh">中文</option></select>
   </div>
 </div>
 
@@ -73,15 +73,6 @@
   <div class="obtns"><button id="kitchenBack" data-i18n="kd.back">← Back</button></div>
 </div>
 
-<div id="settings" class="hidden" role="dialog" aria-modal="true">
-  <div class="sheet">
-    <h3 data-i18n="set.title">⚙ Settings</h3>
-    <div class="srow"><label data-i18n="set.lang">Language</label><select id="langSel"><option value="en">English</option><option value="ru">Русский</option><option value="es">Español</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="fr">Français</option><option value="ja">日本語</option><option value="zh">中文</option></select></div>
-    <div class="srow"><label data-i18n="set.tone">Tone (brightness)</label><input id="tone" type="range" min="600" max="6000" value="2600"><span class="val" id="toneVal">2600</span></div>
-    <div class="srow"><label data-i18n="set.viz">Visualizer</label><select id="vizSel"><option value="on" data-i18n="opt.on">On</option><option value="off" data-i18n="opt.off">Off</option></select></div>
-    <button id="closeSettings" data-i18n="btn.done">Done</button>
-  </div>
-</div>
 
 <div id="help" class="hidden" role="dialog" aria-modal="true">
   <div class="sheet">
@@ -221,6 +212,9 @@
     <div class="vrow"><input id="bpm" type="range" min="40" max="160" value="85"><span class="val" id="bpmVal">85</span></div>
   </div>
   <div class="ctl" id="ctlGyro"><label data-i18n="ctl.gyro">Tilt</label><select id="gyroSel"><option value="off" data-i18n="opt.off">Off</option><option value="vibrato" data-i18n="gyro.vibrato">Vibrato</option><option value="volume" data-i18n="gyro.volume">Volume</option><option value="tone" data-i18n="gyro.tone">Brightness</option></select></div>
+  <div class="ctl" id="ctlTone"><label data-i18n="set.tone">Brightness</label>
+    <div class="vrow"><input id="tone" type="range" min="600" max="6000" value="2600"><span class="val" id="toneVal">2600</span></div></div>
+  <div class="ctl" id="ctlViz"><label data-i18n="set.viz">Visualizer</label><select id="vizSel"><option value="on" data-i18n="opt.on">On</option><option value="off" data-i18n="opt.off">Off</option></select></div>
   <div class="ctl" id="ctlJazzHelp"><button id="jazzHelpBtn" class="jhelp" data-i18n="btn.jazzHelp">About Jazz</button></div>
   <div class="ctl" id="ctlPerc"><label data-i18n="ctl.perc">Percussion</label><select id="percSel"><option value="taiko" data-i18n="perc.taiko">Taiko</option><option value="darbuka" data-i18n="perc.darbuka">Darbuka</option><option value="shaker" data-i18n="perc.shaker">Shaker</option><option value="" data-i18n="perc.none">None</option></select></div>
   <div class="ctl" id="ctlLab"><button id="labBtn" class="jhelp" data-i18n="btn.lab">⚗ Scale builder</button></div>
@@ -234,8 +228,7 @@
   <div class="ctl" id="ctlLand"><label data-i18n="ctl.land">Approach</label><select id="landSel"><option value="line" data-i18n="land.line">Lead the line</option><option value="root" data-i18n="land.root">To the root</option></select></div>
   <div class="ctl" id="ctlPhrase"><label data-i18n="ctl.phrase">Phrasing</label><select id="phraseSel"><option value="free" data-i18n="phrase.free">Free</option><option value="inside" data-i18n="phrase.inside">Inside</option><option value="bebop" data-i18n="phrase.bebop">Bebop</option><option value="outside" data-i18n="phrase.outside">Outside</option></select></div>
   <div class="ctl" id="ctlTiming"><label data-i18n="ctl.timing">Timing</label><select id="timingSel"><option value="free" data-i18n="timing.off">Off</option><option value="8">1/8</option><option value="16">1/16</option><option value="32">1/32</option></select></div>
-  <!-- volume faders: grouped + collapsed on phones (most people never touch them); inline on desktop -->
-  <div id="mixHead" role="button"><span data-i18n="cfg.mix">Volumes</span><span class="chev">▾</span></div>
+  <!-- volume faders: always shown; components (drums/bass/harmony) nest under Backing volume -->
   <div id="mixGroup">
     <div class="ctl vol"><label data-i18n="set.volSolo">Lead volume</label>
       <div class="vrow"><input id="volSolo" type="range" min="0" max="100" value="80"><span class="val" id="volSoloVal">80%</span></div></div>
@@ -249,6 +242,7 @@
     <div class="ctl vol subvol"><label data-i18n="set.bgChord">Harmony</label>
       <div class="vrow"><input id="bgChord" type="range" min="0" max="100" value="100"><span class="val" id="bgChordVal">100%</span></div></div>
   </div>
+  <div class="ctl" id="ctlReset"><button id="resetCfg" data-i18n="btn.reset">↺ Reset to defaults</button></div>
 </div>
 
 <div class="display">
