@@ -11,6 +11,7 @@ import { viz, cssRgb } from './viz.js';
 import { refreshRecLabel } from './rec.js';
 import { isPro, modeLocked, showPaywall, onProChange, initBilling, KITCHEN } from './paywall.js';
 import { loadSampler, sampleAt, samplerReady, instrMeta, sampleRange, GM, FAMILIES, PICK_FAMILIES, familyOf, familyItems, displayName, BANKS, setBank, currentBank } from './sampler.js';
+import { loadDrums, drumsReady, playDrum } from './drums.js';
 import { initTutorial } from './tutorial.js';
 import { track, trackOnce, sinceLaunch } from './analytics.js';
 
@@ -558,11 +559,13 @@ function bBass(rootSemi,time,off){                       // rounder bass with bo
   const g=actx.createGain(); g.gain.setValueAtTime(0,time);g.gain.linearRampToValueAtTime(.55,time+0.012);g.gain.exponentialRampToValueAtTime(.001,time+dur);
   o.connect(g);o2.connect(o2g);o2g.connect(g);g.connect(lp);lp.connect(busBass);
   o.start(time);o2.start(time);o.stop(time+dur+0.05);o2.stop(time+dur+0.05); }
-function kick(time,vel){vizBeat(time,0.9*(vel||1));const o=actx.createOscillator();o.type="sine";const g=accGain(0,busPerc);o.frequency.setValueAtTime(150,time);o.frequency.exponentialRampToValueAtTime(48,time+0.12);g.gain.setValueAtTime(.9*(vel||1),time);g.gain.exponentialRampToValueAtTime(.001,time+0.18);o.connect(g);o.start(time);o.stop(time+0.2);}
-function snare(time,vel){ vel=vel||1;   // tonal body + bright snap = a real backbeat snare
+// live-kit prototype (blues only for now): a sampled kit replaces the synth hits once loaded
+function liveDrums(){ return M.id==='blues' && drumsReady(); }
+function kick(time,vel){vizBeat(time,0.9*(vel||1)); if(liveDrums()&&playDrum('kick',time,vel||1,busPerc))return; const o=actx.createOscillator();o.type="sine";const g=accGain(0,busPerc);o.frequency.setValueAtTime(150,time);o.frequency.exponentialRampToValueAtTime(48,time+0.12);g.gain.setValueAtTime(.9*(vel||1),time);g.gain.exponentialRampToValueAtTime(.001,time+0.18);o.connect(g);o.start(time);o.stop(time+0.2);}
+function snare(time,vel){ vel=vel||1; if(liveDrums()&&playDrum('snare',time,vel,busPerc))return;   // tonal body + bright snap = a real backbeat snare
   const n=actx.createBufferSource();n.buffer=noiseBuf;const f=actx.createBiquadFilter();f.type="highpass";f.frequency.value=1700;const g=accGain(0,busPerc);g.gain.setValueAtTime(.5*vel,time);g.gain.exponentialRampToValueAtTime(.001,time+0.15);n.connect(f);f.connect(g);n.start(time);n.stop(time+0.17);
   const o=actx.createOscillator();o.type="triangle";o.frequency.setValueAtTime(190,time);o.frequency.exponentialRampToValueAtTime(140,time+0.08);const og=accGain(0,busPerc);og.gain.setValueAtTime(.3*vel,time);og.gain.exponentialRampToValueAtTime(.001,time+0.12);o.connect(og);o.start(time);o.stop(time+0.14);}
-function hat(time,open,vel){const n=actx.createBufferSource();n.buffer=noiseBuf;const f=actx.createBiquadFilter();f.type="highpass";f.frequency.value=7000;const g=accGain(0,busPerc);const dur=open?0.12:0.04;g.gain.setValueAtTime(.16*(vel||1),time);g.gain.exponentialRampToValueAtTime(.001,time+dur);n.connect(f);f.connect(g);n.start(time);n.stop(time+dur+0.02);}
+function hat(time,open,vel){ if(liveDrums()&&playDrum(open?'hatOpen':'hatClosed',time,vel==null?1:vel,busPerc))return; const n=actx.createBufferSource();n.buffer=noiseBuf;const f=actx.createBiquadFilter();f.type="highpass";f.frequency.value=7000;const g=accGain(0,busPerc);const dur=open?0.12:0.04;g.gain.setValueAtTime(.16*(vel||1),time);g.gain.exponentialRampToValueAtTime(.001,time+dur);n.connect(f);f.connect(g);n.start(time);n.stop(time+dur+0.02);}
 function drumPat(style,step,t0){
   if(style==='shuffle'){ hat(t0,step%2); if(step===0||step===4)kick(t0); if(step===2||step===6)snare(t0); }
   else if(style==='rock'){ hat(t0,false,0.7); if(step===0||step===4)kick(t0); if(step===3)kick(t0,0.5); if(step===2||step===6)snare(t0); }
@@ -800,6 +803,7 @@ function jazzScheduler(){ const beat=60/settings.bpm, np=JAZZ_PROG.length;
   } }
 
 function startBacking(){ initAudio(); resumeAudio(); accOn=true;
+  if(M.id==='blues') loadDrums().catch(()=>{});   // fetch the sampled kit; synth hits play until it's ready
   if(M.back==='jazz'){ eighth=0; nextNoteTime=actx.currentTime+0.1; applyJazzChord(JAZZ_PROG[0]); startTicks(jazzScheduler,25); }
   else if(M.back==='blues'){ eighth=0; nextNoteTime=actx.currentTime+0.1; startTicks(bluesScheduler,25); }
   else if(M.back==='synth'){ eighth=0; nextNoteTime=actx.currentTime+0.1; startTicks(synthScheduler,25); }
