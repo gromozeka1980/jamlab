@@ -36,6 +36,8 @@ export const FAMILIES=[
   {key:'synthfx'},{key:'world'},{key:'perc'},{key:'fx'},
 ];
 export function familyOf(slug){ const p=GM.indexOf(slug); return p<0?-1:Math.min(15,p>>3); }
+// families you can actually play a melody on — excludes Percussion (14) and Sound Effects (15)
+export const PICK_FAMILIES=FAMILIES.map((f,i)=>i).filter(i=>i<14);
 // instruments of a family, sorted alphabetically by display name
 export function familyItems(fi){ const lo=fi*8, arr=[];
   for(let p=lo;p<lo+8 && p<128;p++) arr.push(GM[p]);
@@ -83,11 +85,9 @@ export function instrMeta(slug){ const fi=familyOf(slug);
 
 // ---- sound banks ----
 export const BANKS=[{id:'fluid',name:'FluidR3'},{id:'gu',name:'GeneralUser GS'}];
-let bank='fluid';
-try{ const b=localStorage.getItem('jamlab.bank'); if(b && BANKS.some(x=>x.id===b)) bank=b; }catch(e){}
+let bank='fluid';                                    // active bank; chosen per style by app.js (leadBankMap)
 export function currentBank(){ return bank; }
-export function setBank(id){ if(id!==bank && BANKS.some(b=>b.id===id)){ bank=id; current=null;
-  try{ localStorage.setItem('jamlab.bank',id); }catch(e){} } }
+export function setBank(id){ if(id!==bank && BANKS.some(b=>b.id===id)){ bank=id; current=null; } }
 
 const FLAT=['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];   // gleitz keys use flats (Bb, not A#)
 function midiName(m){ return FLAT[((m%12)+12)%12]+(Math.floor(m/12)-1); }

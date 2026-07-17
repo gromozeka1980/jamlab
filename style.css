@@ -123,6 +123,13 @@ body.touch.cfgopen #ctlCfgDone{display:block;}
 body.synthlead #instrSel{display:none;}                 /* Synth chosen → no instrument sub-list */
 body.touch.cfgopen .irow{flex-direction:column; gap:8px;}
 body.touch.cfgopen .irow select{width:100%;}
+/* per-style sound bank picker, tucked under the instrument */
+.brow{display:flex; align-items:center; gap:8px; margin-top:4px;}
+.brow label{color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.5px;}
+.brow select{flex:0 1 auto;}
+body.synthlead #ctlInstr .brow{display:none;}           /* Synth voice has no sample bank */
+body.touch.cfgopen .brow{margin-top:8px;}
+body.touch.cfgopen .brow select{flex:1 1 auto;}
 body.tut #topsum{opacity:.25; transition:opacity .3s;}
 
 /* scale strip: dots = scale tones across the playable range, roots bigger; the ring marker hops with every key press */
