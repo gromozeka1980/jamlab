@@ -78,6 +78,7 @@
     <div class="srow"><label data-i18n="set.lang">Language</label><select id="langSel"><option value="en">English</option><option value="ru">Русский</option><option value="es">Español</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="fr">Français</option><option value="ja">日本語</option><option value="zh">中文</option></select></div>
     <div class="srow"><label data-i18n="set.tone">Tone (brightness)</label><input id="tone" type="range" min="600" max="6000" value="2600"><span class="val" id="toneVal">2600</span></div>
     <div class="srow"><label data-i18n="set.viz">Visualizer</label><select id="vizSel"><option value="on" data-i18n="opt.on">On</option><option value="off" data-i18n="opt.off">Off</option></select></div>
+    <div class="srow"><label data-i18n="set.bank">Sound bank</label><select id="bankSel"></select></div>
     <button id="closeSettings" data-i18n="btn.done">Done</button>
   </div>
 </div>
@@ -223,7 +224,8 @@
   <div class="ctl" id="ctlJazzHelp"><button id="jazzHelpBtn" class="jhelp" data-i18n="btn.jazzHelp">About Jazz</button></div>
   <div class="ctl" id="ctlPerc"><label data-i18n="ctl.perc">Percussion</label><select id="percSel"><option value="taiko" data-i18n="perc.taiko">Taiko</option><option value="darbuka" data-i18n="perc.darbuka">Darbuka</option><option value="shaker" data-i18n="perc.shaker">Shaker</option><option value="" data-i18n="perc.none">None</option></select></div>
   <div class="ctl" id="ctlLab"><button id="labBtn" class="jhelp" data-i18n="btn.lab">⚗ Scale builder</button></div>
-  <div class="ctl" id="ctlInstr"><label data-i18n="ctl.instr">Instrument</label><select id="instrSel"></select></div>
+  <div class="ctl" id="ctlInstr"><label data-i18n="ctl.instr">Instrument</label>
+    <div class="irow"><select id="instrGroup"></select><select id="instrSel"></select></div></div>
   <div class="ctl" id="ctlBack"><label data-i18n="ctl.back">Backing</label><select id="backSel"></select></div>
   <div class="ctl" id="ctlHarm"><label data-i18n="ctl.harm">Harmony</label><select id="harmSel"></select></div>
   <div class="ctl" id="ctlRhythm"><label data-i18n="ctl.rhythm">Rhythm</label><select id="rhythmSel"></select></div>
