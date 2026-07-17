@@ -217,19 +217,8 @@
 <div class="controls" id="topbar">
   <div class="ctl"><label data-i18n="ctl.root">Root</label><select id="rootSel"></select></div>
   <div class="ctl" id="ctlTempo"><label data-i18n="ctl.tempo">Tempo</label>
-    <div style="display:flex; align-items:center; gap:6px"><input id="bpm" type="range" min="40" max="160" value="85" style="width:90px"><span class="val" id="bpmVal" style="min-width:22px; font-size:11px; color:var(--muted)">85</span></div>
+    <div class="vrow"><input id="bpm" type="range" min="40" max="160" value="85"><span class="val" id="bpmVal">85</span></div>
   </div>
-  <!-- volumes live here now (were in ⚙ Settings) — balance lead vs backing without leaving the instrument -->
-  <div class="ctl vol"><label data-i18n="set.volSolo">Lead volume</label>
-    <div class="vrow"><input id="volSolo" type="range" min="0" max="100" value="80"><span class="val" id="volSoloVal">80%</span></div></div>
-  <div class="ctl vol"><label data-i18n="set.volAcc">Backing volume</label>
-    <div class="vrow"><input id="volAcc" type="range" min="0" max="100" value="55"><span class="val" id="volAccVal">55%</span></div></div>
-  <div class="ctl vol"><label data-i18n="set.bgDrums">Drums</label>
-    <div class="vrow"><input id="bgDrums" type="range" min="0" max="150" value="100"><span class="val" id="bgDrumsVal">100%</span></div></div>
-  <div class="ctl vol"><label data-i18n="set.bgBass">Bass</label>
-    <div class="vrow"><input id="bgBass" type="range" min="0" max="150" value="100"><span class="val" id="bgBassVal">100%</span></div></div>
-  <div class="ctl vol"><label data-i18n="set.bgChord">Harmony</label>
-    <div class="vrow"><input id="bgChord" type="range" min="0" max="150" value="100"><span class="val" id="bgChordVal">100%</span></div></div>
   <div class="ctl" id="ctlGyro"><label data-i18n="ctl.gyro">Tilt</label><select id="gyroSel"><option value="off" data-i18n="opt.off">Off</option><option value="vibrato" data-i18n="gyro.vibrato">Vibrato</option><option value="volume" data-i18n="gyro.volume">Volume</option><option value="tone" data-i18n="gyro.tone">Brightness</option></select></div>
   <div class="ctl" id="ctlJazzHelp"><button id="jazzHelpBtn" class="jhelp" data-i18n="btn.jazzHelp">About Jazz</button></div>
   <div class="ctl" id="ctlPerc"><label data-i18n="ctl.perc">Percussion</label><select id="percSel"><option value="taiko" data-i18n="perc.taiko">Taiko</option><option value="darbuka" data-i18n="perc.darbuka">Darbuka</option><option value="shaker" data-i18n="perc.shaker">Shaker</option><option value="" data-i18n="perc.none">None</option></select></div>
@@ -242,6 +231,20 @@
   <div class="ctl" id="ctlLand"><label data-i18n="ctl.land">Approach</label><select id="landSel"><option value="line" data-i18n="land.line">Lead the line</option><option value="root" data-i18n="land.root">To the root</option></select></div>
   <div class="ctl" id="ctlPhrase"><label data-i18n="ctl.phrase">Phrasing</label><select id="phraseSel"><option value="free" data-i18n="phrase.free">Free</option><option value="inside" data-i18n="phrase.inside">Inside</option><option value="bebop" data-i18n="phrase.bebop">Bebop</option><option value="outside" data-i18n="phrase.outside">Outside</option></select></div>
   <div class="ctl" id="ctlTiming"><label data-i18n="ctl.timing">Timing</label><select id="timingSel"><option value="free" data-i18n="timing.off">Off</option><option value="8">1/8</option><option value="16">1/16</option><option value="32">1/32</option></select></div>
+  <!-- volume faders: grouped + collapsed on phones (most people never touch them); inline on desktop -->
+  <div id="mixHead" role="button"><span data-i18n="cfg.mix">Volumes</span><span class="chev">▾</span></div>
+  <div id="mixGroup">
+    <div class="ctl vol"><label data-i18n="set.volSolo">Lead volume</label>
+      <div class="vrow"><input id="volSolo" type="range" min="0" max="100" value="80"><span class="val" id="volSoloVal">80%</span></div></div>
+    <div class="ctl vol"><label data-i18n="set.volAcc">Backing volume</label>
+      <div class="vrow"><input id="volAcc" type="range" min="0" max="100" value="55"><span class="val" id="volAccVal">55%</span></div></div>
+    <div class="ctl vol"><label data-i18n="set.bgDrums">Drums</label>
+      <div class="vrow"><input id="bgDrums" type="range" min="0" max="150" value="100"><span class="val" id="bgDrumsVal">100%</span></div></div>
+    <div class="ctl vol"><label data-i18n="set.bgBass">Bass</label>
+      <div class="vrow"><input id="bgBass" type="range" min="0" max="150" value="100"><span class="val" id="bgBassVal">100%</span></div></div>
+    <div class="ctl vol"><label data-i18n="set.bgChord">Harmony</label>
+      <div class="vrow"><input id="bgChord" type="range" min="0" max="150" value="100"><span class="val" id="bgChordVal">100%</span></div></div>
+  </div>
 </div>
 
 <div class="display">

@@ -408,6 +408,8 @@ function updateTopsum(){ if(!topsumTxt) return;
 }
 function toggleCfg(){ document.body.classList.toggle('cfgopen'); }   // not persisted — always open on the instrument
 if(topsumEl) topsumEl.addEventListener('click',toggleCfg);
+const mixHeadEl=document.getElementById('mixHead');                  // phones: expand/collapse the volume faders
+if(mixHeadEl) mixHeadEl.addEventListener('click',()=>document.body.classList.toggle('mixopen'));
 // the title is a toggle too — active exactly when the collapsed-config chip is (touch layouts)
 document.querySelector('header h1').addEventListener('click',()=>{
   if(topsumEl && getComputedStyle(topsumEl).display!=='none') toggleCfg(); });
