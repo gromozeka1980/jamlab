@@ -46,7 +46,10 @@ const activeVoices = new Map();
 let kbBend=0;
 let liteNote=false;                                // set around glissando noteOn: build a lightweight voice
 let curLeadInstr='';                               // '' = the mode's synth voice; else a sampled GM instrument id (any style)
-const MODE_INSTR_DEFAULT={ koto:'koto', blues:'trumpet' };   // default sampled lead per style (user can override → saved)
+const MODE_INSTR_DEFAULT={   // default sampled lead per style (user can override → saved). '' / absent = the mode's own synth voice
+  blues:'harmonica', light:'harp', koto:'koto', vostok:'sitar',
+  lofi:'epiano', dream:'vibes', dorian:'nylon', jazz:'sax',
+};
 
 function vizBeat(time,s){ if(settings.viz && actx) setTimeout(()=>viz.pulse(s), Math.max(0,(time-actx.currentTime)*1000)); }
 
@@ -410,6 +413,8 @@ function toggleCfg(){ document.body.classList.toggle('cfgopen'); }   // not pers
 if(topsumEl) topsumEl.addEventListener('click',toggleCfg);
 const mixHeadEl=document.getElementById('mixHead');                  // phones: expand/collapse the volume faders
 if(mixHeadEl) mixHeadEl.addEventListener('click',()=>document.body.classList.toggle('mixopen'));
+const cfgDoneEl=document.getElementById('cfgDone');                  // config screen: explicit "back to the instrument"
+if(cfgDoneEl) cfgDoneEl.addEventListener('click',()=>document.body.classList.remove('cfgopen'));
 // the title is a toggle too — active exactly when the collapsed-config chip is (touch layouts)
 document.querySelector('header h1').addEventListener('click',()=>{
   if(topsumEl && getComputedStyle(topsumEl).display!=='none') toggleCfg(); });
@@ -911,6 +916,8 @@ const gyroSel=document.getElementById("gyroSel"); gyroSel.addEventListener("chan
 if(!TOUCH) document.getElementById("ctlGyro").style.display="none";   // tilt lives in the top bar; pointless on desktop
 function applyPrefsToControls(){
   tone.value=settings.tone;
+  // component volumes are now 0–100% (were 0–150%); clamp any value saved under the old range
+  settings.bgDrums=Math.min(1,settings.bgDrums); settings.bgBass=Math.min(1,settings.bgBass); settings.bgChord=Math.min(1,settings.bgChord);
   volSolo.value=Math.round(settings.volSolo*100); volAcc.value=Math.round(settings.volAcc*100);
   bgDrums.value=Math.round(settings.bgDrums*100); bgBass.value=Math.round(settings.bgBass*100); bgChord.value=Math.round(settings.bgChord*100);
   setVal('toneVal',Math.round(settings.tone)); setVal('volSoloVal',Math.round(settings.volSolo*100)+'%'); setVal('volAccVal',Math.round(settings.volAcc*100)+'%');
@@ -982,6 +989,9 @@ const percSel=document.getElementById('percSel');
 percSel.addEventListener('change',()=>{ if(M.lab){ M.perc=percSel.value; try{ localStorage.setItem('jamlab.labPerc',percSel.value); }catch(e){} } });
 
 /* ---- lead instrument: any style can swap its synth voice for a sampled GM instrument (per-mode choice) ---- */
+// one-time reset so the refreshed per-style defaults (harp for Bright, harmonica for Blues, …) actually show
+// for early testers whose saved picks predate them; future manual choices persist as before
+try{ if(localStorage.getItem('jamlab.leadInstrV')!=='2'){ localStorage.removeItem('jamlab.leadInstr'); localStorage.setItem('jamlab.leadInstrV','2'); } }catch(e){}
 let leadInstrMap={}; try{ leadInstrMap=JSON.parse(localStorage.getItem('jamlab.leadInstr')||'{}')||{}; }catch(e){}
 const instrSel=document.getElementById('instrSel');
 function buildInstrOptions(){ if(instrSel.options.length===SAMPLER_INSTRUMENTS.length+1) return;
@@ -1170,14 +1180,19 @@ function closeTopSheet(){
   if(sheet.id==='recov') document.getElementById('recVid').pause();
   sheet.classList.add('hidden'); return true;
 }
+// the expanded console counts as a "screen": Back closes it → instrument, before it reaches the picker
+function closeCfgIfOpen(){ if(document.body.classList.contains('cfgopen')){ toggleCfg(); return true; } return false; }
 if(NPLUG && NPLUG.App){
   NPLUG.App.addListener('backButton', ()=>{
     if(closeTopSheet()) return;
+    if(closeCfgIfOpen()) return;
     if(overlay.style.display==='none'){ goHome(); return; }
     NPLUG.App.exitApp();
   });
 }
-window.addEventListener('popstate',()=>{ if(!NATIVE && overlay.style.display==='none'){ closeTopSheet(); goHome(); } });
+window.addEventListener('popstate',()=>{ if(NATIVE || overlay.style.display!=='none') return;
+  if(closeTopSheet() || closeCfgIfOpen()){ history.pushState({jam:1},''); return; }   // stay in the app; consume the Back
+  goHome(); });
 
 // initial build (under the overlay)
 applyPrefsToControls();
