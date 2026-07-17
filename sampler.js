@@ -35,6 +35,26 @@ export const SAMPLER_INSTRUMENTS=[
 const FLAT=['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];   // gleitz keys use flats (Bb, not A#)
 function midiName(m){ return FLAT[((m%12)+12)%12]+(Math.floor(m/12)-1); }
 
+// ---- Timbre facts the MIDI/GM standard and these mp3 packs don't carry — hand-authored ----
+// bend    : realistic pitch-bend range in semitones. 0 = struck / plucked / keyboard: the pitch
+//           can't be pulled, so the engine won't glide it (a "bending" piano sounds fake).
+// sustain : true  = the tone holds while the key is down (winds, bowed strings, organ, voice).
+//                   The mp3 is a short one-shot, so the engine layers a quiet synth tail to hold it.
+//           false = natural decay (piano, plucked, mallets): key length doesn't matter, no tail.
+export const INSTR_META={
+  piano:{bend:0,sustain:false},  epiano:{bend:0,sustain:false},  harpsi:{bend:0,sustain:false},
+  celesta:{bend:0,sustain:false},musicbox:{bend:0,sustain:false},vibes:{bend:0,sustain:false},
+  marimba:{bend:0,sustain:false},glock:{bend:0,sustain:false},   kalimba:{bend:0,sustain:false},
+  harp:{bend:0,sustain:false},
+  organ:{bend:0,sustain:true},   accordion:{bend:0,sustain:true},
+  nylon:{bend:2,sustain:false},  steel:{bend:2,sustain:false},
+  sitar:{bend:4,sustain:false},  koto:{bend:2,sustain:false},    shamisen:{bend:2,sustain:false},
+  strings:{bend:2,sustain:true}, choir:{bend:2,sustain:true},
+  flute:{bend:2,sustain:true},   panflute:{bend:1,sustain:true},  shaku:{bend:3,sustain:true},
+  clarinet:{bend:2,sustain:true},sax:{bend:3,sustain:true},       trumpet:{bend:2,sustain:true},
+};
+export function instrMeta(id){ return INSTR_META[id] || {bend:2,sustain:false}; }
+
 const cache={};             // slug → { buffers: Map<midi,AudioBuffer>, promise }
 let current=null;           // the ready instrument's buffer map
 
@@ -47,6 +67,11 @@ export function sampleBuffer(midi){ if(!current) return null;
 }
 export function sampleBaseMidi(midi){ if(current&&current.has(midi)) return midi;
   let best=midi,bd=99; if(current) for(const k of current.keys()){ const d=Math.abs(k-midi); if(d<bd){bd=d;best=k;} } return best;
+}
+// recorded pitch range of the loaded instrument (MIDI numbers). Notes far outside it are heavy
+// pitch-shifts ("chipmunk"); the engine plays the synth voice there instead. null until loaded.
+export function sampleRange(){ if(!current||!current.size) return null;
+  let lo=999,hi=-1; for(const k of current.keys()){ if(k<lo)lo=k; if(k>hi)hi=k; } return {lo,hi};
 }
 
 // load an instrument by id; decodes notes across lo..hi (the playable range). Resolves when ready.

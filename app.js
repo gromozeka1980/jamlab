@@ -10,7 +10,7 @@ import { actx, comp, leadBus, leadFilter, leadOut, accBus, busPerc, busBass, bus
 import { viz, cssRgb } from './viz.js';
 import { refreshRecLabel } from './rec.js';
 import { isPro, modeLocked, showPaywall, onProChange, initBilling, KITCHEN } from './paywall.js';
-import { loadSampler, sampleBuffer, sampleBaseMidi, samplerReady, SAMPLER_INSTRUMENTS } from './sampler.js';
+import { loadSampler, sampleBuffer, sampleBaseMidi, samplerReady, SAMPLER_INSTRUMENTS, instrMeta, sampleRange } from './sampler.js';
 import { initTutorial } from './tutorial.js';
 import { track, trackOnce, sinceLaunch } from './analytics.js';
 
@@ -129,9 +129,17 @@ function bendTargets(i){
 }
 
 /* ============ Voice (timbre depends on mode) ============ */
+// A sampled instrument caps how far its pitch bends (0 = piano/mallets don't bend at all);
+// the mode's own synth voice bends freely, so no cap there.
+function curBendCap(){ return (curLeadInstr && samplerReady()) ? instrMeta(curLeadInstr).bend : Infinity; }
+// Is this pitch within (a hair of) the loaded instrument's recorded range? Outside it, a heavy
+// pitch-shift sounds fake, so we play the synth voice instead.
+function sampleInRange(freq){ const rng=sampleRange(); if(!rng) return true;
+  const m=Math.round(freqToMidi(freq)); return m>=rng.lo-2 && m<=rng.hi+2; }
 function makeVoice(freq,maxUp,maxDown,approach,when){
   const t0=when||actx.currentTime, g=actx.createGain();
   const v={g,baseFreq:freq,dragBend:0,maxUp:maxUp||0,maxDown:maxDown||0,freqNodes:[],stops:[]};
+  const bcap=curBendCap(); v.maxUp=Math.min(v.maxUp,bcap); v.maxDown=Math.min(v.maxDown,bcap);   // instrument can't bend past its physical limit
   const vib=actx.createOscillator(), vibG=actx.createGain();
   vib.frequency.value = (M.voice==='flute'?4.5:M.voice==='pad'?4.2:5.0);
   vibG.gain.value = (M.voice==='flute'?7:M.voice==='pad'?4:3.8);
@@ -153,8 +161,8 @@ function makeVoice(freq,maxUp,maxDown,approach,when){
     const nf=actx.createBiquadFilter(); nf.type='bandpass'; nf.frequency.value=bpFreq; nf.Q.value=Q;
     const ng=actx.createGain(); ng.gain.setValueAtTime(amp,t0); ng.gain.exponentialRampToValueAtTime(0.0006,t0+dur);
     nz.connect(nf); nf.connect(g); nz.start(t0); nz.stop(t0+dur+0.02); v.stops.push(nz); };
-  if(curLeadInstr && samplerReady()){   // lead swapped for a sampled GM instrument: decoded note, pitch-shifted; bend via playbackRate (shimmed into freqNodes)
-    const midi=Math.round(freqToMidi(freq)), buf=sampleBuffer(midi);
+  if(curLeadInstr && samplerReady() && sampleInRange(freq)){   // lead swapped for a sampled GM instrument: decoded note, pitch-shifted; bend via playbackRate (shimmed into freqNodes)
+    const midi=Math.round(freqToMidi(freq)), buf=sampleBuffer(midi), meta=instrMeta(curLeadInstr);
     if(buf){
       const baseRate=Math.pow(2,(midi-sampleBaseMidi(midi))/12);
       const src=actx.createBufferSource(); src.buffer=buf; src.playbackRate.value=baseRate;
@@ -162,6 +170,16 @@ function makeVoice(freq,maxUp,maxDown,approach,when){
       src.connect(g); src.start(t0); v.stops.push(src);
       v.freqNodes.push({osc:{frequency:src.playbackRate}, mult:baseRate/freq});   // bend: applyBend sets playbackRate = baseRate * 2^(semis/12)
       g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.85,t0+0.008);  // the sample carries its own decay; just avoid a click
+      if(meta.sustain){                                         // winds/bowed/organ: the one-shot mp3 dies in ~3s — hold it with a quiet synth tail while the key is down
+        const s1=actx.createOscillator(); s1.type='sine';     s1.frequency.value=freq;
+        const s2=actx.createOscillator(); s2.type='triangle'; s2.frequency.value=freq*2;
+        const tg=actx.createGain(); tg.gain.setValueAtTime(0,t0); tg.gain.linearRampToValueAtTime(0.16,t0+0.55);  // fades in under the live sample, carries on after it fades
+        vibG.connect(s1.detune); vibG.connect(s2.detune);
+        const s2g=actx.createGain(); s2g.gain.value=0.3;
+        s1.connect(tg); s2.connect(s2g); s2g.connect(tg); tg.connect(g);
+        s1.start(t0); s2.start(t0);
+        v.freqNodes.push({osc:s1,mult:1},{osc:s2,mult:2}); v.stops.push(s1,s2);   // tail tracks bend + vibrato with the sample
+      }
     } else {                                                    // instrument not loaded yet → a soft placeholder tone
       addOsc('sine',1,0,1); g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.2,t0+0.01); g.gain.exponentialRampToValueAtTime(.05,t0+0.6);
     }
@@ -397,8 +415,8 @@ function refreshKeyLabels(){ const ct=curChord; for(const k of noteKeys){
     if(k.el.classList.contains('active')) continue;   // freeze a held key: its label/arrows describe the sounding voice
     const idx=clampIndex(currentIndex+k.off), lab=pitchLabel(idx);
     k.lead.textContent = Math.abs(k.off)>=3 ? String(lab.deg) : lab.deg+" ("+lab.note+")";   // narrow top-row keys: degree only, no (note)
-    const bt=bendTargets(idx);                                                  // per-key bend directions
-    k.el.classList.toggle('canup',!!bt.up); k.el.classList.toggle('candn',!!bt.down);
+    const bt=bendTargets(idx), canBend=curBendCap()>0;                          // per-key bend directions (hidden on non-bending instruments: piano/mallets/harp)
+    k.el.classList.toggle('canup',!!bt.up && canBend); k.el.classList.toggle('candn',!!bt.down && canBend);
     let role=0;                                  // current-chord tone: 1/3/5/7
     if(ct){ const pc=((indexToMidi(idx)%12)+12)%12;
       if(pc===ct.r) role=1; else if(pc===(ct.r+ct.ivs[1])%12) role=3;
@@ -837,7 +855,7 @@ function setMode(id){ const was=accOn; if(actx) stopBacking();
     // per-mode lead voice: the user's saved pick (incl. an explicit 'Original' = '') wins; otherwise the mode's default
     curLeadInstr = Object.prototype.hasOwnProperty.call(leadInstrMap,M.id) ? leadInstrMap[M.id] : (MODE_INSTR_DEFAULT[M.id]||'');
     instrSel.value=curLeadInstr;
-    if(curLeadInstr){ initAudio(); resumeAudio(); loadSampler(curLeadInstr,36,88).catch(()=>{}); } }
+    if(curLeadInstr){ initAudio(); resumeAudio(); loadSampler(curLeadInstr,36,88).then(refreshKeyLabels).catch(()=>{}); } }
   else curLeadInstr='';
   if(isBlues){ settings.harmony='major'; settings.rhythm='shuffle'; harmSel.value='major'; rhythmSel.value='shuffle'; }
   else { settings.backing=M.defBacking; buildBackingOptions(); }
@@ -970,10 +988,11 @@ function buildInstrOptions(){ if(instrSel.options.length===SAMPLER_INSTRUMENTS.l
 function applyLeadInstr(id){                                // '' → native synth; else load & use the sampled instrument
   curLeadInstr=id; instrSel.value=id;
   leadInstrMap[M.id]=id; try{ localStorage.setItem('jamlab.leadInstr',JSON.stringify(leadInstrMap)); }catch(e){}
+  refreshKeyLabels();                                      // show/hide bend arrows for the new instrument's bend limit (0 = piano/mallets: none)
   if(!id) return;
   initAudio(); resumeAudio();
   const hintEl=document.getElementById('hint'); hintEl.textContent=t('instr.loading');
-  loadSampler(id, 36, 88).then(()=>{ setHint(); }).catch(()=>{ hintEl.textContent=t('instr.failed'); });
+  loadSampler(id, 36, 88).then(()=>{ setHint(); refreshKeyLabels(); }).catch(()=>{ hintEl.textContent=t('instr.failed'); });
 }
 instrSel.addEventListener('change',()=>applyLeadInstr(instrSel.value));
 const labov=document.getElementById('labov'), labPcs=document.getElementById('labPcs'), labPcsDn=document.getElementById('labPcsDn'),
