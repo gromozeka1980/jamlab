@@ -13,10 +13,14 @@ import { isPro, modeLocked, showPaywall, onProChange, initBilling, KITCHEN } fro
 import { loadSampler, sampleAt, samplerReady, instrMeta, sampleRange, GM, FAMILIES, PICK_FAMILIES, familyOf, familyItems, displayName, BANKS, setBank, currentBank } from './sampler.js';
 import { loadDrums, drumsReady, playDrum } from './drums.js';
 import { loadBass, bassReady, playBassNote } from './bass.js';
+import { loadArp, arpReady, playArpNote } from './arp.js';
 // per-style bass sound: upright for acoustic styles, synth-bass for synthwave, electric for lo-fi
 const BASS_SLUG={ blues:'acoustic_bass', jazz:'acoustic_bass', synth:'synth_bass_1', lofi:'electric_bass_finger',
   koto:'acoustic_bass', vostok:'acoustic_bass', light:'acoustic_bass', lab:'acoustic_bass', dorian:'acoustic_bass' };
 function liveBass(){ return bassReady(); }
+// per-style arp/ostinato pluck: koto strings, santur-ish dulcimer for East, harp for Bright, nylon for Lab, celesta for Dream
+const ARP_SLUG={ koto:'koto', vostok:'dulcimer', light:'orchestral_harp', lab:'acoustic_guitar_nylon', dream:'celesta' };
+function liveArp(){ return arpReady(); }
 import { initTutorial } from './tutorial.js';
 import { track, trackOnce, sinceLaunch } from './analytics.js';
 
@@ -602,6 +606,7 @@ function curBack(){ return M.backings.find(b=>b.id===settings.backing) || M.back
 function fifthOf(){ if(M.kind!=='scale') return 7;
   for(const c of [7,6,8,5,9]) if(SCALE.includes(c)) return c; return 12; }
 function kotoPluck(off,time){ const m=settings.rootMidi+off;   // an octave above the drone
+  if(liveArp()&&playArpNote(m,time,0.9,0.22,busChord))return;
   const o=actx.createOscillator();o.type="triangle";o.frequency.value=midiToFreq(m);
   const f=actx.createBiquadFilter();f.type="lowpass";f.frequency.setValueAtTime(5200,time);f.frequency.exponentialRampToValueAtTime(1500,time+0.5);
   const g=actx.createGain();g.gain.setValueAtTime(0,time);g.gain.linearRampToValueAtTime(0.22,time+0.004);g.gain.exponentialRampToValueAtTime(0.001,time+0.85);
@@ -817,6 +822,7 @@ function jazzScheduler(){ const beat=60/settings.bpm, np=JAZZ_PROG.length;
 function startBacking(){ initAudio(); resumeAudio(); accOn=true;
   loadDrums().catch(()=>{});   // fetch the sampled kit; synth hits play until it's ready (and whenever offline)
   if(BASS_SLUG[M.id]) loadBass(BASS_SLUG[M.id]).catch(()=>{});   // this style's sampled bass
+  if(ARP_SLUG[M.id]) loadArp(ARP_SLUG[M.id]).catch(()=>{});      // this style's sampled arp/ostinato pluck
   if(M.back==='jazz'){ eighth=0; nextNoteTime=actx.currentTime+0.1; applyJazzChord(JAZZ_PROG[0]); startTicks(jazzScheduler,25); }
   else if(M.back==='blues'){ eighth=0; nextNoteTime=actx.currentTime+0.1; startTicks(bluesScheduler,25); }
   else if(M.back==='synth'){ eighth=0; nextNoteTime=actx.currentTime+0.1; startTicks(synthScheduler,25); }
