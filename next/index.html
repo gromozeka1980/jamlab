@@ -238,12 +238,13 @@
       <div class="vrow"><input id="volSolo" type="range" min="0" max="100" value="80"><span class="val" id="volSoloVal">80%</span></div></div>
     <div class="ctl vol"><label data-i18n="set.volAcc">Backing volume</label>
       <div class="vrow"><input id="volAcc" type="range" min="0" max="100" value="55"><span class="val" id="volAccVal">55%</span></div></div>
-    <div class="ctl vol"><label data-i18n="set.bgDrums">Drums</label>
-      <div class="vrow"><input id="bgDrums" type="range" min="0" max="150" value="100"><span class="val" id="bgDrumsVal">100%</span></div></div>
-    <div class="ctl vol"><label data-i18n="set.bgBass">Bass</label>
-      <div class="vrow"><input id="bgBass" type="range" min="0" max="150" value="100"><span class="val" id="bgBassVal">100%</span></div></div>
-    <div class="ctl vol"><label data-i18n="set.bgChord">Harmony</label>
-      <div class="vrow"><input id="bgChord" type="range" min="0" max="150" value="100"><span class="val" id="bgChordVal">100%</span></div></div>
+    <!-- the three below are components OF the backing (accBus) — indented to show they nest under Backing volume -->
+    <div class="ctl vol subvol"><label data-i18n="set.bgDrums">Drums</label>
+      <div class="vrow"><input id="bgDrums" type="range" min="0" max="100" value="100"><span class="val" id="bgDrumsVal">100%</span></div></div>
+    <div class="ctl vol subvol"><label data-i18n="set.bgBass">Bass</label>
+      <div class="vrow"><input id="bgBass" type="range" min="0" max="100" value="100"><span class="val" id="bgBassVal">100%</span></div></div>
+    <div class="ctl vol subvol"><label data-i18n="set.bgChord">Harmony</label>
+      <div class="vrow"><input id="bgChord" type="range" min="0" max="100" value="100"><span class="val" id="bgChordVal">100%</span></div></div>
   </div>
 </div>
 
@@ -271,6 +272,8 @@
 <div class="controls actions" id="bottombar">
   <div class="ctl"><button id="accBtn" class="toggle" data-i18n="btn.bgStart">▶ Backing</button></div>
   <div class="ctl"><button id="recBtn" data-i18n="btn.rec">⏺ Record</button></div>
+  <!-- config screen only: an explicit way back to the instrument, next to Backing (the top chip still works too) -->
+  <div class="ctl" id="ctlCfgDone"><button id="cfgDone" data-i18n="btn.toInstr">◀ Instrument</button></div>
 </div>
 <div class="hint" id="hint"></div>
 

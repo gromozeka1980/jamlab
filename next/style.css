@@ -108,6 +108,15 @@ body.touch.cfgopen #mixHead{
 body.touch.cfgopen #mixHead .chev{margin-left:auto; transition:transform .2s;}
 body.mixopen #mixHead .chev{transform:rotate(180deg);}
 body.touch.cfgopen:not(.mixopen) #mixGroup > .ctl{display:none;}
+/* Drums/Bass/Harmony are parts OF the backing — indent them under "Backing volume" with a bracket rule */
+body.touch.cfgopen #mixGroup > .subvol{
+  border-top:none; padding-left:16px; margin-left:4px; border-left:2px solid rgba(255,255,255,.12);
+}
+body.touch.cfgopen #mixGroup > .subvol label{color:var(--muted); font-size:10px;}
+/* config screen: an explicit "back to instrument" button beside Backing (hidden on the play screen) */
+#ctlCfgDone{display:none;}
+body.touch.cfgopen #ctlCfgDone{display:block;}
+#cfgDone{border-color:var(--accent); color:var(--accent); font-weight:600;}
 body.tut #topsum{opacity:.25; transition:opacity .3s;}
 
 /* scale strip: dots = scale tones across the playable range, roots bigger; the ring marker hops with every key press */
