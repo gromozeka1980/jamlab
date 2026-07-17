@@ -10,7 +10,7 @@ import { actx, comp, leadBus, leadFilter, leadOut, accBus, busPerc, busBass, bus
 import { viz, cssRgb } from './viz.js';
 import { refreshRecLabel } from './rec.js';
 import { isPro, modeLocked, showPaywall, onProChange, initBilling, KITCHEN } from './paywall.js';
-import { loadSampler, sampleAt, samplerReady, instrMeta, sampleRange, GM, FAMILIES, familyOf, familyItems, displayName, BANKS, setBank, currentBank } from './sampler.js';
+import { loadSampler, sampleAt, samplerReady, instrMeta, sampleRange, GM, FAMILIES, PICK_FAMILIES, familyOf, familyItems, displayName, BANKS, setBank, currentBank } from './sampler.js';
 import { initTutorial } from './tutorial.js';
 import { track, trackOnce, sinceLaunch } from './analytics.js';
 
@@ -859,6 +859,7 @@ function setMode(id){ const was=accOn; if(actx) stopBacking();
   const showInstr = M.kind!=='harmonic';
   document.getElementById("ctlInstr").style.display = showInstr?'':'none';
   if(showInstr){ buildInstrOptions();
+    const modeBank=leadBankMap[M.id]||'fluid'; setBank(modeBank); if(bankSel) bankSel.value=modeBank;   // this style's sound bank
     // per-mode lead voice: the user's saved pick (incl. an explicit Synth = '') wins; otherwise the mode's default
     curLeadInstr = Object.prototype.hasOwnProperty.call(leadInstrMap,M.id) ? leadInstrMap[M.id] : (MODE_INSTR_DEFAULT[M.id]||'');
     syncInstrSelects(curLeadInstr);
@@ -993,11 +994,12 @@ percSel.addEventListener('change',()=>{ if(M.lab){ M.perc=percSel.value; try{ lo
 // for early testers whose saved picks predate them; future manual choices persist as before
 try{ if(localStorage.getItem('jamlab.leadInstrV')!=='3'){ localStorage.removeItem('jamlab.leadInstr'); localStorage.setItem('jamlab.leadInstrV','3'); } }catch(e){}
 let leadInstrMap={}; try{ leadInstrMap=JSON.parse(localStorage.getItem('jamlab.leadInstr')||'{}')||{}; }catch(e){}
+let leadBankMap={}; try{ leadBankMap=JSON.parse(localStorage.getItem('jamlab.leadBank')||'{}')||{}; }catch(e){}   // sound bank chosen per style
 // two-step picker: choose a family (or Synth), then an instrument within it (128 GM instruments is too many for one list)
 const instrGroup=document.getElementById('instrGroup'), instrSel=document.getElementById('instrSel');
 function buildInstrOptions(){ if(instrGroup.options.length) return;
   instrGroup.appendChild(new Option(t('instr.original'),'__synth'));           // '' = the mode's own synth voice
-  FAMILIES.forEach((f,i)=>instrGroup.appendChild(new Option(t('grp.'+f.key),String(i)))); }
+  PICK_FAMILIES.forEach(i=>instrGroup.appendChild(new Option(t('grp.'+FAMILIES[i].key),String(i)))); }   // melodic families only (no percussion/SFX)
 function fillInstrSel(fi){ instrSel.innerHTML='';
   familyItems(fi).forEach(slug=>instrSel.appendChild(new Option(displayName(slug),slug))); }
 function syncInstrSelects(slug){                            // reflect the active instrument in both selects
@@ -1017,10 +1019,11 @@ function applyLeadInstr(slug){                              // '' → native syn
 instrGroup.addEventListener('change',()=>{ if(instrGroup.value==='__synth'){ applyLeadInstr(''); return; }
   fillInstrSel(+instrGroup.value); applyLeadInstr(instrSel.value); });   // fillInstrSel selects the group's first item → apply it
 instrSel.addEventListener('change',()=>applyLeadInstr(instrSel.value));
-// sound bank (FluidR3 ↔ GeneralUser GS): swap the source and reload the current instrument
+// sound bank (FluidR3 ↔ GeneralUser GS): chosen per style, swaps the source and reloads the current instrument
 const bankSel=document.getElementById('bankSel');
-if(bankSel){ BANKS.forEach(b=>bankSel.appendChild(new Option(b.name,b.id))); bankSel.value=currentBank();
-  bankSel.addEventListener('change',()=>{ setBank(bankSel.value); if(curLeadInstr) applyLeadInstr(curLeadInstr); }); }
+if(bankSel){ BANKS.forEach(b=>bankSel.appendChild(new Option(b.name,b.id)));
+  bankSel.addEventListener('change',()=>{ leadBankMap[M.id]=bankSel.value; try{ localStorage.setItem('jamlab.leadBank',JSON.stringify(leadBankMap)); }catch(e){}
+    setBank(bankSel.value); if(curLeadInstr) applyLeadInstr(curLeadInstr); }); }
 const labov=document.getElementById('labov'), labPcs=document.getElementById('labPcs'), labPcsDn=document.getElementById('labPcsDn'),
       labDownSel=document.getElementById('labDownSel'), labArpEl=document.getElementById('labArp'),
       labName=document.getElementById('labName'), labCount=document.getElementById('labCount');
