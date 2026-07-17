@@ -12,6 +12,11 @@ import { refreshRecLabel } from './rec.js';
 import { isPro, modeLocked, showPaywall, onProChange, initBilling, KITCHEN } from './paywall.js';
 import { loadSampler, sampleAt, samplerReady, instrMeta, sampleRange, GM, FAMILIES, PICK_FAMILIES, familyOf, familyItems, displayName, BANKS, setBank, currentBank } from './sampler.js';
 import { loadDrums, drumsReady, playDrum } from './drums.js';
+import { loadBass, bassReady, playBassNote } from './bass.js';
+// per-style bass sound: upright for acoustic styles, synth-bass for synthwave, electric for lo-fi
+const BASS_SLUG={ blues:'acoustic_bass', jazz:'acoustic_bass', synth:'synth_bass_1', lofi:'electric_bass_finger',
+  koto:'acoustic_bass', vostok:'acoustic_bass', light:'acoustic_bass', lab:'acoustic_bass', dorian:'acoustic_bass' };
+function liveBass(){ return bassReady(); }
 import { initTutorial } from './tutorial.js';
 import { track, trackOnce, sinceLaunch } from './analytics.js';
 
@@ -552,7 +557,8 @@ function bChord(rootSemi,time,dur,ivs,lvl){ const base=settings.rootMidi-12+root
     const g=actx.createGain();g.gain.setValueAtTime(0,time);g.gain.linearRampToValueAtTime(lvl,time+0.005);g.gain.exponentialRampToValueAtTime(.0008,time+dur);
     o.connect(f);f.connect(g);g.connect(busChord);o.start(time);o.stop(time+dur+0.05); }); }
 function bBass(rootSemi,time,off){                       // rounder bass with body (sine + triangle through a lowpass)
-  const fr=midiToFreq(settings.rootMidi-24+rootSemi+off);
+  const bm=settings.rootMidi-24+rootSemi+off; if(liveBass()&&playBassNote(bm,time,(60/settings.bpm)*0.5,0.55,busBass))return;
+  const fr=midiToFreq(bm);
   const o=actx.createOscillator();o.type="sine";o.frequency.value=fr;
   const o2=actx.createOscillator();o2.type="triangle";o2.frequency.value=fr; const o2g=actx.createGain();o2g.gain.value=0.4;
   const beat=60/settings.bpm,dur=beat*0.5, lp=actx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=820;
@@ -600,8 +606,10 @@ function kotoPluck(off,time){ const m=settings.rootMidi+off;   // an octave abov
   const f=actx.createBiquadFilter();f.type="lowpass";f.frequency.setValueAtTime(5200,time);f.frequency.exponentialRampToValueAtTime(1500,time+0.5);
   const g=actx.createGain();g.gain.setValueAtTime(0,time);g.gain.linearRampToValueAtTime(0.22,time+0.004);g.gain.exponentialRampToValueAtTime(0.001,time+0.85);
   o.connect(f);f.connect(g);g.connect(busChord);o.start(time);o.stop(time+0.95); }
-function modalBass(off,time){ const o=actx.createOscillator();o.type="triangle";o.frequency.value=midiToFreq(settings.rootMidi-12+off);
-  const dur=(60/settings.bpm)*0.9, g=accGain(0,busBass);
+function modalBass(off,time){ const bm=settings.rootMidi-12+off, dur0=(60/settings.bpm)*0.9;
+  if(liveBass()&&playBassNote(bm,time,dur0,0.34,busBass))return;
+  const o=actx.createOscillator();o.type="triangle";o.frequency.value=midiToFreq(bm);
+  const dur=dur0, g=accGain(0,busBass);
   g.gain.setValueAtTime(0,time);g.gain.linearRampToValueAtTime(0.34,time+0.02);g.gain.exponentialRampToValueAtTime(0.001,time+dur);
   o.connect(g);o.start(time);o.stop(time+dur+0.05); }
 // drums
@@ -681,7 +689,8 @@ function gamelanScheduler(){ const beat=60/settings.bpm, pat=(curBack().id==='pa
     nextNoteTime+=beat/2; qStep++; } }
 
 // --- synthwave: pumping bass arp, four-on-the-floor, gated pads over i–VI–III–VII ---
-function synthBass(off,time){ const fr=midiToFreq(settings.rootMidi-24+off);
+function synthBass(off,time){ const bm=settings.rootMidi-24+off; if(liveBass()&&playBassNote(bm,time,0.2,0.42,busBass))return;
+  const fr=midiToFreq(bm);
   const o=actx.createOscillator();o.type='sawtooth';o.frequency.value=fr;
   const lp=actx.createBiquadFilter();lp.type='lowpass';lp.frequency.setValueAtTime(900,time);lp.frequency.exponentialRampToValueAtTime(300,time+0.18);
   const g=actx.createGain();g.gain.setValueAtTime(0,time);g.gain.linearRampToValueAtTime(0.42,time+0.006);g.gain.exponentialRampToValueAtTime(0.001,time+0.2);
@@ -710,8 +719,10 @@ function lofiKeys(rootSemi,time,ivs,vel){ const base=settings.rootMidi-12+rootSe
     const g=actx.createGain();g.gain.setValueAtTime(0,tt);g.gain.linearRampToValueAtTime(vel,tt+0.01);g.gain.exponentialRampToValueAtTime(0.0008,tt+dur);
     o.connect(f);o2.connect(o2g);o2g.connect(f);f.connect(g);g.connect(busChord);
     o.start(tt);o2.start(tt);o.stop(tt+dur+0.05);o2.stop(tt+dur+0.05); }); }
-function lofiBass(off,time){ const o=actx.createOscillator();o.type='sine';o.frequency.value=midiToFreq(settings.rootMidi-24+off);
-  const dur=(60/settings.bpm)*1.8, g=accGain(0,busBass);
+function lofiBass(off,time){ const bm=settings.rootMidi-24+off, dur0=(60/settings.bpm)*1.8;
+  if(liveBass()&&playBassNote(bm,time,dur0,0.5,busBass))return;
+  const o=actx.createOscillator();o.type='sine';o.frequency.value=midiToFreq(bm);
+  const dur=dur0, g=accGain(0,busBass);
   g.gain.setValueAtTime(0,time);g.gain.linearRampToValueAtTime(0.5,time+0.03);g.gain.exponentialRampToValueAtTime(0.001,time+dur);
   o.connect(g);o.start(time);o.stop(time+dur+0.05); }
 function vinylPop(time){ const n=actx.createBufferSource();n.buffer=noiseBuf;
@@ -753,7 +764,8 @@ function applyJazzChord(ch){
   updateDisplay();
 }
 function jazzBass(off,time){                       // upright-ish: round body, soft attack, sustained walking quarter
-  const f=midiToFreq(settings.rootMidi-24+off);
+  const bm=settings.rootMidi-24+off; if(liveBass()&&playBassNote(bm,time,(60/settings.bpm)*0.92,0.5,busBass))return;
+  const f=midiToFreq(bm);
   const o=actx.createOscillator();o.type='sine';o.frequency.value=f;
   const o2=actx.createOscillator();o2.type='triangle';o2.frequency.value=f; const o2g=actx.createGain();o2g.gain.value=0.3;
   const beat=60/settings.bpm,dur=beat*0.92, lp=actx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=900;
@@ -804,6 +816,7 @@ function jazzScheduler(){ const beat=60/settings.bpm, np=JAZZ_PROG.length;
 
 function startBacking(){ initAudio(); resumeAudio(); accOn=true;
   loadDrums().catch(()=>{});   // fetch the sampled kit; synth hits play until it's ready (and whenever offline)
+  if(BASS_SLUG[M.id]) loadBass(BASS_SLUG[M.id]).catch(()=>{});   // this style's sampled bass
   if(M.back==='jazz'){ eighth=0; nextNoteTime=actx.currentTime+0.1; applyJazzChord(JAZZ_PROG[0]); startTicks(jazzScheduler,25); }
   else if(M.back==='blues'){ eighth=0; nextNoteTime=actx.currentTime+0.1; startTicks(bluesScheduler,25); }
   else if(M.back==='synth'){ eighth=0; nextNoteTime=actx.currentTime+0.1; startTicks(synthScheduler,25); }
