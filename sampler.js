@@ -123,6 +123,22 @@ async function loadFluid(slug,lo,hi,entry){
   await Promise.all(jobs);
   if(!entry.map.size) throw new Error('fluid empty '+slug);
 }
+// autocorrelation pitch of a decoded sample → MIDI (float), or null if it isn't clearly pitched.
+// The GeneralUser GS pack has unreliable tuning metadata (dropped pitch-correction on some instruments,
+// per-zone fineTune on others) — measuring the sample's real pitch fixes both.
+function detectMidi(buf){
+  const sr=buf.sampleRate, d=buf.getChannelData(0);
+  const maxLag=Math.floor(sr/55), minLag=Math.floor(sr/1600);   // 55 Hz … 1600 Hz
+  let N=8192, off=Math.floor(sr*0.06);
+  if(off+N+maxLag>=d.length){ off=0; N=d.length-maxLag-1; }
+  if(N<1024) return null;
+  let norm=0; for(let i=0;i<N;i++) norm+=d[off+i]*d[off+i];
+  if(norm<1e-4) return null;                                   // silence
+  let best=0,bestLag=-1;
+  for(let lag=minLag;lag<=maxLag;lag++){ let s=0; for(let i=0;i<N;i++) s+=d[off+i]*d[off+i+lag]; if(s>best){best=s;bestLag=lag;} }
+  if(bestLag<1 || best/norm<0.55) return null;                 // not clearly pitched (percussion/fx/pads) → trust metadata
+  return 69+12*Math.log2((sr/bestLag)/440);
+}
 // GeneralUser GS (webaudiofont): a few zones, each with a root pitch + key range → map every note to its zone
 async function loadWAF(slug,lo,hi,entry){
   const prog=GM.indexOf(slug); if(prog<0) throw new Error('no prog '+slug);
@@ -133,11 +149,15 @@ async function loadWAF(slug,lo,hi,entry){
   if(!zones || !zones.length) throw new Error('waf empty '+slug);
   const bufs=await Promise.all(zones.map(z=>{ const b64=z.file||z.sample; if(!b64) return Promise.resolve(null);
     return actx.decodeAudioData(b64ToU8(b64).buffer).then(b=>b).catch(()=>null); }));
-  const rootOf=z=>(z.originalPitch!=null?z.originalPitch:6000)/100;
+  // true root per zone: metadata (originalPitch + coarse/fine), overridden by the measured pitch when the sample is
+  // clearly pitched and within a semitone of the metadata (fixes GU's mistuned sitar/fiddle/etc; safe on drums/pads)
+  const metaRoot=z=>((z.originalPitch!=null?z.originalPitch:6000) - 100*(z.coarseTune||0) - (z.fineTune||0))/100;
+  const roots=zones.map((z,i)=>{ const meta=metaRoot(z), b=bufs[i]; if(!b) return meta;
+    const det=detectMidi(b); return (det!=null && Math.abs(det-meta)<=1.2) ? det : meta; });
   for(let m=lo;m<=hi;m++){
     let zi=zones.findIndex(z=>m>=(z.keyRangeLow!=null?z.keyRangeLow:0) && m<=(z.keyRangeHigh!=null?z.keyRangeHigh:127));
-    if(zi<0){ let bd=1e9; for(let i=0;i<zones.length;i++){ const d=Math.abs(rootOf(zones[i])-m); if(d<bd){bd=d;zi=i;} } }
-    const buf=bufs[zi]; if(buf) entry.map.set(m,{buf,base:rootOf(zones[zi])});
+    if(zi<0){ let bd=1e9; for(let i=0;i<zones.length;i++){ const d=Math.abs(roots[i]-m); if(d<bd){bd=d;zi=i;} } }
+    const buf=bufs[zi]; if(buf) entry.map.set(m,{buf,base:roots[zi]});
   }
   if(!entry.map.size) throw new Error('waf nomap '+slug);
 }
