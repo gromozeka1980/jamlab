@@ -929,7 +929,6 @@ bpm.addEventListener("input",()=>{settings.bpm=+bpm.value; bpmVal.textContent=bp
 const setVal=(id,txt)=>{ const e=document.getElementById(id); if(e) e.textContent=txt; };
 const tone=document.getElementById("tone"); tone.addEventListener("input",()=>{settings.tone=+tone.value; if(leadFilter) leadFilter.frequency.value=settings.tone; setVal('toneVal',tone.value); saveSettings();});
 const volSolo=document.getElementById("volSolo"); volSolo.addEventListener("input",()=>{settings.volSolo=volSolo.value/100; if(leadOut) leadOut.gain.value=settings.volSolo; setVal('volSoloVal',volSolo.value+'%'); saveSettings();});
-const volAcc=document.getElementById("volAcc"); volAcc.addEventListener("input",()=>{settings.volAcc=volAcc.value/100; if(accBus) accBus.gain.value=settings.volAcc; setVal('volAccVal',volAcc.value+'%'); saveSettings();});
 const bgDrums=document.getElementById("bgDrums"); bgDrums.addEventListener("input",()=>{settings.bgDrums=bgDrums.value/100; if(busPerc) busPerc.gain.value=settings.bgDrums; setVal('bgDrumsVal',bgDrums.value+'%'); saveSettings();});
 const bgBass=document.getElementById("bgBass"); bgBass.addEventListener("input",()=>{settings.bgBass=bgBass.value/100; if(busBass) busBass.gain.value=settings.bgBass; setVal('bgBassVal',bgBass.value+'%'); saveSettings();});
 const bgChord=document.getElementById("bgChord"); bgChord.addEventListener("input",()=>{settings.bgChord=bgChord.value/100; if(busChord) busChord.gain.value=settings.bgChord; setVal('bgChordVal',bgChord.value+'%'); saveSettings();});
@@ -940,9 +939,9 @@ function applyPrefsToControls(){
   tone.value=settings.tone;
   // component volumes are now 0–100% (were 0–150%); clamp any value saved under the old range
   settings.bgDrums=Math.min(1,settings.bgDrums); settings.bgBass=Math.min(1,settings.bgBass); settings.bgChord=Math.min(1,settings.bgChord);
-  volSolo.value=Math.round(settings.volSolo*100); volAcc.value=Math.round(settings.volAcc*100);
+  volSolo.value=Math.round(settings.volSolo*100);
   bgDrums.value=Math.round(settings.bgDrums*100); bgBass.value=Math.round(settings.bgBass*100); bgChord.value=Math.round(settings.bgChord*100);
-  setVal('toneVal',Math.round(settings.tone)); setVal('volSoloVal',Math.round(settings.volSolo*100)+'%'); setVal('volAccVal',Math.round(settings.volAcc*100)+'%');
+  setVal('toneVal',Math.round(settings.tone)); setVal('volSoloVal',Math.round(settings.volSolo*100)+'%');
   setVal('bgDrumsVal',Math.round(settings.bgDrums*100)+'%'); setVal('bgBassVal',Math.round(settings.bgBass*100)+'%'); setVal('bgChordVal',Math.round(settings.bgChord*100)+'%');
   vizSel.value=settings.viz?'on':'off'; gyroSel.value=settings.gyro;
   colorSel.value=settings.jazzColor; landSel.value=settings.jazzLand; phraseSel.value=settings.jazzPhrase; timingSel.value=settings.jazzTiming;
@@ -950,7 +949,7 @@ function applyPrefsToControls(){
 // reset this style's settings to the defaults (global prefs + drop the style's saved instrument/bank), then rebuild
 function resetToDefaults(){
   settings.tone=2600; settings.viz=true; settings.gyro='off';
-  settings.volSolo=0.8; settings.volAcc=0.55; settings.bgDrums=1; settings.bgBass=1; settings.bgChord=1;
+  settings.volSolo=0.8; settings.volAcc=1; settings.bgDrums=0.55; settings.bgBass=0.55; settings.bgChord=0.55;
   saveSettings();
   delete leadInstrMap[M.id]; try{ localStorage.setItem('jamlab.leadInstr',JSON.stringify(leadInstrMap)); }catch(e){}
   delete leadBankMap[M.id]; try{ localStorage.setItem('jamlab.leadBank',JSON.stringify(leadBankMap)); }catch(e){}
