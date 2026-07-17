@@ -2,7 +2,12 @@
 // Loaded on demand; until then the app's synthesized hits play (graceful fallback, and offline-safe).
 import { actx } from './audio.js';
 
-const WAF='https://surikov.github.io/webaudiofontdata/sound/';
+const WAF_LOCAL='./waf/';                                          // drum kit is bundled → offline
+const WAF='https://surikov.github.io/webaudiofontdata/sound/';    // CDN fallback
+async function fetchWaf(fn){
+  try{ const r=await fetch(WAF_LOCAL+fn+'.js'); if(r.ok) return r.text(); }catch(e){}
+  const r=await fetch(WAF+fn+'.js'); if(!r.ok) throw 0; return r.text();
+}
 const KIT={ kick:36, snare:38, hatClosed:42, hatOpen:46,   // name → GM drum note
   taiko:41, doum:64, tek:62, shaker:70 };                  // ethnic perc: low floor tom, low conga, mute hi conga, maracas
 // tuned by measurement to match the loudness of the synth voices the mix was balanced around
@@ -20,7 +25,7 @@ export function loadDrums(){
   if(loading) return loading;
   loading=Promise.all(Object.entries(KIT).map(async([name,note])=>{
     const fn='128'+note+'_0_FluidR3_GM_sf2_file';
-    try{ const txt=await fetch(WAF+fn+'.js').then(r=>{ if(!r.ok) throw 0; return r.text(); });
+    try{ const txt=await fetchWaf(fn);
       (0,eval)(txt);
       const tone=window['_drum_'+note+'_0_FluidR3_GM_sf2_file'], z=tone&&tone.zones&&tone.zones[0];
       const b64=z&&(z.file||z.sample); if(b64) bufs[name]=await b64ToBuf(b64);

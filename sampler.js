@@ -5,8 +5,14 @@
 // Both normalize into `current`: Map<midi, {buf, base}>  where base = the sample's own pitch (MIDI number).
 import { actx } from './audio.js';
 
-const FLUID='https://gleitz.github.io/midi-js-soundfonts/FluidR3_GM/';
-const WAF='https://surikov.github.io/webaudiofontdata/sound/';
+const FLUID='https://gleitz.github.io/midi-js-soundfonts/FluidR3_GM/';   // streamed (big; ~2.5 MB/instrument)
+const WAF_LOCAL='./waf/';                                                // GeneralUser GS is bundled in the app → offline
+const WAF='https://surikov.github.io/webaudiofontdata/sound/';          // CDN fallback (web, or a missing file)
+// GU webaudiofont file: bundled copy first, CDN only if that's missing
+async function fetchWaf(fn){
+  try{ const r=await fetch(WAF_LOCAL+fn+'.js'); if(r.ok) return r.text(); }catch(e){}
+  const r=await fetch(WAF+fn+'.js'); if(!r.ok) throw new Error('waf '+r.status); return r.text();
+}
 
 // the 128 GM programs in order — slug = gleitz filename, index = GM program number
 export const GM=[
@@ -121,7 +127,7 @@ async function loadFluid(slug,lo,hi,entry){
 async function loadWAF(slug,lo,hi,entry){
   const prog=GM.indexOf(slug); if(prog<0) throw new Error('no prog '+slug);
   const fn=String(prog).padStart(3,'0')+'0_GeneralUserGS_sf2_file';
-  const txt=await fetch(WAF+fn+'.js').then(r=>{ if(!r.ok) throw new Error('waf '+r.status); return r.text(); });
+  const txt=await fetchWaf(fn);
   (0,eval)(txt);
   const tone=window['_tone_'+fn], zones=tone&&tone.zones;
   if(!zones || !zones.length) throw new Error('waf empty '+slug);
