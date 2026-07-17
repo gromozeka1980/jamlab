@@ -3,10 +3,12 @@
 import { actx } from './audio.js';
 
 const WAF='https://surikov.github.io/webaudiofontdata/sound/';
-const KIT={ kick:36, snare:38, hatClosed:42, hatOpen:46 };   // name → GM drum note
-// tuned by measurement to match the loudness of the synth kit the mix was balanced around
-// (sampled one-shots are full-scale recordings — raw they were ~3-4× too loud)
-const LEVEL={ kick:0.34, snare:0.5, hatClosed:0.12, hatOpen:0.12 };
+const KIT={ kick:36, snare:38, hatClosed:42, hatOpen:46,   // name → GM drum note
+  taiko:41, doum:64, tek:62, shaker:70 };                  // ethnic perc: low floor tom, low conga, mute hi conga, maracas
+// tuned by measurement to match the loudness of the synth voices the mix was balanced around
+// (sampled one-shots are full-scale recordings — raw they were several× too loud)
+const LEVEL={ kick:0.34, snare:0.5, hatClosed:0.12, hatOpen:0.12,
+  taiko:0.17, doum:0.38, tek:0.5, shaker:0.57 };
 const bufs={};
 let done=false, loading=null;
 

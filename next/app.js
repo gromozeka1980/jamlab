@@ -559,8 +559,8 @@ function bBass(rootSemi,time,off){                       // rounder bass with bo
   const g=actx.createGain(); g.gain.setValueAtTime(0,time);g.gain.linearRampToValueAtTime(.55,time+0.012);g.gain.exponentialRampToValueAtTime(.001,time+dur);
   o.connect(g);o2.connect(o2g);o2g.connect(g);g.connect(lp);lp.connect(busBass);
   o.start(time);o2.start(time);o.stop(time+dur+0.05);o2.stop(time+dur+0.05); }
-// live-kit prototype (blues only for now): a sampled kit replaces the synth hits once loaded
-function liveDrums(){ return M.id==='blues' && drumsReady(); }
+// sampled kit replaces the synth hits once loaded (all styles); synth plays until ready / offline
+function liveDrums(){ return drumsReady(); }
 function kick(time,vel){vizBeat(time,0.9*(vel||1)); if(liveDrums()&&playDrum('kick',time,vel||1,busPerc))return; const o=actx.createOscillator();o.type="sine";const g=accGain(0,busPerc);o.frequency.setValueAtTime(150,time);o.frequency.exponentialRampToValueAtTime(48,time+0.12);g.gain.setValueAtTime(.9*(vel||1),time);g.gain.exponentialRampToValueAtTime(.001,time+0.18);o.connect(g);o.start(time);o.stop(time+0.2);}
 function snare(time,vel){ vel=vel||1; if(liveDrums()&&playDrum('snare',time,vel,busPerc))return;   // tonal body + bright snap = a real backbeat snare
   const n=actx.createBufferSource();n.buffer=noiseBuf;const f=actx.createBiquadFilter();f.type="highpass";f.frequency.value=1700;const g=accGain(0,busPerc);g.gain.setValueAtTime(.5*vel,time);g.gain.exponentialRampToValueAtTime(.001,time+0.15);n.connect(f);f.connect(g);n.start(time);n.stop(time+0.17);
@@ -605,15 +605,15 @@ function modalBass(off,time){ const o=actx.createOscillator();o.type="triangle";
   g.gain.setValueAtTime(0,time);g.gain.linearRampToValueAtTime(0.34,time+0.02);g.gain.exponentialRampToValueAtTime(0.001,time+dur);
   o.connect(g);o.start(time);o.stop(time+dur+0.05); }
 // drums
-function taiko(time,vel){ vizBeat(time,0.85*vel); const o=actx.createOscillator();o.type='sine';o.frequency.setValueAtTime(95,time);o.frequency.exponentialRampToValueAtTime(48,time+0.18);
+function taiko(time,vel){ vizBeat(time,0.85*vel); if(liveDrums()&&playDrum('taiko',time,vel,busPerc))return; const o=actx.createOscillator();o.type='sine';o.frequency.setValueAtTime(95,time);o.frequency.exponentialRampToValueAtTime(48,time+0.18);
   const g=accGain(0,busPerc);g.gain.setValueAtTime(0.55*vel,time);g.gain.exponentialRampToValueAtTime(0.001,time+0.28);o.connect(g);o.start(time);o.stop(time+0.3);
   const n=actx.createBufferSource();n.buffer=noiseBuf;const f=actx.createBiquadFilter();f.type='lowpass';f.frequency.value=380;const ng=accGain(0,busPerc);
   ng.gain.setValueAtTime(0.22*vel,time);ng.gain.exponentialRampToValueAtTime(0.001,time+0.11);n.connect(f);f.connect(ng);n.start(time);n.stop(time+0.13); }
-function doum(time){ vizBeat(time,0.8); const o=actx.createOscillator();o.type='sine';o.frequency.setValueAtTime(115,time);o.frequency.exponentialRampToValueAtTime(56,time+0.16);
+function doum(time){ vizBeat(time,0.8); if(liveDrums()&&playDrum('doum',time,1,busPerc))return; const o=actx.createOscillator();o.type='sine';o.frequency.setValueAtTime(115,time);o.frequency.exponentialRampToValueAtTime(56,time+0.16);
   const g=accGain(0,busPerc);g.gain.setValueAtTime(0.6,time);g.gain.exponentialRampToValueAtTime(0.001,time+0.22);o.connect(g);o.start(time);o.stop(time+0.24); }
-function tek(time,vel){ const n=actx.createBufferSource();n.buffer=noiseBuf;const f=actx.createBiquadFilter();f.type='highpass';f.frequency.value=3200;const g=accGain(0,busPerc);
+function tek(time,vel){ if(liveDrums()&&playDrum('tek',time,vel||0.3,busPerc))return; const n=actx.createBufferSource();n.buffer=noiseBuf;const f=actx.createBiquadFilter();f.type='highpass';f.frequency.value=3200;const g=accGain(0,busPerc);
   g.gain.setValueAtTime(vel||0.3,time);g.gain.exponentialRampToValueAtTime(0.001,time+0.05);n.connect(f);f.connect(g);n.start(time);n.stop(time+0.07); }
-function shaker(time,vel){ const n=actx.createBufferSource();n.buffer=noiseBuf;const f=actx.createBiquadFilter();f.type='highpass';f.frequency.value=6500;const g=accGain(0,busPerc);
+function shaker(time,vel){ if(liveDrums()&&playDrum('shaker',time,vel,busPerc))return; const n=actx.createBufferSource();n.buffer=noiseBuf;const f=actx.createBiquadFilter();f.type='highpass';f.frequency.value=6500;const g=accGain(0,busPerc);
   g.gain.setValueAtTime(vel,time);g.gain.exponentialRampToValueAtTime(0.001,time+0.04);n.connect(f);f.connect(g);n.start(time);n.stop(time+0.06); }
 function percHit(type,step,time){
   if(!type) return;                                         // lab: percussion set to "None"
@@ -803,7 +803,7 @@ function jazzScheduler(){ const beat=60/settings.bpm, np=JAZZ_PROG.length;
   } }
 
 function startBacking(){ initAudio(); resumeAudio(); accOn=true;
-  if(M.id==='blues') loadDrums().catch(()=>{});   // fetch the sampled kit; synth hits play until it's ready
+  loadDrums().catch(()=>{});   // fetch the sampled kit; synth hits play until it's ready (and whenever offline)
   if(M.back==='jazz'){ eighth=0; nextNoteTime=actx.currentTime+0.1; applyJazzChord(JAZZ_PROG[0]); startTicks(jazzScheduler,25); }
   else if(M.back==='blues'){ eighth=0; nextNoteTime=actx.currentTime+0.1; startTicks(bluesScheduler,25); }
   else if(M.back==='synth'){ eighth=0; nextNoteTime=actx.currentTime+0.1; startTicks(synthScheduler,25); }
