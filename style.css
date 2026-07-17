@@ -117,6 +117,12 @@ body.touch.cfgopen #mixGroup > .subvol label{color:var(--muted); font-size:10px;
 #ctlCfgDone{display:none;}
 body.touch.cfgopen #ctlCfgDone{display:block;}
 #cfgDone{border-color:var(--accent); color:var(--accent); font-weight:600;}
+/* instrument picker: family select + instrument select */
+.irow{display:flex; gap:6px;}
+.irow select{flex:1 1 0; min-width:0;}
+body.synthlead #instrSel{display:none;}                 /* Synth chosen → no instrument sub-list */
+body.touch.cfgopen .irow{flex-direction:column; gap:8px;}
+body.touch.cfgopen .irow select{width:100%;}
 body.tut #topsum{opacity:.25; transition:opacity .3s;}
 
 /* scale strip: dots = scale tones across the playable range, roots bigger; the ring marker hops with every key press */

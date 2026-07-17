@@ -10,7 +10,7 @@ import { actx, comp, leadBus, leadFilter, leadOut, accBus, busPerc, busBass, bus
 import { viz, cssRgb } from './viz.js';
 import { refreshRecLabel } from './rec.js';
 import { isPro, modeLocked, showPaywall, onProChange, initBilling, KITCHEN } from './paywall.js';
-import { loadSampler, sampleBuffer, sampleBaseMidi, samplerReady, SAMPLER_INSTRUMENTS, instrMeta, sampleRange } from './sampler.js';
+import { loadSampler, sampleAt, samplerReady, instrMeta, sampleRange, GM, FAMILIES, familyOf, familyItems, displayName, BANKS, setBank, currentBank } from './sampler.js';
 import { initTutorial } from './tutorial.js';
 import { track, trackOnce, sinceLaunch } from './analytics.js';
 
@@ -46,9 +46,9 @@ const activeVoices = new Map();
 let kbBend=0;
 let liteNote=false;                                // set around glissando noteOn: build a lightweight voice
 let curLeadInstr='';                               // '' = the mode's synth voice; else a sampled GM instrument id (any style)
-const MODE_INSTR_DEFAULT={   // default sampled lead per style (user can override → saved). '' / absent = the mode's own synth voice
-  blues:'harmonica', light:'harp', koto:'koto', vostok:'sitar',
-  lofi:'epiano', dream:'vibes', dorian:'nylon', jazz:'sax',
+const MODE_INSTR_DEFAULT={   // default sampled lead per style (GM slug; user can override → saved). '' / absent = the mode's own synth voice
+  blues:'harmonica', light:'orchestral_harp', koto:'koto', vostok:'sitar',
+  lofi:'electric_piano_1', dream:'vibraphone', dorian:'acoustic_guitar_nylon', jazz:'alto_sax',
 };
 
 function vizBeat(time,s){ if(settings.viz && actx) setTimeout(()=>viz.pulse(s), Math.max(0,(time-actx.currentTime)*1000)); }
@@ -165,9 +165,9 @@ function makeVoice(freq,maxUp,maxDown,approach,when){
     const ng=actx.createGain(); ng.gain.setValueAtTime(amp,t0); ng.gain.exponentialRampToValueAtTime(0.0006,t0+dur);
     nz.connect(nf); nf.connect(g); nz.start(t0); nz.stop(t0+dur+0.02); v.stops.push(nz); };
   if(curLeadInstr && samplerReady() && sampleInRange(freq)){   // lead swapped for a sampled GM instrument: decoded note, pitch-shifted; bend via playbackRate (shimmed into freqNodes)
-    const midi=Math.round(freqToMidi(freq)), buf=sampleBuffer(midi), meta=instrMeta(curLeadInstr);
-    if(buf){
-      const baseRate=Math.pow(2,(midi-sampleBaseMidi(midi))/12);
+    const midi=Math.round(freqToMidi(freq)), smp=sampleAt(midi), meta=instrMeta(curLeadInstr);
+    if(smp && smp.buf){
+      const buf=smp.buf, baseRate=Math.pow(2,(midi-smp.base)/12);
       const src=actx.createBufferSource(); src.buffer=buf; src.playbackRate.value=baseRate;
       vibG.connect(src.detune);                                 // vibrato (cents) on the sample
       src.connect(g); src.start(t0); v.stops.push(src);
@@ -859,9 +859,9 @@ function setMode(id){ const was=accOn; if(actx) stopBacking();
   const showInstr = M.kind!=='harmonic';
   document.getElementById("ctlInstr").style.display = showInstr?'':'none';
   if(showInstr){ buildInstrOptions();
-    // per-mode lead voice: the user's saved pick (incl. an explicit 'Original' = '') wins; otherwise the mode's default
+    // per-mode lead voice: the user's saved pick (incl. an explicit Synth = '') wins; otherwise the mode's default
     curLeadInstr = Object.prototype.hasOwnProperty.call(leadInstrMap,M.id) ? leadInstrMap[M.id] : (MODE_INSTR_DEFAULT[M.id]||'');
-    instrSel.value=curLeadInstr;
+    syncInstrSelects(curLeadInstr);
     if(curLeadInstr){ initAudio(); resumeAudio(); loadSampler(curLeadInstr,36,88).then(refreshKeyLabels).catch(()=>{}); } }
   else curLeadInstr='';
   if(isBlues){ settings.harmony='major'; settings.rhythm='shuffle'; harmSel.value='major'; rhythmSel.value='shuffle'; }
@@ -991,22 +991,36 @@ percSel.addEventListener('change',()=>{ if(M.lab){ M.perc=percSel.value; try{ lo
 /* ---- lead instrument: any style can swap its synth voice for a sampled GM instrument (per-mode choice) ---- */
 // one-time reset so the refreshed per-style defaults (harp for Bright, harmonica for Blues, …) actually show
 // for early testers whose saved picks predate them; future manual choices persist as before
-try{ if(localStorage.getItem('jamlab.leadInstrV')!=='2'){ localStorage.removeItem('jamlab.leadInstr'); localStorage.setItem('jamlab.leadInstrV','2'); } }catch(e){}
+try{ if(localStorage.getItem('jamlab.leadInstrV')!=='3'){ localStorage.removeItem('jamlab.leadInstr'); localStorage.setItem('jamlab.leadInstrV','3'); } }catch(e){}
 let leadInstrMap={}; try{ leadInstrMap=JSON.parse(localStorage.getItem('jamlab.leadInstr')||'{}')||{}; }catch(e){}
-const instrSel=document.getElementById('instrSel');
-function buildInstrOptions(){ if(instrSel.options.length===SAMPLER_INSTRUMENTS.length+1) return;
-  instrSel.innerHTML=''; instrSel.appendChild(new Option(t('instr.original'),''));   // '' = the mode's own synth voice
-  SAMPLER_INSTRUMENTS.forEach(o=>instrSel.appendChild(new Option(t('instr.'+o.id),o.id))); }
-function applyLeadInstr(id){                                // '' → native synth; else load & use the sampled instrument
-  curLeadInstr=id; instrSel.value=id;
-  leadInstrMap[M.id]=id; try{ localStorage.setItem('jamlab.leadInstr',JSON.stringify(leadInstrMap)); }catch(e){}
-  refreshKeyLabels();                                      // show/hide bend arrows for the new instrument's bend limit (0 = piano/mallets: none)
-  if(!id) return;
+// two-step picker: choose a family (or Synth), then an instrument within it (128 GM instruments is too many for one list)
+const instrGroup=document.getElementById('instrGroup'), instrSel=document.getElementById('instrSel');
+function buildInstrOptions(){ if(instrGroup.options.length) return;
+  instrGroup.appendChild(new Option(t('instr.original'),'__synth'));           // '' = the mode's own synth voice
+  FAMILIES.forEach((f,i)=>instrGroup.appendChild(new Option(t('grp.'+f.key),String(i)))); }
+function fillInstrSel(fi){ instrSel.innerHTML='';
+  familyItems(fi).forEach(slug=>instrSel.appendChild(new Option(displayName(slug),slug))); }
+function syncInstrSelects(slug){                            // reflect the active instrument in both selects
+  if(!slug){ instrGroup.value='__synth'; instrSel.innerHTML=''; document.body.classList.add('synthlead'); return; }
+  document.body.classList.remove('synthlead');
+  const fi=familyOf(slug); instrGroup.value=String(fi); fillInstrSel(fi); instrSel.value=slug; }
+function applyLeadInstr(slug){                              // '' → native synth; else load & use the sampled instrument
+  curLeadInstr=slug||'';
+  leadInstrMap[M.id]=curLeadInstr; try{ localStorage.setItem('jamlab.leadInstr',JSON.stringify(leadInstrMap)); }catch(e){}
+  syncInstrSelects(curLeadInstr);
+  refreshKeyLabels();                                      // show/hide bend arrows for the new instrument's bend limit
+  if(!curLeadInstr) return;
   initAudio(); resumeAudio();
   const hintEl=document.getElementById('hint'); hintEl.textContent=t('instr.loading');
-  loadSampler(id, 36, 88).then(()=>{ setHint(); refreshKeyLabels(); }).catch(()=>{ hintEl.textContent=t('instr.failed'); });
+  loadSampler(curLeadInstr, 36, 88).then(()=>{ setHint(); refreshKeyLabels(); }).catch(()=>{ hintEl.textContent=t('instr.failed'); });
 }
+instrGroup.addEventListener('change',()=>{ if(instrGroup.value==='__synth'){ applyLeadInstr(''); return; }
+  fillInstrSel(+instrGroup.value); applyLeadInstr(instrSel.value); });   // fillInstrSel selects the group's first item → apply it
 instrSel.addEventListener('change',()=>applyLeadInstr(instrSel.value));
+// sound bank (FluidR3 ↔ GeneralUser GS): swap the source and reload the current instrument
+const bankSel=document.getElementById('bankSel');
+if(bankSel){ BANKS.forEach(b=>bankSel.appendChild(new Option(b.name,b.id))); bankSel.value=currentBank();
+  bankSel.addEventListener('change',()=>{ setBank(bankSel.value); if(curLeadInstr) applyLeadInstr(curLeadInstr); }); }
 const labov=document.getElementById('labov'), labPcs=document.getElementById('labPcs'), labPcsDn=document.getElementById('labPcsDn'),
       labDownSel=document.getElementById('labDownSel'), labArpEl=document.getElementById('labArp'),
       labName=document.getElementById('labName'), labCount=document.getElementById('labCount');

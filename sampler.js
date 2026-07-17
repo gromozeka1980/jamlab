@@ -1,101 +1,148 @@
-// Kitchen experiment: sampled General-MIDI instruments (FluidR3_GM, free/redistributable),
-// loaded on demand from the gleitz/midi-js-soundfonts CDN and decoded through the app's AudioContext.
-// Online only for now (each instrument ~2.6 MB) — fine for a kitchen experiment.
+// Sampled instruments for the relational keyboard — the full 128 General-MIDI set, streamed on demand.
+// Two interchangeable "sound banks", both base64 audio decoded through the app's AudioContext:
+//   fluid — gleitz/midi-js-soundfonts FluidR3_GM: one mp3 PER NOTE (our original source, free/redistributable)
+//   gu    — surikov/webaudiofont GeneralUser GS: a few ZONES per instrument (root pitch + key range)
+// Both normalize into `current`: Map<midi, {buf, base}>  where base = the sample's own pitch (MIDI number).
 import { actx } from './audio.js';
 
-const BASE='https://gleitz.github.io/midi-js-soundfonts/FluidR3_GM/';
-// visible name key (i18n: instr.<id>) → GM slug
-export const SAMPLER_INSTRUMENTS=[
-  {id:'piano',    slug:'acoustic_grand_piano'},
-  {id:'epiano',   slug:'electric_piano_1'},
-  {id:'harpsi',   slug:'harpsichord'},
-  {id:'celesta',  slug:'celesta'},
-  {id:'musicbox', slug:'music_box'},
-  {id:'vibes',    slug:'vibraphone'},
-  {id:'marimba',  slug:'marimba'},
-  {id:'glock',    slug:'glockenspiel'},
-  {id:'kalimba',  slug:'kalimba'},
-  {id:'organ',    slug:'church_organ'},
-  {id:'accordion',slug:'accordion'},
-  {id:'harmonica',slug:'harmonica'},
-  {id:'nylon',    slug:'acoustic_guitar_nylon'},
-  {id:'steel',    slug:'acoustic_guitar_steel'},
-  {id:'harp',     slug:'orchestral_harp'},
-  {id:'sitar',    slug:'sitar'},
-  {id:'koto',     slug:'koto'},
-  {id:'shamisen', slug:'shamisen'},
-  {id:'strings',  slug:'string_ensemble_1'},
-  {id:'choir',    slug:'choir_aahs'},
-  {id:'flute',    slug:'flute'},
-  {id:'panflute', slug:'pan_flute'},
-  {id:'shaku',    slug:'shakuhachi'},
-  {id:'clarinet', slug:'clarinet'},
-  {id:'sax',      slug:'alto_sax'},
-  {id:'trumpet',  slug:'trumpet'},
+const FLUID='https://gleitz.github.io/midi-js-soundfonts/FluidR3_GM/';
+const WAF='https://surikov.github.io/webaudiofontdata/sound/';
+
+// the 128 GM programs in order — slug = gleitz filename, index = GM program number
+export const GM=[
+  'acoustic_grand_piano','bright_acoustic_piano','electric_grand_piano','honkytonk_piano','electric_piano_1','electric_piano_2','harpsichord','clavinet',
+  'celesta','glockenspiel','music_box','vibraphone','marimba','xylophone','tubular_bells','dulcimer',
+  'drawbar_organ','percussive_organ','rock_organ','church_organ','reed_organ','accordion','harmonica','tango_accordion',
+  'acoustic_guitar_nylon','acoustic_guitar_steel','electric_guitar_jazz','electric_guitar_clean','electric_guitar_muted','overdriven_guitar','distortion_guitar','guitar_harmonics',
+  'acoustic_bass','electric_bass_finger','electric_bass_pick','fretless_bass','slap_bass_1','slap_bass_2','synth_bass_1','synth_bass_2',
+  'violin','viola','cello','contrabass','tremolo_strings','pizzicato_strings','orchestral_harp','timpani',
+  'string_ensemble_1','string_ensemble_2','synth_strings_1','synth_strings_2','choir_aahs','voice_oohs','synth_choir','orchestra_hit',
+  'trumpet','trombone','tuba','muted_trumpet','french_horn','brass_section','synth_brass_1','synth_brass_2',
+  'soprano_sax','alto_sax','tenor_sax','baritone_sax','oboe','english_horn','bassoon','clarinet',
+  'piccolo','flute','recorder','pan_flute','blown_bottle','shakuhachi','whistle','ocarina',
+  'lead_1_square','lead_2_sawtooth','lead_3_calliope','lead_4_chiff','lead_5_charang','lead_6_voice','lead_7_fifths','lead_8_bass__lead',
+  'pad_1_new_age','pad_2_warm','pad_3_polysynth','pad_4_choir','pad_5_bowed','pad_6_metallic','pad_7_halo','pad_8_sweep',
+  'fx_1_rain','fx_2_soundtrack','fx_3_crystal','fx_4_atmosphere','fx_5_brightness','fx_6_goblins','fx_7_echoes','fx_8_scifi',
+  'sitar','banjo','shamisen','koto','kalimba','bagpipe','fiddle','shanai',
+  'tinkle_bell','agogo','steel_drums','woodblock','taiko_drum','melodic_tom','synth_drum','reverse_cymbal',
+  'guitar_fret_noise','breath_noise','seashore','bird_tweet','telephone_ring','helicopter','applause','gunshot',
 ];
+
+// 16 GM families (8 programs each). key → i18n label grp.<key>; the picker groups by these
+export const FAMILIES=[
+  {key:'piano'},{key:'mallet'},{key:'organ'},{key:'guitar'},
+  {key:'bass'},{key:'strings'},{key:'ensemble'},{key:'brass'},
+  {key:'reed'},{key:'pipe'},{key:'lead'},{key:'pad'},
+  {key:'synthfx'},{key:'world'},{key:'perc'},{key:'fx'},
+];
+export function familyOf(slug){ const p=GM.indexOf(slug); return p<0?-1:Math.min(15,p>>3); }
+// instruments of a family, sorted alphabetically by display name
+export function familyItems(fi){ const lo=fi*8, arr=[];
+  for(let p=lo;p<lo+8 && p<128;p++) arr.push(GM[p]);
+  return arr.sort((a,b)=>displayName(a).localeCompare(displayName(b))); }
+// "acoustic_grand_piano" → "Acoustic Grand Piano" (names are conventionally English, like a DAW)
+export function displayName(slug){ return slug.replace(/_+/g,' ').trim().replace(/\b\w/g,c=>c.toUpperCase()); }
+
+// ---- Timbre facts MIDI/GM and the mp3 packs don't carry — by family, with per-instrument overrides ----
+// bend: realistic pitch-bend range in semitones (0 = struck/plucked-keyboard, don't glide the pitch)
+// sustain: true = tone holds while the key is down (needs a synth tail under the one-shot sample)
+const FAM_META=[
+  {bend:0,sustain:false}, // piano
+  {bend:0,sustain:false}, // mallet (chromatic percussion)
+  {bend:0,sustain:true},  // organ
+  {bend:2,sustain:false}, // guitar
+  {bend:2,sustain:false}, // bass
+  {bend:2,sustain:true},  // strings (bowed)
+  {bend:1,sustain:true},  // ensemble / choir
+  {bend:2,sustain:true},  // brass
+  {bend:2,sustain:true},  // reed
+  {bend:2,sustain:true},  // pipe (flutes)
+  {bend:2,sustain:true},  // synth lead
+  {bend:1,sustain:true},  // synth pad
+  {bend:1,sustain:true},  // synth fx
+  {bend:2,sustain:false}, // world (mostly plucked)
+  {bend:0,sustain:false}, // percussive
+  {bend:0,sustain:false}, // sound effects
+];
+const META_OVERRIDE={
+  harmonica:{bend:2,sustain:true},          // in the organ family, but a blues harp bends and holds
+  orchestral_harp:{bend:0,sustain:false},   // in strings, but plucked → decays, no bend
+  pizzicato_strings:{bend:0,sustain:false},
+  tremolo_strings:{bend:1,sustain:true},
+  timpani:{bend:0,sustain:false},
+  orchestra_hit:{bend:0,sustain:false},     // one-shot stab
+  guitar_harmonics:{bend:2,sustain:false},
+  sitar:{bend:4,sustain:false},             // deep signature bends, plucked
+  shakuhachi:{bend:3,sustain:true},
+  bagpipe:{bend:1,sustain:true},            // world, but sustained
+  fiddle:{bend:2,sustain:true},
+  shanai:{bend:2,sustain:true},
+};
+export function instrMeta(slug){ const fi=familyOf(slug);
+  return Object.assign({}, fi<0?{bend:2,sustain:false}:FAM_META[fi], META_OVERRIDE[slug]||{}); }
+
+// ---- sound banks ----
+export const BANKS=[{id:'fluid',name:'FluidR3'},{id:'gu',name:'GeneralUser GS'}];
+let bank='fluid';
+try{ const b=localStorage.getItem('jamlab.bank'); if(b && BANKS.some(x=>x.id===b)) bank=b; }catch(e){}
+export function currentBank(){ return bank; }
+export function setBank(id){ if(id!==bank && BANKS.some(b=>b.id===id)){ bank=id; current=null;
+  try{ localStorage.setItem('jamlab.bank',id); }catch(e){} } }
+
 const FLAT=['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];   // gleitz keys use flats (Bb, not A#)
 function midiName(m){ return FLAT[((m%12)+12)%12]+(Math.floor(m/12)-1); }
+function b64ToU8(b64){ const bin=atob(b64), u8=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u8[i]=bin.charCodeAt(i); return u8; }
 
-// ---- Timbre facts the MIDI/GM standard and these mp3 packs don't carry — hand-authored ----
-// bend    : realistic pitch-bend range in semitones. 0 = struck / plucked / keyboard: the pitch
-//           can't be pulled, so the engine won't glide it (a "bending" piano sounds fake).
-// sustain : true  = the tone holds while the key is down (winds, bowed strings, organ, voice).
-//                   The mp3 is a short one-shot, so the engine layers a quiet synth tail to hold it.
-//           false = natural decay (piano, plucked, mallets): key length doesn't matter, no tail.
-export const INSTR_META={
-  piano:{bend:0,sustain:false},  epiano:{bend:0,sustain:false},  harpsi:{bend:0,sustain:false},
-  celesta:{bend:0,sustain:false},musicbox:{bend:0,sustain:false},vibes:{bend:0,sustain:false},
-  marimba:{bend:0,sustain:false},glock:{bend:0,sustain:false},   kalimba:{bend:0,sustain:false},
-  harp:{bend:0,sustain:false},
-  organ:{bend:0,sustain:true},   accordion:{bend:0,sustain:true},   harmonica:{bend:2,sustain:true},
-  nylon:{bend:2,sustain:false},  steel:{bend:2,sustain:false},
-  sitar:{bend:4,sustain:false},  koto:{bend:2,sustain:false},    shamisen:{bend:2,sustain:false},
-  strings:{bend:2,sustain:true}, choir:{bend:2,sustain:true},
-  flute:{bend:2,sustain:true},   panflute:{bend:1,sustain:true},  shaku:{bend:3,sustain:true},
-  clarinet:{bend:2,sustain:true},sax:{bend:3,sustain:true},       trumpet:{bend:2,sustain:true},
-};
-export function instrMeta(id){ return INSTR_META[id] || {bend:2,sustain:false}; }
-
-const cache={};             // slug → { buffers: Map<midi,AudioBuffer>, promise }
-let current=null;           // the ready instrument's buffer map
+const cache={};             // (bank+'/'+slug) → { map:Map<midi,{buf,base}>, done, promise }
+let current=null;           // the ready instrument's note→sample map
 
 export function samplerReady(){ return !!current; }
-export function sampleBuffer(midi){ if(!current) return null;
+export function sampleAt(midi){ if(!current) return null;
   if(current.has(midi)) return current.get(midi);
-  // fall back to the nearest decoded note (bend/rate handles the pitch gap)
-  let best=null,bd=99; for(const k of current.keys()){ const d=Math.abs(k-midi); if(d<bd){bd=d;best=k;} }
-  return best==null?null:current.get(best);
-}
-export function sampleBaseMidi(midi){ if(current&&current.has(midi)) return midi;
-  let best=midi,bd=99; if(current) for(const k of current.keys()){ const d=Math.abs(k-midi); if(d<bd){bd=d;best=k;} } return best;
-}
-// recorded pitch range of the loaded instrument (MIDI numbers). Notes far outside it are heavy
-// pitch-shifts ("chipmunk"); the engine plays the synth voice there instead. null until loaded.
+  let best=null,bd=1e9; for(const [k,v] of current){ const d=Math.abs(k-midi); if(d<bd){bd=d;best=v;} }   // nearest note; rate covers the gap
+  return best; }
 export function sampleRange(){ if(!current||!current.size) return null;
-  let lo=999,hi=-1; for(const k of current.keys()){ if(k<lo)lo=k; if(k>hi)hi=k; } return {lo,hi};
-}
+  let lo=999,hi=-1; for(const k of current.keys()){ if(k<lo)lo=k; if(k>hi)hi=k; } return {lo,hi}; }
 
-// load an instrument by id; decodes notes across lo..hi (the playable range). Resolves when ready.
-export async function loadSampler(id, lo=36, hi=88){
-  const inst=SAMPLER_INSTRUMENTS.find(x=>x.id===id)||SAMPLER_INSTRUMENTS[0];
-  const slug=inst.slug;
-  if(cache[slug] && cache[slug].done){ current=cache[slug].buffers; return true; }
-  if(cache[slug] && cache[slug].promise){ await cache[slug].promise; current=cache[slug].buffers; return true; }
-  const entry={buffers:new Map(), done:false};
-  cache[slug]=entry;
-  entry.promise=(async()=>{
-    const txt=await fetch(BASE+slug+'-mp3.js').then(r=>r.text());
-    (0,eval)(txt);                                   // defines window.MIDI.Soundfont[slug] = { "C4":"data:audio/mp3;base64,…" }
-    const sf=window.MIDI && window.MIDI.Soundfont && window.MIDI.Soundfont[slug];
-    if(!sf) throw new Error('soundfont parse failed: '+slug);
-    const jobs=[];
-    for(let m=lo;m<=hi;m++){ const uri=sf[midiName(m)]; if(!uri) continue;
-      const b64=uri.split(',')[1], bin=atob(b64), u8=new Uint8Array(bin.length);
-      for(let i=0;i<bin.length;i++) u8[i]=bin.charCodeAt(i);
-      jobs.push(actx.decodeAudioData(u8.buffer).then(buf=>entry.buffers.set(m,buf)).catch(()=>{}));
-    }
-    await Promise.all(jobs);
-    entry.done=true;
-  })();
-  await entry.promise; current=entry.buffers; return true;
+// FluidR3: one mp3 per note → base = that note
+async function loadFluid(slug,lo,hi,entry){
+  const txt=await fetch(FLUID+slug+'-mp3.js').then(r=>{ if(!r.ok) throw new Error('fluid '+r.status); return r.text(); });
+  (0,eval)(txt);                                       // window.MIDI.Soundfont[slug] = { "C4":"data:audio/mp3;base64,…" }
+  const sf=window.MIDI && window.MIDI.Soundfont && window.MIDI.Soundfont[slug];
+  if(!sf) throw new Error('fluid parse '+slug);
+  const jobs=[];
+  for(let m=lo;m<=hi;m++){ const uri=sf[midiName(m)]; if(!uri) continue;
+    jobs.push(actx.decodeAudioData(b64ToU8(uri.split(',')[1]).buffer).then(buf=>entry.map.set(m,{buf,base:m})).catch(()=>{}));
+  }
+  await Promise.all(jobs);
+  if(!entry.map.size) throw new Error('fluid empty '+slug);
+}
+// GeneralUser GS (webaudiofont): a few zones, each with a root pitch + key range → map every note to its zone
+async function loadWAF(slug,lo,hi,entry){
+  const prog=GM.indexOf(slug); if(prog<0) throw new Error('no prog '+slug);
+  const fn=String(prog).padStart(3,'0')+'0_GeneralUserGS_sf2_file';
+  const txt=await fetch(WAF+fn+'.js').then(r=>{ if(!r.ok) throw new Error('waf '+r.status); return r.text(); });
+  (0,eval)(txt);
+  const tone=window['_tone_'+fn], zones=tone&&tone.zones;
+  if(!zones || !zones.length) throw new Error('waf empty '+slug);
+  const bufs=await Promise.all(zones.map(z=>{ const b64=z.file||z.sample; if(!b64) return Promise.resolve(null);
+    return actx.decodeAudioData(b64ToU8(b64).buffer).then(b=>b).catch(()=>null); }));
+  const rootOf=z=>(z.originalPitch!=null?z.originalPitch:6000)/100;
+  for(let m=lo;m<=hi;m++){
+    let zi=zones.findIndex(z=>m>=(z.keyRangeLow!=null?z.keyRangeLow:0) && m<=(z.keyRangeHigh!=null?z.keyRangeHigh:127));
+    if(zi<0){ let bd=1e9; for(let i=0;i<zones.length;i++){ const d=Math.abs(rootOf(zones[i])-m); if(d<bd){bd=d;zi=i;} } }
+    const buf=bufs[zi]; if(buf) entry.map.set(m,{buf,base:rootOf(zones[zi])});
+  }
+  if(!entry.map.size) throw new Error('waf nomap '+slug);
+}
+// load an instrument by slug for the active bank; GU falling back to FluidR3 if a program is missing there
+export async function loadSampler(slug, lo=36, hi=88){
+  const key=bank+'/'+slug;
+  if(cache[key] && cache[key].done){ current=cache[key].map; return true; }
+  if(cache[key] && cache[key].promise){ try{ await cache[key].promise; }catch(e){} if(cache[key].done) current=cache[key].map; return true; }
+  const entry={map:new Map(), done:false, bank}; cache[key]=entry;
+  entry.promise=(bank==='gu'?loadWAF(slug,lo,hi,entry):loadFluid(slug,lo,hi,entry))
+    .catch(async e=>{ if(entry.bank==='gu'){ await loadFluid(slug,lo,hi,entry); return; } throw e; })  // GU gap → FluidR3
+    .then(()=>{ entry.done=true; });
+  await entry.promise; if(entry.done) current=entry.map; return true;
 }
