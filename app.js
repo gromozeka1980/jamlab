@@ -10,7 +10,7 @@ import { actx, comp, leadBus, leadFilter, leadOut, accBus, busPerc, busBass, bus
 import { viz, cssRgb } from './viz.js';
 import { refreshRecLabel } from './rec.js';
 import { isPro, modeLocked, showPaywall, onProChange, initBilling, KITCHEN } from './paywall.js';
-import { loadSampler, sampleAt, samplerReady, instrMeta, sampleRange, GM, FAMILIES, PICK_FAMILIES, familyOf, familyItems, displayName, BANKS, setBank, currentBank } from './sampler.js';
+import { loadSampler, sampleAt, sampleGain, samplerReady, instrMeta, GM, FAMILIES, PICK_FAMILIES, familyOf, familyItems, displayName, BANKS, setBank, currentBank } from './sampler.js';
 import { loadDrums, drumsReady, playDrum } from './drums.js';
 import { loadBass, bassReady, playBassNote } from './bass.js';
 import { loadArp, arpReady, playArpNote } from './arp.js';
@@ -145,10 +145,6 @@ function bendTargets(i){
 // A sampled instrument caps how far its pitch bends (0 = piano/mallets don't bend at all);
 // the mode's own synth voice bends freely, so no cap there.
 function curBendCap(){ return (curLeadInstr && samplerReady()) ? instrMeta(curLeadInstr).bend : Infinity; }
-// Is this pitch within (a hair of) the loaded instrument's recorded range? Outside it, a heavy
-// pitch-shift sounds fake, so we play the synth voice instead.
-function sampleInRange(freq){ const rng=sampleRange(); if(!rng) return true;
-  const m=Math.round(freqToMidi(freq)); return m>=rng.lo-2 && m<=rng.hi+2; }
 function makeVoice(freq,maxUp,maxDown,approach,when){
   const t0=when||actx.currentTime, g=actx.createGain();
   const v={g,baseFreq:freq,dragBend:0,maxUp:maxUp||0,maxDown:maxDown||0,freqNodes:[],stops:[]};
@@ -174,19 +170,21 @@ function makeVoice(freq,maxUp,maxDown,approach,when){
     const nf=actx.createBiquadFilter(); nf.type='bandpass'; nf.frequency.value=bpFreq; nf.Q.value=Q;
     const ng=actx.createGain(); ng.gain.setValueAtTime(amp,t0); ng.gain.exponentialRampToValueAtTime(0.0006,t0+dur);
     nz.connect(nf); nf.connect(g); nz.start(t0); nz.stop(t0+dur+0.02); v.stops.push(nz); };
-  if(curLeadInstr && samplerReady() && sampleInRange(freq)){   // lead swapped for a sampled GM instrument: decoded note, pitch-shifted; bend via playbackRate (shimmed into freqNodes)
+  if(curLeadInstr && samplerReady()){   // lead swapped for a sampled GM instrument: decoded note, pitch-shifted; bend via playbackRate (shimmed into freqNodes)
     const midi=Math.round(freqToMidi(freq)), smp=sampleAt(midi), meta=instrMeta(curLeadInstr);
     if(smp && smp.buf){
-      const buf=smp.buf, baseRate=Math.pow(2,(midi-smp.base)/12);
+      const buf=smp.buf, baseRate=Math.pow(2,(midi-smp.base)/12), lvl=sampleGain();   // per-instrument loudness normalization
+      const looped = meta.sustain && smp.loopS!=null;           // GU marks loop points → hold the tone by looping the sample
       const src=actx.createBufferSource(); src.buffer=buf; src.playbackRate.value=baseRate;
+      if(looped){ src.loop=true; src.loopStart=smp.loopS; src.loopEnd=smp.loopE; }
       vibG.connect(src.detune);                                 // vibrato (cents) on the sample
       src.connect(g); src.start(t0); v.stops.push(src);
       v.freqNodes.push({osc:{frequency:src.playbackRate}, mult:baseRate/freq});   // bend: applyBend sets playbackRate = baseRate * 2^(semis/12)
-      g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(.85,t0+0.008);  // the sample carries its own decay; just avoid a click
-      if(meta.sustain){                                         // winds/bowed/organ: the one-shot mp3 dies in ~3s — hold it with a quiet synth tail while the key is down
+      g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(lvl,t0+0.008);  // sample carries its own decay/loop; just avoid a click
+      if(meta.sustain && !looped){                              // one-shot winds (FluidR3, no loop): hold with a quiet synth tail while the key is down
         const s1=actx.createOscillator(); s1.type='sine';     s1.frequency.value=freq;
         const s2=actx.createOscillator(); s2.type='triangle'; s2.frequency.value=freq*2;
-        const tg=actx.createGain(); tg.gain.setValueAtTime(0,t0); tg.gain.linearRampToValueAtTime(0.16,t0+0.55);  // fades in under the live sample, carries on after it fades
+        const tg=actx.createGain(); tg.gain.setValueAtTime(0,t0); tg.gain.linearRampToValueAtTime(0.18/lvl,t0+0.55);  // fades in under the sample; /lvl because it also passes through g (=lvl), so output ≈0.18 regardless of instrument
         vibG.connect(s1.detune); vibG.connect(s2.detune);
         const s2g=actx.createGain(); s2g.gain.value=0.3;
         s1.connect(tg); s2.connect(s2g); s2g.connect(tg); tg.connect(g);

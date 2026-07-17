@@ -99,16 +99,23 @@ const FLAT=['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];   // gleitz k
 function midiName(m){ return FLAT[((m%12)+12)%12]+(Math.floor(m/12)-1); }
 function b64ToU8(b64){ const bin=atob(b64), u8=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u8[i]=bin.charCodeAt(i); return u8; }
 
-const cache={};             // (bank+'/'+slug) → { map:Map<midi,{buf,base}>, done, promise }
+const cache={};             // (bank+'/'+slug) → { map:Map<midi,{buf,base,loopS,loopE}>, gain, done, promise }
 let current=null;           // the ready instrument's note→sample map
+let curGain=1;              // per-instrument loudness normalization (FluidR3 samples are ~10-20× quieter than GU)
 
 export function samplerReady(){ return !!current; }
+export function sampleGain(){ return curGain; }
 export function sampleAt(midi){ if(!current) return null;
   if(current.has(midi)) return current.get(midi);
   let best=null,bd=1e9; for(const [k,v] of current){ const d=Math.abs(k-midi); if(d<bd){bd=d;best=v;} }   // nearest note; rate covers the gap
   return best; }
 export function sampleRange(){ if(!current||!current.size) return null;
   let lo=999,hi=-1; for(const k of current.keys()){ if(k<lo)lo=k; if(k>hi)hi=k; } return {lo,hi}; }
+// normalize each instrument to a consistent peak (~0.8): FluidR3 and GU are recorded at very different levels
+function normGain(map){ let mx=0; const seen=new Set();
+  for(const {buf} of map.values()){ if(!buf||seen.has(buf))continue; seen.add(buf);
+    const d=buf.getChannelData(0), N=Math.min(d.length,24000); for(let i=0;i<N;i++){ const v=d[i]<0?-d[i]:d[i]; if(v>mx)mx=v; } }
+  return mx>0 ? Math.max(0.05,Math.min(40, 0.8/mx)) : 1; }
 
 // FluidR3: one mp3 per note → base = that note
 async function loadFluid(slug,lo,hi,entry){
@@ -154,21 +161,24 @@ async function loadWAF(slug,lo,hi,entry){
   const metaRoot=z=>((z.originalPitch!=null?z.originalPitch:6000) - 100*(z.coarseTune||0) - (z.fineTune||0))/100;
   const roots=zones.map((z,i)=>{ const meta=metaRoot(z), b=bufs[i]; if(!b) return meta;
     const det=detectMidi(b); return (det!=null && Math.abs(det-meta)<=1.2) ? det : meta; });
+  // loop points (seconds) for sustained tones — GU marks them so a held note can ring forever by looping
+  const loops=zones.map(z=>{ const ls=z.loopStart, le=z.loopEnd, sr=z.sampleRate||44100;
+    return (ls!=null && le!=null && le>ls && ls>=0) ? {s:ls/sr, e:le/sr} : null; });
   for(let m=lo;m<=hi;m++){
     let zi=zones.findIndex(z=>m>=(z.keyRangeLow!=null?z.keyRangeLow:0) && m<=(z.keyRangeHigh!=null?z.keyRangeHigh:127));
     if(zi<0){ let bd=1e9; for(let i=0;i<zones.length;i++){ const d=Math.abs(roots[i]-m); if(d<bd){bd=d;zi=i;} } }
-    const buf=bufs[zi]; if(buf) entry.map.set(m,{buf,base:roots[zi]});
+    const buf=bufs[zi]; if(buf) entry.map.set(m,{buf,base:roots[zi], loopS:loops[zi]&&loops[zi].s, loopE:loops[zi]&&loops[zi].e});
   }
   if(!entry.map.size) throw new Error('waf nomap '+slug);
 }
 // load an instrument by slug for the active bank; GU falling back to FluidR3 if a program is missing there
 export async function loadSampler(slug, lo=36, hi=88){
   const key=bank+'/'+slug;
-  if(cache[key] && cache[key].done){ current=cache[key].map; return true; }
-  if(cache[key] && cache[key].promise){ try{ await cache[key].promise; }catch(e){} if(cache[key].done) current=cache[key].map; return true; }
-  const entry={map:new Map(), done:false, bank}; cache[key]=entry;
+  if(cache[key] && cache[key].done){ current=cache[key].map; curGain=cache[key].gain; return true; }
+  if(cache[key] && cache[key].promise){ try{ await cache[key].promise; }catch(e){} if(cache[key].done){ current=cache[key].map; curGain=cache[key].gain; } return true; }
+  const entry={map:new Map(), gain:1, done:false, bank}; cache[key]=entry;
   entry.promise=(bank==='gu'?loadWAF(slug,lo,hi,entry):loadFluid(slug,lo,hi,entry))
     .catch(async e=>{ if(entry.bank==='gu'){ await loadFluid(slug,lo,hi,entry); return; } throw e; })  // GU gap → FluidR3
-    .then(()=>{ entry.done=true; });
-  await entry.promise; if(entry.done) current=entry.map; return true;
+    .then(()=>{ entry.gain=normGain(entry.map); entry.done=true; });
+  await entry.promise; if(entry.done){ current=entry.map; curGain=entry.gain; } return true;
 }
