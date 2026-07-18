@@ -57,6 +57,8 @@ export const viz=(()=>{
   function keysHeld(a){ heldKeys=a||[]; }
   // keyboard mirror: the video draws the real key grid and lights up taps
   let keymap=null, keymapProvider=null, activeOffs=new Set(); const tapAt={};
+  let recScaleTxt='';
+  function recScaleName(s){ recScaleTxt=s||''; }
   function setKeymapProvider(fn){ keymapProvider=fn; }
   function keysActive(offs){ const s=new Set(offs);                    // new presses since last call → start a tap pulse
     for(const o of s) if(!activeOffs.has(o)) tapAt[o]=performance.now();
@@ -87,8 +89,8 @@ export const viz=(()=>{
     c.textAlign='center'; c.textBaseline='alphabetic';
     c.fillStyle='rgba('+acc[0]+','+acc[1]+','+acc[2]+',0.92)'; c.font='600 '+Math.round(17*s)+'px system-ui,sans-serif';
     c.fillText(document.getElementById('h1name').textContent||'', RW/2, 30*s);
-    c.fillStyle='rgba(230,232,245,0.55)'; c.font='400 '+Math.round(11*s)+'px system-ui,sans-serif';
-    c.fillText((document.getElementById('h1sub').textContent||'').replace(/^·\s*/,''), RW/2, 48*s);
+    c.fillStyle='rgba(230,232,245,0.72)'; c.font='700 '+Math.round(13*s)+'px system-ui,sans-serif';
+    c.fillText(recScaleTxt || (document.getElementById('h1sub').textContent||'').replace(/^·\s*/,''), RW/2, 49*s);
     // melody ribbon — scrolls right→left over ~7s, in the band above the keys
     const WIN=7000, xR=RW*0.88, span=RW*0.76, yBot=kTop-30*s, yTop=Math.max(RH*0.16, kTop-Math.min(kTop*0.5, RH*0.26)), pts=[];
     for(let i=0;i<MEL.length;i++){ const m=MEL[i], ag=(now-m.t)/WIN; if(ag>1) continue;
@@ -140,7 +142,7 @@ export const viz=(()=>{
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
-  return {note,spark,pulse,melody,melodyBend,liveNote,keysHeld,setKeymapProvider,keysActive, recCanvas:rec,
+  return {note,spark,pulse,melody,melodyBend,liveNote,keysHeld,setKeymapProvider,keysActive,recScaleName, recCanvas:rec,
     startRec(){ keymap = keymapProvider ? keymapProvider() : null; activeOffs=new Set(); recording=true; },   // snapshot the key layout while it's stable
     stopRec(){ recording=false; }};
 })();
