@@ -278,6 +278,7 @@ function glideVoice(v,tf){ v.baseFreq=tf; const t0=actx.currentTime; let b=v.dra
   for(const fn of v.freqNodes) fn.osc.frequency.setTargetAtTime(tf*fn.mult*r,t0,0.09); }   // settle held note to a chord tone
 const VOICE_CAP=6;                                 // voice stealing: a palm on the screen must not overload the audio thread
 const heldNotes=new Map();                         // id → key offset label ("+2"), shown under the ring in recordings
+const keyDownOffs=new Map();                        // id → key offset (number), for lighting up the mirrored keyboard in the video
 function noteOn(id,offset,el){ initAudio(); resumeAudio(); if(activeVoices.has(id)) return null;
   if(activeVoices.size>=VOICE_CAP) stopVoice(activeVoices.keys().next().value);   // steal the oldest voice
   currentIndex=clampIndex(currentIndex+offset);
@@ -300,6 +301,7 @@ function noteOn(id,offset,el){ initAudio(); resumeAudio(); if(activeVoices.has(i
   activeVoices.set(id,v); el.classList.add("active");
   tapHaptic('LIGHT');
   heldNotes.set(id,(offset>0?'+':'')+offset); viz.keysHeld([...heldNotes.values()]);   // video: pressed keys + sounding note
+  keyDownOffs.set(id,offset); viz.keysActive([...keyDownOffs.values()]);                // video: light up the tapped key
   viz.liveNote(midiToName(Math.round(freqToMidi(freq))),0);
   if(settings.viz){ const r=el.getBoundingClientRect(); const cv=el.classList.contains('neg')?'--neg':el.classList.contains('pos')?'--pos':'--zero'; viz.note(r.left+r.width/2, r.top+10, cssRgb(cv));
     const mm=freqToMidi(freq), p01=Math.max(0,Math.min(1,(mm-settings.minMidi)/Math.max(1,settings.maxMidi-settings.minMidi))); viz.melody(p01); }
@@ -313,6 +315,7 @@ function noteOn(id,offset,el){ initAudio(); resumeAudio(); if(activeVoices.has(i
   return v; }
 function noteOff(id,el,rel){ stopVoice(id,rel);
   heldNotes.delete(id); viz.keysHeld([...heldNotes.values()]);
+  keyDownOffs.delete(id); viz.keysActive([...keyDownOffs.values()]);
   if(activeVoices.size===0){ viz.liveNote(null,0); elNote.classList.remove('bup','bdown'); }   // silence → no note in the video
   if(el){el.classList.remove("active","bending","bent","down"); el.style.setProperty("--bend",0);}
   refreshKeyLabels(); }                                                        // restore the per-key bend arrows
@@ -471,6 +474,17 @@ function buildKeys(){
   rowTopEl.style.setProperty('--topoff',off); rowTopEl.style.setProperty('--toplead',lead);
 }
 buildKeys();
+// snapshot the key grid (positions/labels normalized to the screen) so the recording video can mirror it
+function buildKeymap(){ if(!noteKeys.length) return null;
+  const W=innerWidth, H=innerHeight, keys=[];
+  for(const k of noteKeys){ const r=k.el.getBoundingClientRect(); if(!r.width) continue;
+    const off=k.el.querySelector('.off');
+    keys.push({ off:k.off, offTxt:off?off.textContent:'', lead:k.lead.textContent||'',
+      cls: k.el.classList.contains('neg')?'neg':k.el.classList.contains('pos')?'pos':'zero',
+      x:r.left/W, y:r.top/H, w:r.width/W, h:r.height/H }); }
+  return keys.length ? {keys} : null;
+}
+viz.setKeymapProvider(buildKeymap);
 
 const EXTRA=[{key:'extra.octDown',code:"BracketLeft",act:()=>shiftOctave(-1)},
              {key:'extra.toRoot',code:"Backspace",act:resetToRoot},
