@@ -301,7 +301,7 @@ function noteOn(id,offset,el){ initAudio(); resumeAudio(); if(activeVoices.has(i
   activeVoices.set(id,v); el.classList.add("active");
   tapHaptic('LIGHT');
   heldNotes.set(id,(offset>0?'+':'')+offset); viz.keysHeld([...heldNotes.values()]);   // video: pressed keys + sounding note
-  keyDownOffs.set(id,offset); viz.keysActive([...keyDownOffs.values()]);                // video: light up the tapped key
+  if(id!=='strip'){ keyDownOffs.set(id,offset); viz.keysActive([...keyDownOffs.values()]); }   // video: light the tapped key (not for strip glissando)
   viz.liveNote(midiToName(Math.round(freqToMidi(freq))),0);
   if(settings.viz){ const r=el.getBoundingClientRect(); const cv=el.classList.contains('neg')?'--neg':el.classList.contains('pos')?'--pos':'--zero'; viz.note(r.left+r.width/2, r.top+10, cssRgb(cv));
     const mm=freqToMidi(freq), p01=Math.max(0,Math.min(1,(mm-settings.minMidi)/Math.max(1,settings.maxMidi-settings.minMidi))); viz.melody(p01); }
@@ -407,6 +407,16 @@ function updateDisplay(){
   refreshKeyLabels();
   stripRender();
   updateTopsum();
+  viz.recScaleName(scaleLabel());        // video subtitle: the actual scale in use (root + variant)
+}
+// concise name of the scale currently in use, for the recording video (e.g. "A · Hirajōshi", "A · Blues minor")
+function scaleLabel(){
+  const root=NOTE_NAMES[((settings.rootMidi%12)+12)%12];
+  if(M.id==='jazz') return jazzLabel||t(M.name);
+  if(M.kind==='harmonic') return (t(M.sub)||'').replace(/^·\s*/,'');
+  const vr=M.variants && M.variants.find(v=>v.id===settings.variant);
+  const sc=vr ? (M.lab?labScaleName(settings.variant):t(vr.label)) : '';
+  return sc ? root+' · '+sc : root;
 }
 /* collapsed config summary: "A · 85 · Minor · Shuffle" — the one line phones see instead of the console */
 const topsumEl=document.getElementById('topsum'), topsumTxt=document.getElementById('topsumTxt');
