@@ -143,6 +143,8 @@ export const viz=(()=>{
   }
   requestAnimationFrame(frame);
   return {note,spark,pulse,melody,melodyBend,liveNote,keysHeld,setKeymapProvider,keysActive,recScaleName, recCanvas:rec,
-    startRec(){ keymap = keymapProvider ? keymapProvider() : null; activeOffs=new Set(); recording=true; },   // snapshot the key layout while it's stable
+    startRec(){ keymap = keymapProvider ? keymapProvider() : null;   // snapshot the key layout while it's stable
+      MEL.length=0; P.length=0; activeOffs=new Set(); for(const o in tapAt) delete tapAt[o];   // start clean — no leftover ribbon/taps from before recording
+      liveTxt=null; heldKeys=[]; lastNoteAt=-1e9; beat=0; recording=true; },
     stopRec(){ recording=false; }};
 })();
