@@ -165,8 +165,11 @@ async function loadWAF(slug,lo,hi,entry){
   const loops=zones.map(z=>{ const ls=z.loopStart, le=z.loopEnd, sr=z.sampleRate||44100;
     return (ls!=null && le!=null && le>ls && ls>=0) ? {s:ls/sr, e:le/sr} : null; });
   for(let m=lo;m<=hi;m++){
-    let zi=zones.findIndex(z=>m>=(z.keyRangeLow!=null?z.keyRangeLow:0) && m<=(z.keyRangeHigh!=null?z.keyRangeHigh:127));
-    if(zi<0){ let bd=1e9; for(let i=0;i<zones.length;i++){ const d=Math.abs(roots[i]-m); if(d<bd){bd=d;zi=i;} } }
+    // pick the zone whose TRUE root is nearest m (minimal pitch-shift). We ignore keyRange: GU key-ranges
+    // are sometimes pathological (bagpipe: the root-72 zone is tagged 0-57, and a root-94 zone spans 0-76),
+    // which made notes shift down 1-2 octaves. Nearest-root matches keyRange on well-formed fonts anyway.
+    let zi=0, bd=1e9;
+    for(let i=0;i<zones.length;i++){ if(!bufs[i]) continue; const d=Math.abs(roots[i]-m); if(d<bd){bd=d;zi=i;} }
     const buf=bufs[zi]; if(buf) entry.map.set(m,{buf,base:roots[zi], loopS:loops[zi]&&loops[zi].s, loopE:loops[zi]&&loops[zi].e});
   }
   if(!entry.map.size) throw new Error('waf nomap '+slug);
