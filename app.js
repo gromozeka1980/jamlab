@@ -625,6 +625,9 @@ function curBack(){ return M.backings.find(b=>b.id===settings.backing) || M.back
 // (iwato has b5 instead of 5 — droning a perfect fifth against it clashes)
 function fifthOf(){ if(M.kind!=='scale') return 7;
   for(const c of [7,6,8,5,9]) if(SCALE.includes(c)) return c; return 12; }
+// scale-degree index -> semitones from root. Lets a per-style arp be written in degrees and stay
+// in-scale across every variant automatically (degree 5 in a 5-note scale = octave, etc.).
+function degToSemi(d){ const n=SCALE.length||1, oct=Math.floor(d/n), idx=((d%n)+n)%n; return (SCALE[idx]||0)+12*oct; }
 function kotoPluck(off,time){ const m=settings.rootMidi+off;   // an octave above the drone
   if(liveArp()&&playArpNote(m,time,0.9,0.22,busChord))return;
   const o=actx.createOscillator();o.type="triangle";o.frequency.value=midiToFreq(m);
@@ -660,7 +663,9 @@ function modalScheduler(){ const b=curBack(), beat=60/settings.bpm, vamp=M.vamp|
     const f5=fifthOf();
     if(b.perc) percHit(M.perc, step, nextNoteTime);
     if(b.bass && (step===0||step===4)) modalBass(vroot + (step===4?f5:0), nextNoteTime);
-    if(b.arp){ const AP=(M.arps&&M.arps[settings.variant])||[0,f5,12,f5], av=AP[mStep%AP.length];   // lab: per-scale custom arp with rests
+    if(b.arp){ let av;
+      if(b.arpU && M.arpU){ const P=M.arpU, d=P[mStep%P.length]; av=(d==null)?null:degToSemi(d); }   // per-style unique arp, written in scale degrees
+      else { const AP=(M.arps&&M.arps[settings.variant])||[0,f5,12,f5]; av=AP[mStep%AP.length]; }     // lab custom / classic root-fifth-octave
       if(av!=null) kotoPluck(vroot+av, nextNoteTime); }
     nextNoteTime += beat/2; mStep++;
   } }

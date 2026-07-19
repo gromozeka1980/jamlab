@@ -39,24 +39,27 @@ export const MODES = {
     theme:{bg1:'#2a2150', accent:'#ffcf6b', zero:'#e23b3b', neg:'#4263eb', pos:'#e8590c', blue:'#4dd0e1'},
     kind:'scale',
     scales:{hira:[0,2,3,7,8], kumoi:[0,2,3,7,9], insen:[0,1,5,7,10], iwato:[0,1,5,6,10]},
+    arpU:[0,2,4,3,5,3,2,0],                     // unique koto arp — rolling pentatonic run up to the octave and back (scale degrees)
     variants:[{id:'hira',label:'variant.hira'},{id:'kumoi',label:'variant.kumoi'},{id:'insen',label:'variant.insen'},{id:'iwato',label:'variant.iwato'}], defVariant:'hira',
-    backings:[{id:'drone',label:'backing.drone',pad:1},{id:'arp',label:'backing.arp',arp:1},{id:'both',label:'backing.both',pad:1,arp:1},{id:'padperc',label:'backing.koto.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.koto.arpperc',arp:1,perc:1,bass:1}], defBacking:'arpperc',
+    backings:[{id:'drone',label:'backing.drone',pad:1},{id:'arp',label:'backing.arp',arp:1},{id:'both',label:'backing.both',pad:1,arp:1},{id:'padperc',label:'backing.koto.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.koto.arpperc',arp:1,perc:1,bass:1},{id:'arpU',label:'backing.arpU',arp:1,arpU:1,perc:1,bass:1}], defBacking:'arpperc',
   },
   vostok: {
     id:'vostok', name:'mode.vostok.name', sub:'mode.vostok.sub', voice:'pluck', back:'koto', perc:'darbuka', vamp:[0,1],
     theme:{bg1:'#3a2417', accent:'#e8b04b', zero:'#d6453b', neg:'#b5651d', pos:'#e8930c', blue:'#e8b04b'},
     kind:'scale',
     scales:{freygish:[0,1,4,5,7,8,10], hungarian:[0,2,3,6,7,8,11], romanian:[0,2,3,6,7,9,10]},
+    arpU:[0,1,2,1,4,3,2,1],                     // unique East arp — hypnotic circling of the exotic tetrachord (root·♭2·M3) up to the fifth (scale degrees)
     variants:[{id:'freygish',label:'variant.freygish'},{id:'hungarian',label:'variant.hungarian'},{id:'romanian',label:'variant.romanian'}], defVariant:'freygish',
-    backings:[{id:'drone',label:'backing.drone',pad:1},{id:'padperc',label:'backing.vostok.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.vostok.arpperc',arp:1,perc:1,bass:1},{id:'vamp',label:'backing.vostok.vamp',vamp:1,arp:1,perc:1,bass:1}], defBacking:'arpperc',
+    backings:[{id:'drone',label:'backing.drone',pad:1},{id:'padperc',label:'backing.vostok.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.vostok.arpperc',arp:1,perc:1,bass:1},{id:'vamp',label:'backing.vostok.vamp',vamp:1,arp:1,perc:1,bass:1},{id:'arpU',label:'backing.arpU',arp:1,arpU:1,perc:1,bass:1}], defBacking:'arpperc',
   },
   light: {
     id:'light', name:'mode.light.name', sub:'mode.light.sub', voice:'pluck', back:'koto', perc:'shaker',
     theme:{bg1:'#13405a', accent:'#ffe08a', zero:'#37b24d', neg:'#4dabf7', pos:'#ffa94d', blue:'#66d9e8'},
     kind:'scale',
     scales:{major:[0,2,4,7,9], minor:[0,3,5,7,10]},
+    arpU:[0,4,2,4,5,2,4,0],                     // unique Bright arp — bouncy leaps to the sixth and octave (scale degrees)
     variants:[{id:'major',label:'variant.light.major'},{id:'minor',label:'variant.light.minor'}], defVariant:'major',
-    backings:[{id:'drone',label:'backing.drone',pad:1},{id:'arp',label:'backing.arp',arp:1},{id:'padperc',label:'backing.light.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.light.arpperc',arp:1,perc:1,bass:1}], defBacking:'arpperc',
+    backings:[{id:'drone',label:'backing.drone',pad:1},{id:'arp',label:'backing.arp',arp:1},{id:'padperc',label:'backing.light.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.light.arpperc',arp:1,perc:1,bass:1},{id:'arpU',label:'backing.arpU',arp:1,arpU:1,perc:1,bass:1}], defBacking:'arpperc',
   },
   synth: {
     id:'synth', name:'mode.synth.name', sub:'mode.synth.sub', voice:'saw', back:'synth', defBpm:108,
