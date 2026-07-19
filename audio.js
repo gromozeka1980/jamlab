@@ -34,7 +34,11 @@ export function initAudio(){
   const d=noiseBuf.getChannelData(0); for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
   unlockAudio();
 }
-export function resumeAudio(){ if(actx && actx.state==="suspended") actx.resume(); if(silentEl) silentEl.play().catch(()=>{}); }
+export function resumeAudio(){ if(!actx) return;
+  try{ actx.resume(); }catch(e){}                                                                    // resume regardless of exact state — some WebViews don't report 'suspended' after losing audio focus
+  try{ const s=actx.createBufferSource(); s.buffer=actx.createBuffer(1,1,22050); s.connect(actx.destination); s.start(0); }catch(e){}   // nudge the output stream awake
+  if(silentEl) silentEl.play().catch(()=>{});                                                        // replay the silent element to reclaim the audio session the other app took
+}
 export function makeImpulse(sec,decay){ const rate=actx.sampleRate,n=rate*sec,b=actx.createBuffer(2,n,rate);
   for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch); for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/n,decay);} return b; }
 export function makeDriveCurve(k){ const n=1024,c=new Float32Array(n); for(let i=0;i<n;i++){const x=i/(n-1)*2-1; c[i]=(1+k)*x/(1+k*Math.abs(x));} return c; }
