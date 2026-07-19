@@ -6,7 +6,7 @@ import { actx, comp, recDest, initAudio, resumeAudio } from './audio.js';
 import { track } from './analytics.js';
 
 const REC_MAX_MS=5*60*1000;
-let mediaRec=null, recChunks=[], recStart=0, recTimer=null, recTracks=null;
+let mediaRec=null, recChunks=[], recStart=0, recTimer=null, recTracks=null, recVTracks=null;
 let tapDest=null;                                   // local fallback tap if the shared recDest feed died
 const recBtn=document.getElementById("recBtn");
 export function isRecording(){ return !!(mediaRec && mediaRec.state==='recording'); }
@@ -45,24 +45,28 @@ function patchMp4Duration(ab, durMs){
     return true;
   }catch(e){ return false; }
 }
+// Stop the canvas capture tracks so they stop pulling frames. Without this, every record cycle leaves
+// a live CanvasCaptureMediaStreamTrack tapping recCanvas at 30fps → they pile up and the graphics slow down.
+function stopVTracks(){ if(recVTracks){ for(const tr of recVTracks){ try{ tr.stop(); }catch(e){} } recVTracks=null; } }
 function startRecording(){
   initAudio(); resumeAudio();
   if(!window.MediaRecorder){ alert(t('rec.noSupport')); return; }
-  const vtr = viz.recCanvas.captureStream ? viz.recCanvas.captureStream(30).getVideoTracks() : [];
+  stopVTracks();                                                          // release any leftover capture track before making a new one
+  recVTracks = viz.recCanvas.captureStream ? viz.recCanvas.captureStream(30).getVideoTracks() : [];
   const dest = tapDest || recDest;
   let atr = dest ? dest.stream.getAudioTracks() : [];
   if(!atr.length && actx){ try{ tapDest=actx.createMediaStreamDestination(); comp.connect(tapDest); atr=tapDest.stream.getAudioTracks(); }catch(e){} }   // re-tap if the audio feed died
-  const stream = new MediaStream([...vtr, ...atr]);
+  const stream = new MediaStream([...recVTracks, ...atr]);
   viz.startRec();
   const mime=pickMime();
   const opts={videoBitsPerSecond:3000000}; if(mime) opts.mimeType=mime;   // ~720p, small share-friendly files; audio bitrate left to the encoder default
   try{ mediaRec = new MediaRecorder(stream, opts); }
   catch(e){ try{ mediaRec = new MediaRecorder(stream, mime?{mimeType:mime}:undefined); }             // some WebViews reject bitrate opts
-    catch(e2){ alert(t('rec.unavailable')+e2.message); viz.stopRec(); return; } }
+    catch(e2){ alert(t('rec.unavailable')+e2.message); viz.stopRec(); stopVTracks(); return; } }
   recTracks={a:stream.getAudioTracks().length, v:stream.getVideoTracks().length};
   recChunks=[];
   mediaRec.ondataavailable=e=>{ if(e.data && e.data.size) recChunks.push(e.data); };
-  mediaRec.onstop=()=>{ viz.stopRec(); const durMs=Date.now()-recStart; track('record_done',{sec:Math.round(durMs/1000)});
+  mediaRec.onstop=()=>{ viz.stopRec(); stopVTracks(); const durMs=Date.now()-recStart; track('record_done',{sec:Math.round(durMs/1000)});
     const blob=new Blob(recChunks,{type:mediaRec.mimeType||'video/webm'});
     if((blob.type||'').indexOf('mp4')>=0 && blob.arrayBuffer)
       blob.arrayBuffer().then(ab=>finishRecording(patchMp4Duration(ab,durMs)?new Blob([ab],{type:blob.type}):blob))
