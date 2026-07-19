@@ -27,7 +27,7 @@ function setPro(v){ pro=!!v; try{ v?localStorage.setItem('jamlab.pro','1'):local
   listeners.forEach(f=>{ try{f();}catch(e){} }); }
 
 /* --- RevenueCat --- */
-let pkgObj=null, priceStr='$4.99';
+let pkgObj=null, priceStr='$4';   // placeholder only — the real price comes from RevenueCat/Play once billing is live
 function applyCustomerInfo(res){ const ent=res && res.customerInfo && res.customerInfo.entitlements;
   const active=!!(ent && ent.active && ent.active[ENTITLEMENT]);
   if(active!==pro) setPro(active);

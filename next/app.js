@@ -40,7 +40,7 @@ if(TOUCH) document.body.classList.add('touch');   // hide keyboard hints/labels 
 /* ============ Native niceties (Capacitor bridge, no-ops on the web) ============ */
 const NPLUG = (NATIVE && window.Capacitor.Plugins) ? window.Capacitor.Plugins : null;
 if(NPLUG && NPLUG.KeepAwake){ try{ NPLUG.KeepAwake.keepAwake(); }catch(e){} }   // an instrument must not dim mid-jam
-function tapHaptic(style){ if(NPLUG && NPLUG.Haptics){ try{ NPLUG.Haptics.impact({style}); }catch(e){} } }
+function tapHaptic(style){ if(!settings.haptics) return; if(NPLUG && NPLUG.Haptics){ try{ NPLUG.Haptics.impact({style}); }catch(e){} } }   // opt-in: off by default (settings)
 
 /* ============ Mode state ============ */
 
@@ -902,7 +902,7 @@ function setMode(id){ const was=accOn; if(actx) stopBacking();
   const showInstr = M.kind!=='harmonic';
   document.getElementById("ctlInstr").style.display = showInstr?'':'none';
   if(showInstr){ buildInstrOptions();
-    const modeBank=leadBankMap[M.id]||'fluid'; setBank(modeBank); if(bankSel) bankSel.value=modeBank;   // this style's sound bank
+    const modeBank=leadBankMap[M.id]||'gu'; setBank(modeBank); if(bankSel) bankSel.value=modeBank;   // this style's sound bank (GU default — bundled offline)
     // per-mode lead voice: the user's saved pick (incl. an explicit Synth = '') wins; otherwise the mode's default
     curLeadInstr = Object.prototype.hasOwnProperty.call(leadInstrMap,M.id) ? leadInstrMap[M.id] : (MODE_INSTR_DEFAULT[M.id]||'');
     syncInstrSelects(curLeadInstr);
@@ -957,6 +957,9 @@ const bgChord=document.getElementById("bgChord"); bgChord.addEventListener("inpu
 const vizSel=document.getElementById("vizSel"); vizSel.addEventListener("change",()=>{ settings.viz=vizSel.value==='on'; saveSettings(); });
 const gyroSel=document.getElementById("gyroSel"); gyroSel.addEventListener("change",()=>{ resetGyroParams(); settings.gyro=gyroSel.value; if(settings.gyro!=='off') enableGyro(); saveSettings(); });
 if(!TOUCH) document.getElementById("ctlGyro").style.display="none";   // tilt lives in the top bar; pointless on desktop
+const hapticSel=document.getElementById("hapticSel");
+if(hapticSel){ hapticSel.addEventListener("change",()=>{ settings.haptics=hapticSel.value==='on'; saveSettings(); });
+  if(!TOUCH) document.getElementById("ctlHaptics").style.display="none"; }   // vibration is a phone-only thing
 function applyPrefsToControls(){
   tone.value=settings.tone;
   // component volumes are now 0–100% (were 0–150%); clamp any value saved under the old range
@@ -965,12 +968,12 @@ function applyPrefsToControls(){
   bgDrums.value=Math.round(settings.bgDrums*100); bgBass.value=Math.round(settings.bgBass*100); bgChord.value=Math.round(settings.bgChord*100);
   setVal('toneVal',Math.round(settings.tone)); setVal('volSoloVal',Math.round(settings.volSolo*100)+'%');
   setVal('bgDrumsVal',Math.round(settings.bgDrums*100)+'%'); setVal('bgBassVal',Math.round(settings.bgBass*100)+'%'); setVal('bgChordVal',Math.round(settings.bgChord*100)+'%');
-  vizSel.value=settings.viz?'on':'off'; gyroSel.value=settings.gyro;
+  vizSel.value=settings.viz?'on':'off'; gyroSel.value=settings.gyro; if(hapticSel) hapticSel.value=settings.haptics?'on':'off';
   colorSel.value=settings.jazzColor; landSel.value=settings.jazzLand; phraseSel.value=settings.jazzPhrase; timingSel.value=settings.jazzTiming;
 }
 // reset this style's settings to the defaults (global prefs + drop the style's saved instrument/bank), then rebuild
 function resetToDefaults(){
-  settings.tone=2600; settings.viz=true; settings.gyro='off';
+  settings.tone=2600; settings.viz=true; settings.gyro='off'; settings.haptics=false;
   settings.volSolo=0.8; settings.volAcc=1; settings.bgDrums=0.55; settings.bgBass=0.55; settings.bgChord=0.55;
   saveSettings();
   delete leadInstrMap[M.id]; try{ localStorage.setItem('jamlab.leadInstr',JSON.stringify(leadInstrMap)); }catch(e){}
@@ -1050,6 +1053,8 @@ percSel.addEventListener('change',()=>{ if(M.lab){ M.perc=percSel.value; try{ lo
 try{ if(localStorage.getItem('jamlab.leadInstrV')!=='3'){ localStorage.removeItem('jamlab.leadInstr'); localStorage.setItem('jamlab.leadInstrV','3'); } }catch(e){}
 let leadInstrMap={}; try{ leadInstrMap=JSON.parse(localStorage.getItem('jamlab.leadInstr')||'{}')||{}; }catch(e){}
 let leadBankMap={}; try{ leadBankMap=JSON.parse(localStorage.getItem('jamlab.leadBank')||'{}')||{}; }catch(e){}   // sound bank chosen per style
+// one-time: GU is now the default bank (bundled offline). Drop stale per-style FluidR3 defaults so everyone lands on GU.
+try{ if(localStorage.getItem('jamlab.bankDefV')!=='1'){ leadBankMap={}; localStorage.setItem('jamlab.leadBank','{}'); localStorage.setItem('jamlab.bankDefV','1'); } }catch(e){}
 // two-step picker: choose a family (or Synth), then an instrument within it (128 GM instruments is too many for one list)
 const instrGroup=document.getElementById('instrGroup'), instrSel=document.getElementById('instrSel');
 function buildInstrOptions(){ if(instrGroup.options.length) return;
@@ -1179,7 +1184,8 @@ document.getElementById('labDelete').addEventListener('click',()=>{
 
 /* ============ Instrument picker and start ============ */
 const overlay=document.getElementById("overlay");
-function refreshLocks(){ document.querySelectorAll('.pick').forEach(p=>p.classList.toggle('locked', modeLocked(p.dataset.mode))); }
+function refreshLocks(){ document.querySelectorAll('.pick').forEach(p=>p.classList.toggle('locked', modeLocked(p.dataset.mode)));
+  const kd=document.getElementById('kitchenDoor'); if(kd) kd.classList.toggle('locked', !isPro()); }   // the kitchen itself is the lock, not the dishes inside
 onProChange(refreshLocks);   // a purchase unlocks everything in place
 function goHome(){ if(TEASER) return; if(accOn) stopBacking(); clearTaste(); overlay.style.display="flex"; }
 function enterPlay(id){
@@ -1197,6 +1203,7 @@ function enterPlay(id){
 }
 const kitchenEl=document.getElementById('kitchen');
 document.getElementById('kitchenDoor').addEventListener('click',()=>{
+  if(!isPro()){ track('kitchen_locked'); showPaywall(); return; }   // the kitchen door itself is locked for free users
   track('kitchen_open'); kitchenEl.classList.remove('hidden'); });
 document.getElementById('kitchenBack').addEventListener('click',()=>kitchenEl.classList.add('hidden'));
 document.querySelectorAll(".pick").forEach(p=>p.addEventListener("click",()=>{
