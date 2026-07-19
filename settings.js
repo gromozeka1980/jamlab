@@ -2,10 +2,10 @@
 // note range is fixed: A1 … A6 (checked by ear on a phone speaker)
 export const settings = { rootMidi:57, bpm:85, tone:2600, variant:'minor', backing:'major',
                           harmony:'major', rhythm:'shuffle', jazzColor:'hot', jazzLand:'line', jazzPhrase:'bebop', jazzTiming:'free',
-                          volSolo:0.8, volAcc:1, bgDrums:0.55, bgBass:0.55, bgChord:0.55, minMidi:33, maxMidi:93, viz:true, gyro:'off' };
+                          volSolo:0.8, volAcc:1, bgDrums:0.55, bgBass:0.55, bgChord:0.55, minMidi:33, maxMidi:93, viz:true, gyro:'off', haptics:false };
 
 // only mode-independent user preferences (variant/backing/harmony/rhythm/bpm are reset per mode)
-const PERSIST_KEYS=['tone','volSolo','volAcc','bgDrums','bgBass','bgChord','viz','gyro','jazzColor','jazzLand','jazzPhrase','jazzTiming'];
+const PERSIST_KEYS=['tone','volSolo','volAcc','bgDrums','bgBass','bgChord','viz','gyro','haptics','jazzColor','jazzLand','jazzPhrase','jazzTiming'];
 function loadSettings(){ try{ const raw=localStorage.getItem('jamlab.settings');
   if(raw){ const s=JSON.parse(raw); PERSIST_KEYS.forEach(k=>{ if(s[k]!=null) settings[k]=s[k]; });
     if(settings.jazzPhrase==='plain') settings.jazzPhrase='free';

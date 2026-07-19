@@ -91,7 +91,7 @@ export function instrMeta(slug){ const fi=familyOf(slug);
 
 // ---- sound banks ----
 export const BANKS=[{id:'fluid',name:'FluidR3'},{id:'gu',name:'GeneralUser GS'}];
-let bank='fluid';                                    // active bank; chosen per style by app.js (leadBankMap)
+let bank='gu';                                       // active bank; GU is bundled offline (waf/) so it's the default. chosen per style by app.js (leadBankMap)
 export function currentBank(){ return bank; }
 export function setBank(id){ if(id!==bank && BANKS.some(b=>b.id===id)){ bank=id; current=null; } }
 
