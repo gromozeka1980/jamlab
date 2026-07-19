@@ -1296,9 +1296,17 @@ document.addEventListener("gesturestart",e=>e.preventDefault());
 document.addEventListener("dblclick",e=>e.preventDefault());   // belt-and-suspenders vs iOS double-tap zoom
 document.addEventListener("contextmenu",e=>e.preventDefault());
 document.addEventListener("touchend",resumeAudio,{passive:true});
-// interruptions (call, app switch, screen lock): hold the backing while hidden, resume on return
+// interruptions (call, app switch, screen lock): hold the backing while hidden, revive audio on return.
+// The WebView hands the audio session to the other app; visibilitychange isn't reliably fired on native,
+// so we also listen to the Capacitor App lifecycle, and resume twice (the session isn't ready instantly).
 let backingHeldBg=false;
-document.addEventListener("visibilitychange",()=>{
-  if(document.hidden){ if(accOn){ backingHeldBg=true; stopBacking(); } }
-  else { resumeAudio(); if(backingHeldBg){ backingHeldBg=false; startBacking(); } }
-});
+function audioToBackground(){ if(accOn){ backingHeldBg=true; stopBacking(); } }
+function audioToForeground(){ resumeAudio(); setTimeout(resumeAudio,350);
+  if(backingHeldBg){ backingHeldBg=false; startBacking(); } }
+document.addEventListener("visibilitychange",()=>{ document.hidden?audioToBackground():audioToForeground(); });
+window.addEventListener("focus",audioToForeground);
+if(NPLUG && NPLUG.App){
+  NPLUG.App.addListener('appStateChange',({isActive})=>{ isActive?audioToForeground():audioToBackground(); });
+  NPLUG.App.addListener('resume',audioToForeground);
+  NPLUG.App.addListener('pause',audioToBackground);
+}
