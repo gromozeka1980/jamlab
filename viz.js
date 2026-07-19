@@ -121,7 +121,11 @@ export const viz=(()=>{
         let ol=base; if(on&&liveBend>0)ol=[255,212,59]; else if(on&&liveBend<0)ol=[77,208,225];
         c.strokeStyle='rgba('+ol[0]+','+ol[1]+','+ol[2]+','+(0.30+0.6*lit).toFixed(3)+')'; c.lineWidth=(1.5+1.5*lit)*s; rrp(c,x,y,w,h,r); c.stroke();
         c.fillStyle= lit>0.4?'#fff':'rgba(236,234,243,0.88)'; c.textAlign='center';
-        c.font='800 '+Math.round(Math.min(h*0.30,30*s))+'px system-ui,sans-serif'; c.fillText(k.offTxt||'', x+w/2, y+h*0.40);
+        const offTxt=k.offTxt||''; let fs=Math.min(h*0.30,30*s);
+        c.font='800 '+Math.round(fs)+'px system-ui,sans-serif';
+        const tw=c.measureText(offTxt).width, maxw=w*0.82;      // narrow keys: shrink so 2–3 char labels (+6/-7) don't spill
+        if(tw>maxw){ fs*=maxw/tw; c.font='800 '+Math.round(fs)+'px system-ui,sans-serif'; }
+        c.fillText(offTxt, x+w/2, y+h*0.40);
         if(k.lead){ c.fillStyle='rgba(236,234,243,0.5)'; c.font='600 '+Math.round(Math.min(h*0.15,13*s))+'px system-ui,sans-serif'; c.fillText(k.lead, x+w/2, y+h*0.66); } }
     }
     // touch splashes (emitted at the real key positions on tap)
