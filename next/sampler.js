@@ -164,13 +164,19 @@ async function loadWAF(slug,lo,hi,entry){
   // loop points (seconds) for sustained tones — GU marks them so a held note can ring forever by looping
   const loops=zones.map(z=>{ const ls=z.loopStart, le=z.loopEnd, sr=z.sampleRate||44100;
     return (ls!=null && le!=null && le>ls && ls>=0) ? {s:ls/sr, e:le/sr} : null; });
+  // loop-ONLY samples: the buffer ends at full level (decay not baked in — an SF2 player is expected to
+  // loop + envelope them). Played one-shot they cut off mid-ring (GU harp lows). Detect by tail level.
+  const hots=bufs.map(b=>{ if(!b) return false; const d=b.getChannelData(0);
+    let peak=0; for(let i=0;i<d.length;i+=4){ const v=d[i]<0?-d[i]:d[i]; if(v>peak)peak=v; }
+    let tail=0; for(let i=Math.max(0,d.length-2048);i<d.length;i++){ const v=d[i]<0?-d[i]:d[i]; if(v>tail)tail=v; }
+    return tail>0.15*peak; });
   for(let m=lo;m<=hi;m++){
     // pick the zone whose TRUE root is nearest m (minimal pitch-shift). We ignore keyRange: GU key-ranges
     // are sometimes pathological (bagpipe: the root-72 zone is tagged 0-57, and a root-94 zone spans 0-76),
     // which made notes shift down 1-2 octaves. Nearest-root matches keyRange on well-formed fonts anyway.
     let zi=0, bd=1e9;
     for(let i=0;i<zones.length;i++){ if(!bufs[i]) continue; const d=Math.abs(roots[i]-m); if(d<bd){bd=d;zi=i;} }
-    const buf=bufs[zi]; if(buf) entry.map.set(m,{buf,base:roots[zi], loopS:loops[zi]&&loops[zi].s, loopE:loops[zi]&&loops[zi].e});
+    const buf=bufs[zi]; if(buf) entry.map.set(m,{buf,base:roots[zi], loopS:loops[zi]&&loops[zi].s, loopE:loops[zi]&&loops[zi].e, hot:!!(loops[zi]&&hots[zi])});
   }
   if(!entry.map.size) throw new Error('waf nomap '+slug);
 }

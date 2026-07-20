@@ -174,13 +174,17 @@ function makeVoice(freq,maxUp,maxDown,approach,when){
     const midi=Math.round(freqToMidi(freq)), smp=sampleAt(midi), meta=instrMeta(curLeadInstr);
     if(smp && smp.buf){
       const buf=smp.buf, baseRate=Math.pow(2,(midi-smp.base)/12), lvl=sampleGain();   // per-instrument loudness normalization
-      const looped = meta.sustain && smp.loopS!=null;           // GU marks loop points → hold the tone by looping the sample
+      const hot = smp.hot && smp.loopS!=null;                   // loop-ONLY sample (ends at full level): must loop or it cuts off mid-ring
+      const looped = (meta.sustain || hot) && smp.loopS!=null;  // GU marks loop points → hold the tone by looping the sample
       const src=actx.createBufferSource(); src.buffer=buf; src.playbackRate.value=baseRate;
       if(looped){ src.loop=true; src.loopStart=smp.loopS; src.loopEnd=smp.loopE; }
       vibG.connect(src.detune);                                 // vibrato (cents) on the sample
       src.connect(g); src.start(t0); v.stops.push(src);
       v.freqNodes.push({osc:{frequency:src.playbackRate}, mult:baseRate/freq});   // bend: applyBend sets playbackRate = baseRate * 2^(semis/12)
       g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(lvl,t0+0.008);  // sample carries its own decay/loop; just avoid a click
+      if(hot && !meta.sustain){                                 // plucked tone on a loop-only sample (GU harp lows): paint the natural decay ourselves
+        const dec=Math.max(0.5, 5*Math.pow(2,-(midi-36)/24));   // lower strings ring longer (~5s at C2 → ~1.2s at C6)
+        g.gain.exponentialRampToValueAtTime(Math.max(0.0008,lvl*0.012), t0+0.008+dec); }
       if(meta.sustain && !looped){                              // one-shot winds (FluidR3, no loop): hold with a quiet synth tail while the key is down
         const s1=actx.createOscillator(); s1.type='sine';     s1.frequency.value=freq;
         const s2=actx.createOscillator(); s2.type='triangle'; s2.frequency.value=freq*2;
