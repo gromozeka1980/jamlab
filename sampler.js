@@ -185,3 +185,16 @@ export async function loadSampler(slug, lo=36, hi=88){
     .then(()=>{ entry.gain=normGain(entry.map); entry.done=true; });
   await entry.promise; if(entry.done){ current=entry.map; curGain=entry.gain; } return true;
 }
+
+// backing loader (bass/arp): always GU from the bundled waf/ pack — offline, independent of the lead's
+// bank switch. Its own cache so backing note-ranges never collide with the lead's cached ranges.
+const backCache={};          // slug → { map, gain, done, promise }
+export async function loadGuBacking(slug, lo, hi){
+  let e=backCache[slug];
+  if(e && e.done) return e;
+  if(e && e.promise){ try{ await e.promise; }catch(err){} return backCache[slug].done?backCache[slug]:null; }
+  e={map:new Map(), gain:1, done:false}; backCache[slug]=e;
+  e.promise=loadWAF(slug,lo,hi,e).then(()=>{ e.gain=normGain(e.map); e.done=true; });
+  try{ await e.promise; }catch(err){ return null; }
+  return e;
+}
