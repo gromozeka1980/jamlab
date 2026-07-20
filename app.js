@@ -356,6 +356,7 @@ function stripRender(){ if(!stripEl) return;
       d.className='sdot'+(((i%len)+len)%len===0?' root':''); stripEl.appendChild(d); stripDots.push({i,el:d}); }
     stripMark=document.createElement('span'); stripMark.className='smark'; stripEl.appendChild(stripMark); }
   for(const d of stripDots) d.el.classList.toggle('cur', d.i===currentIndex);
+  viz.stripCur(currentIndex);                              // the video's strip mirror follows the position
   const cur=stripDots.find(d=>d.i===currentIndex);
   if(cur && stripMark) stripMark.style.left=(cur.el.offsetLeft + cur.el.offsetWidth/2)+'px';
 }
@@ -499,6 +500,14 @@ function buildKeymap(){ if(!noteKeys.length) return null;
   return keys.length ? {keys} : null;
 }
 viz.setKeymapProvider(buildKeymap);
+// the scale strip's dot centers, normalized like the keymap — the video mirrors the "you are here" ladder
+function buildStripmap(){ if(!stripDots.length) return null;
+  const W=innerWidth, H=innerHeight, dots=[];
+  for(const d of stripDots){ const r=d.el.getBoundingClientRect(); if(!r.width) continue;
+    dots.push({ i:d.i, root:d.el.classList.contains('root'), x:(r.left+r.width/2)/W, y:(r.top+r.height/2)/H }); }
+  return dots.length ? {dots} : null;
+}
+viz.setStripProvider(buildStripmap);
 
 const EXTRA=[{key:'extra.octDown',code:"BracketLeft",act:()=>shiftOctave(-1)},
              {key:'extra.toRoot',code:"Backspace",act:resetToRoot},

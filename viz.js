@@ -60,6 +60,10 @@ export const viz=(()=>{
   let recScaleTxt='';
   function recScaleName(s){ recScaleTxt=s||''; }
   function setKeymapProvider(fn){ keymapProvider=fn; }
+  // scale-strip mirror: the "you are here" dot ladder, with the current dot glowing (glissando reads as a running light)
+  let stripmap=null, stripProvider=null, stripCurI=null, stripMoveAt=0;
+  function setStripProvider(fn){ stripProvider=fn; }
+  function stripCur(i){ if(i!==stripCurI){ stripCurI=i; stripMoveAt=performance.now(); } }
   function keysActive(offs){ const s=new Set(offs);                    // new presses since last call → start a tap pulse
     for(const o of s) if(!activeOffs.has(o)) tapAt[o]=performance.now();
     activeOffs=s; }
@@ -84,7 +88,9 @@ export const viz=(()=>{
     const acc=cssRgb('--accent');
     // where the mirrored keyboard starts (from the snapshot); the ribbon + note live in the band above it
     const km = keymap && keymap.keys && keymap.keys.length ? keymap.keys : null;
+    const sm = stripmap && stripmap.dots && stripmap.dots.length ? stripmap.dots : null;
     let kTop=RH*0.52; if(km){ kTop=RH; for(const k of km) kTop=Math.min(kTop,k.y*RH); }
+    if(sm) for(const d of sm) kTop=Math.min(kTop,d.y*RH-8*s);   // the band above must clear the strip too
     // title
     c.textAlign='center'; c.textBaseline='alphabetic';
     c.fillStyle='rgba('+acc[0]+','+acc[1]+','+acc[2]+',0.92)'; c.font='600 '+Math.round(17*s)+'px system-ui,sans-serif';
@@ -128,6 +134,16 @@ export const viz=(()=>{
         c.fillText(offTxt, x+w/2, y+h*0.40);
         if(k.lead){ c.fillStyle='rgba(236,234,243,0.5)'; c.font='600 '+Math.round(Math.min(h*0.15,13*s))+'px system-ui,sans-serif'; c.fillText(k.lead, x+w/2, y+h*0.66); } }
     }
+    // the scale strip: root dots warm, the current dot glows and pops when the position moves
+    if(sm){ const pop=Math.exp(-(now-stripMoveAt)/220);
+      for(const d of sm){ const x=d.x*RW, y=d.y*RH, cur=d.i===stripCurI;
+        const r0=(d.root?4.4:3.0)*s*(cur?1.35+0.5*pop:1);
+        c.fillStyle = cur ? 'rgba('+acc[0]+','+acc[1]+','+acc[2]+',0.97)'
+                    : d.root ? 'rgba('+acc[0]+','+acc[1]+','+acc[2]+',0.5)' : 'rgba(236,234,243,0.30)';
+        c.beginPath(); c.arc(x,y,r0,0,6.2832); c.fill();
+        if(cur){ c.save(); c.globalCompositeOperation='lighter';
+          c.fillStyle='rgba('+acc[0]+','+acc[1]+','+acc[2]+','+(0.20+0.35*pop).toFixed(3)+')';
+          c.beginPath(); c.arc(x,y,r0*(2.1+1.2*pop),0,6.2832); c.fill(); c.restore(); } } }
     // touch splashes (emitted at the real key positions on tap)
     drawParticles(c,s);
     // watermark at the very bottom
@@ -146,8 +162,9 @@ export const viz=(()=>{
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
-  return {note,spark,pulse,melody,melodyBend,liveNote,keysHeld,setKeymapProvider,keysActive,recScaleName, recCanvas:rec,
+  return {note,spark,pulse,melody,melodyBend,liveNote,keysHeld,setKeymapProvider,keysActive,recScaleName,setStripProvider,stripCur, recCanvas:rec,
     startRec(){ keymap = keymapProvider ? keymapProvider() : null;   // snapshot the key layout while it's stable
+      stripmap = stripProvider ? stripProvider() : null;
       MEL.length=0; P.length=0; activeOffs=new Set(); for(const o in tapAt) delete tapAt[o];   // start clean — no leftover ribbon/taps from before recording
       liveTxt=null; heldKeys=[]; lastNoteAt=-1e9; beat=0; recording=true; },
     stopRec(){ recording=false; }};
