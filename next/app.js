@@ -881,7 +881,19 @@ function setHint(){ document.getElementById("hint").innerHTML = t(TOUCH ? 'hint.
 // sub-title under the instrument name: in Lab it's the active scale's name, elsewhere the mode blurb
 function updateModeSub(){ document.getElementById("h1sub").textContent = M.lab ? ('· '+labScaleName(settings.variant)) : t(M.sub); }
 
-function setMode(id){ const was=accOn; if(actx) stopBacking();
+// per-style tweak recorder: the last state of every style touched this session, snapped on style switch
+// (and on 🐞 dump for the current one) — so a hand-tuned session can be turned into per-style defaults.
+// NB: declared before setMode's first call (boot) — M starts truthy, so snapStyle runs immediately.
+const styleTweaks={};
+let styleTouched=false;                                 // don't record the untouched boot mode
+function snapStyle(){ if(!M || !styleTouched) return;
+  styleTweaks[M.id]={ variant:settings.variant, backing:settings.backing, bpm:settings.bpm, root:settings.rootMidi,
+    harmony:settings.harmony, rhythm:settings.rhythm,
+    instr:(leadInstrMap[M.id]!==undefined?leadInstrMap[M.id]:curLeadInstr)||'synth', bank:leadBankMap[M.id]||currentBank(),
+    vol:{solo:settings.volSolo, drums:settings.bgDrums, bass:settings.bgBass, chord:settings.bgChord, tone:settings.tone} }; }
+function setMode(id){ snapStyle();                     // record the outgoing style's tweaks for the 🐞 dump
+  styleTouched=true;
+  const was=accOn; if(actx) stopBacking();
   M=MODES[id]; applyTheme(M.theme);
   if(M.lab){ rebuildLabMode();                                 // lab: variants come from presets + saved custom scales
     try{ const lv=localStorage.getItem('jamlab.labVariant'); if(lv && M.scales[lv]) M.defVariant=lv;
@@ -1335,11 +1347,17 @@ window.addEventListener('unhandledrejection',e=>alog('unhandled rejection: '+((e
 
 /* ---- 🐞 one-tap debug dump: share/download a text file with the full audio state + lifecycle log ---- */
 async function audioDebugText(){
+  snapStyle();                                          // include the current style's live state too
   return ['JamBrew audio debug',
     'mode: '+M.id+' variant='+settings.variant+' backing='+settings.backing+' accOn='+accOn,
     'bank: '+currentBank()+' lead='+(curLeadInstr||'synth')+' voices='+activeVoices.size,
     'native: '+NATIVE,
-    'settings: '+JSON.stringify(settings), ''].join('\n') + await audioDebugReport();
+    'settings: '+JSON.stringify(settings),
+    '',
+    '--- per-style tweaks (styles visited this session, last state each) ---',
+    JSON.stringify(styleTweaks,null,1),
+    'leadInstrMap (persisted): '+JSON.stringify(leadInstrMap),
+    'leadBankMap (persisted): '+JSON.stringify(leadBankMap), ''].join('\n') + await audioDebugReport();
 }
 window.__audioDebug=audioDebugText;                       // also callable from chrome://inspect
 const dbgBtn=document.getElementById('dbgBtn');
