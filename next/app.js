@@ -6,7 +6,7 @@ import { MODES, NOTE_NAMES, HARMONY, HARM_OPTS, HARM_LADS, RHYTHM, RHY_OPTS,
          ARP, DREAMARP, GMPAT, DARBUKA, RIDE, DARING, QUAL, JAZZ_PROG,
          SYNTH_PROG, LOFI_PROG, LAB_PRESETS } from './modes.js';
 import { actx, comp, leadBus, leadFilter, leadOut, accBus, busPerc, busBass, busChord, noiseBuf,
-         initAudio, resumeAudio, accGain } from './audio.js';
+         initAudio, resumeAudio, recreateAudio, accGain } from './audio.js';
 import { viz, cssRgb } from './viz.js';
 import { refreshRecLabel } from './rec.js';
 import { isPro, modeLocked, showPaywall, onProChange, initBilling, KITCHEN } from './paywall.js';
@@ -1304,10 +1304,13 @@ document.addEventListener("touchend",resumeAudio,{passive:true});
 // interruptions (call, app switch, screen lock): hold the backing while hidden, revive audio on return.
 // The WebView hands the audio session to the other app; visibilitychange isn't reliably fired on native,
 // so we also listen to the Capacitor App lifecycle, and resume twice (the session isn't ready instantly).
-let backingHeldBg=false;
-function audioToBackground(){ if(accOn){ backingHeldBg=true; stopBacking(); } }
-function audioToForeground(){ resumeAudio(); setTimeout(resumeAudio,350);
-  if(backingHeldBg){ backingHeldBg=false; startBacking(); } }
+let backingHeldBg=false, needAudioRebuild=false;
+function audioToBackground(){ needAudioRebuild=true; if(accOn){ backingHeldBg=true; stopBacking(); } }
+function audioToForeground(){
+  if(needAudioRebuild && actx){ needAudioRebuild=false; try{ recreateAudio(); }catch(e){ resumeAudio(); } }   // resume alone doesn't revive a context the OS detached — rebuild it
+  else resumeAudio();
+  setTimeout(resumeAudio,350);
+  if(backingHeldBg){ backingHeldBg=false; setTimeout(startBacking,80); } }   // let the fresh graph settle before the band returns
 document.addEventListener("visibilitychange",()=>{ document.hidden?audioToBackground():audioToForeground(); });
 window.addEventListener("focus",audioToForeground);
 if(NPLUG && NPLUG.App){

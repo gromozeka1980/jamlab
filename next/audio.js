@@ -5,10 +5,14 @@ import { settings } from './settings.js';
 export let actx=null, master=null, comp=null, leadBus=null, leadFilter=null, shaper=null,
            leadOut=null, accBus=null, busPerc=null, busBass=null, busChord=null, reverb=null, noiseBuf=null, recDest=null, anl=null;
 
-export function initAudio(){
-  if (actx) return;
-  const AC=window.AudioContext||window.webkitAudioContext;
-  try{ actx=new AC({latencyHint:'balanced'}); }catch(e){ actx=new AC(); }   // bigger audio buffer → fewer underruns (anti-crackle)
+function openCtx(){ const AC=window.AudioContext||window.webkitAudioContext;
+  try{ actx=new AC({latencyHint:'balanced'}); }catch(e){ actx=new AC(); } }   // bigger audio buffer → fewer underruns (anti-crackle)
+export function initAudio(){ if(actx) return; openCtx(); buildGraph(); unlockAudio(); }
+// Some WebViews hand the audio hardware to another app and never give it back — resume() then reports
+// 'running' but no sound flows. On return from background we rebuild the whole context + graph so audio
+// is guaranteed live again. AudioBuffers are context-agnostic, so cached samples keep working.
+export function recreateAudio(){ try{ if(actx) actx.close(); }catch(e){} actx=null; openCtx(); buildGraph(); unlockAudio(); }
+function buildGraph(){
   comp = actx.createDynamicsCompressor(); comp.threshold.value=-12; comp.ratio.value=3; comp.release.value=.25;
   master = actx.createGain(); master.gain.value=1; master.connect(comp); comp.connect(actx.destination);
   try{ recDest=actx.createMediaStreamDestination(); comp.connect(recDest); }catch(e){}   // tap for recording
@@ -32,7 +36,6 @@ export function initAudio(){
   busChord= actx.createGain(); busChord.gain.value=settings.bgChord; busChord.connect(accBus);
   const len=actx.sampleRate*1; noiseBuf=actx.createBuffer(1,len,actx.sampleRate);
   const d=noiseBuf.getChannelData(0); for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
-  unlockAudio();
 }
 export function resumeAudio(){ if(!actx) return;
   try{ actx.resume(); }catch(e){}                                                                    // resume regardless of exact state — some WebViews don't report 'suspended' after losing audio focus
