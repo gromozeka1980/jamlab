@@ -3,7 +3,7 @@
 import { LANG, t, degName, setLangCode } from './i18n.js';
 import { settings, saveSettings } from './settings.js';
 import { MODES, NOTE_NAMES, HARMONY, HARM_OPTS, HARM_LADS, RHYTHM, RHY_OPTS,
-         ARP, DREAMARP, GMPAT, DARBUKA, RIDE, DARING, QUAL, JAZZ_PROG,
+         ARP, ARP_SHAPES, DREAMARP, GMPAT, DARBUKA, RIDE, DARING, QUAL, JAZZ_PROG,
          SYNTH_PROG, LOFI_PROG, LAB_PRESETS } from './modes.js';
 import { actx, comp, leadBus, leadFilter, leadOut, accBus, busPerc, busBass, busChord, noiseBuf,
          initAudio, resumeAudio, recreateAudio, accGain, alog, audioDebugReport } from './audio.js';
@@ -669,6 +669,8 @@ function modalScheduler(){ const b=curBack(), beat=60/settings.bpm, vamp=M.vamp|
     if(b.bass && (step===0||step===4)) modalBass(vroot + (step===4?f5:0), nextNoteTime);
     if(b.arp){ let av;
       if(b.arpU && M.arpU){ const P=M.arpU, d=P[mStep%P.length]; av=(d==null)?null:degToSemi(d); }   // per-style unique arp, written in scale degrees
+      else if(b.shape && ARP_SHAPES[b.shape]){ const S=ARP_SHAPES[b.shape], tk=S[mStep%S.length];    // root/fifth/octave shapes: 5 → the scale's live fifth
+        av = tk==null?null : tk===5?f5 : tk===17?f5+12 : tk; }
       else { const AP=(M.arps&&M.arps[settings.variant])||[0,f5,12,f5]; av=AP[mStep%AP.length]; }     // lab custom / classic root-fifth-octave
       if(av!=null) kotoPluck(vroot+av, nextNoteTime); }
     nextNoteTime += beat/2; mStep++;

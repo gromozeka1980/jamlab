@@ -41,7 +41,7 @@ export const MODES = {
     scales:{hira:[0,2,3,7,8], kumoi:[0,2,3,7,9], insen:[0,1,5,7,10], iwato:[0,1,5,6,10]},
     arpU:[0,2,4,3,5,3,2,0],                     // unique koto arp — rolling pentatonic run up to the octave and back (scale degrees)
     variants:[{id:'hira',label:'variant.hira'},{id:'kumoi',label:'variant.kumoi'},{id:'insen',label:'variant.insen'},{id:'iwato',label:'variant.iwato'}], defVariant:'hira',
-    backings:[{id:'drone',label:'backing.drone',pad:1},{id:'arp',label:'backing.arp',arp:1},{id:'both',label:'backing.both',pad:1,arp:1},{id:'padperc',label:'backing.koto.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.koto.arpperc',arp:1,perc:1,bass:1},{id:'arpU',label:'backing.arpU',arp:1,arpU:1,perc:1,bass:1}], defBacking:'arpperc',
+    backings:[{id:'drone',label:'backing.drone',pad:1},{id:'arp',label:'backing.arp',arp:1},{id:'both',label:'backing.both',pad:1,arp:1},{id:'padperc',label:'backing.koto.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.koto.arpperc',arp:1,perc:1,bass:1},{id:'arpU',label:'backing.arpU',arp:1,arpU:1,perc:1,bass:1},{id:'arpW',label:'backing.arpW',arp:1,shape:'waves',perc:1,bass:1},{id:'arpP',label:'backing.arpP',arp:1,shape:'pulse',perc:1,bass:1},{id:'arpF',label:'backing.arpF',arp:1,shape:'fall',perc:1,bass:1}], defBacking:'arpperc',
   },
   vostok: {
     id:'vostok', name:'mode.vostok.name', sub:'mode.vostok.sub', voice:'pluck', back:'koto', perc:'darbuka', vamp:[0,1],
@@ -50,7 +50,7 @@ export const MODES = {
     scales:{freygish:[0,1,4,5,7,8,10], hungarian:[0,2,3,6,7,8,11], romanian:[0,2,3,6,7,9,10]},
     arpU:[0,1,2,1,4,3,2,1],                     // unique East arp — hypnotic circling of the exotic tetrachord (root·♭2·M3) up to the fifth (scale degrees)
     variants:[{id:'freygish',label:'variant.freygish'},{id:'hungarian',label:'variant.hungarian'},{id:'romanian',label:'variant.romanian'}], defVariant:'freygish',
-    backings:[{id:'drone',label:'backing.drone',pad:1},{id:'padperc',label:'backing.vostok.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.vostok.arpperc',arp:1,perc:1,bass:1},{id:'vamp',label:'backing.vostok.vamp',vamp:1,arp:1,perc:1,bass:1},{id:'arpU',label:'backing.arpU',arp:1,arpU:1,perc:1,bass:1}], defBacking:'arpperc',
+    backings:[{id:'drone',label:'backing.drone',pad:1},{id:'padperc',label:'backing.vostok.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.vostok.arpperc',arp:1,perc:1,bass:1},{id:'vamp',label:'backing.vostok.vamp',vamp:1,arp:1,perc:1,bass:1},{id:'arpU',label:'backing.arpU',arp:1,arpU:1,perc:1,bass:1},{id:'arpW',label:'backing.arpW',arp:1,shape:'waves',perc:1,bass:1},{id:'arpP',label:'backing.arpP',arp:1,shape:'pulse',perc:1,bass:1},{id:'arpF',label:'backing.arpF',arp:1,shape:'fall',perc:1,bass:1}], defBacking:'arpperc',
   },
   light: {
     id:'light', name:'mode.light.name', sub:'mode.light.sub', voice:'pluck', back:'koto', perc:'shaker',
@@ -59,7 +59,7 @@ export const MODES = {
     scales:{major:[0,2,4,7,9], minor:[0,3,5,7,10]},
     arpU:[0,4,2,4,5,2,4,0],                     // unique Bright arp — bouncy leaps to the sixth and octave (scale degrees)
     variants:[{id:'major',label:'variant.light.major'},{id:'minor',label:'variant.light.minor'}], defVariant:'major',
-    backings:[{id:'drone',label:'backing.drone',pad:1},{id:'arp',label:'backing.arp',arp:1},{id:'padperc',label:'backing.light.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.light.arpperc',arp:1,perc:1,bass:1},{id:'arpU',label:'backing.arpU',arp:1,arpU:1,perc:1,bass:1}], defBacking:'arpperc',
+    backings:[{id:'drone',label:'backing.drone',pad:1},{id:'arp',label:'backing.arp',arp:1},{id:'padperc',label:'backing.light.padperc',pad:1,perc:1,bass:1},{id:'arpperc',label:'backing.light.arpperc',arp:1,perc:1,bass:1},{id:'arpU',label:'backing.arpU',arp:1,arpU:1,perc:1,bass:1},{id:'arpW',label:'backing.arpW',arp:1,shape:'waves',perc:1,bass:1},{id:'arpP',label:'backing.arpP',arp:1,shape:'pulse',perc:1,bass:1},{id:'arpF',label:'backing.arpF',arp:1,shape:'fall',perc:1,bass:1}], defBacking:'arpperc',
   },
   synth: {
     id:'synth', name:'mode.synth.name', sub:'mode.synth.sub', voice:'saw', back:'synth', defBpm:108,
@@ -136,6 +136,13 @@ export const RHY_OPTS=[['shuffle','rhy.shuffle'],['rock','rhy.rock'],['slow','rh
 
 /* --- modal backing patterns --- */
 export const ARP=[0,7,12,7];                       // root-fifth-octave (consonant in any scale)
+// arp shapes over the safe root/fifth/octave tones — variety comes from contour & density, not harmony.
+// tokens: 0/12 literal semitones, 5 → the scale's live fifth (fifthOf), 17 → fifth+octave, null → rest
+export const ARP_SHAPES={
+  waves:[0,5,12,17,12,5],                          // rolls over two octaves; 6 steps on the 8-step grid → drifting accent
+  pulse:[0,null,5,null,12,null,5,null],            // quarters with air between — the lightest
+  fall:[12,5,0,5],                                 // classic density, inverted contour (starts on top)
+};
 export const DREAMARP=[0,4,8,12,8,4];
 export const GMPAT=[0,1,2,3,4,2,3,4];
 export const DARBUKA=['D','.','t','.','D','t','.','t'];  // baladi-ish pattern over eighths
