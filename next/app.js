@@ -6,7 +6,7 @@ import { MODES, NOTE_NAMES, HARMONY, HARM_OPTS, HARM_LADS, RHYTHM, RHY_OPTS,
          ARP, DREAMARP, GMPAT, DARBUKA, RIDE, DARING, QUAL, JAZZ_PROG,
          SYNTH_PROG, LOFI_PROG, LAB_PRESETS } from './modes.js';
 import { actx, comp, leadBus, leadFilter, leadOut, accBus, busPerc, busBass, busChord, noiseBuf,
-         initAudio, resumeAudio, recreateAudio, accGain } from './audio.js';
+         initAudio, resumeAudio, recreateAudio, accGain, alog, audioDebugReport } from './audio.js';
 import { viz, cssRgb } from './viz.js';
 import { refreshRecLabel } from './rec.js';
 import { isPro, modeLocked, showPaywall, onProChange, initBilling, KITCHEN } from './paywall.js';
@@ -1304,17 +1304,51 @@ document.addEventListener("touchend",resumeAudio,{passive:true});
 // interruptions (call, app switch, screen lock): hold the backing while hidden, revive audio on return.
 // The WebView hands the audio session to the other app; visibilitychange isn't reliably fired on native,
 // so we also listen to the Capacitor App lifecycle, and resume twice (the session isn't ready instantly).
-let backingHeldBg=false, needAudioRebuild=false;
-function audioToBackground(){ needAudioRebuild=true; if(accOn){ backingHeldBg=true; stopBacking(); } }
-function audioToForeground(){
-  if(needAudioRebuild && actx){ needAudioRebuild=false; try{ recreateAudio(); }catch(e){ resumeAudio(); } }   // resume alone doesn't revive a context the OS detached — rebuild it
-  else resumeAudio();
-  setTimeout(resumeAudio,350);
-  if(backingHeldBg){ backingHeldBg=false; setTimeout(startBacking,80); } }   // let the fresh graph settle before the band returns
-document.addEventListener("visibilitychange",()=>{ document.hidden?audioToBackground():audioToForeground(); });
-window.addEventListener("focus",audioToForeground);
-if(NPLUG && NPLUG.App){
-  NPLUG.App.addListener('appStateChange',({isActive})=>{ isActive?audioToForeground():audioToBackground(); });
-  NPLUG.App.addListener('resume',audioToForeground);
-  NPLUG.App.addListener('pause',audioToBackground);
+// v3: rebuilding the context on EVERY return leaked zombie contexts (browsers cap live AudioContexts,
+// and close() on a detached one can hang) — after enough app switches audio died for good. Now we
+// resume first, then VERIFY the audio clock actually advances, and rebuild only a provably stuck context.
+let backingHeldBg=false, lastFg=0, fgCheckTimer=null;
+function audioToBackground(src){ alog('background ('+src+')'); if(accOn){ backingHeldBg=true; stopBacking(); } }
+function audioToForeground(src){
+  const now=performance.now(); if(now-lastFg<250) return; lastFg=now;   // vis/focus/appState often fire together
+  alog('foreground ('+src+') state='+(actx?actx.state:'-'));
+  resumeAudio(); setTimeout(resumeAudio,350);
+  if(backingHeldBg){ backingHeldBg=false; setTimeout(startBacking,80); }
+  if(actx && !fgCheckTimer){ const t0=actx.currentTime;
+    fgCheckTimer=setTimeout(()=>{ fgCheckTimer=null; if(!actx) return;
+      const dt=actx.currentTime-t0; alog('fg clock check: +'+dt.toFixed(3)+'s');
+      if(dt<0.05){ alog('zombie context -> rebuilding');
+        const wasOn=accOn; if(wasOn) stopBacking();
+        try{ recreateAudio(); }catch(e){ alog('rebuild failed: '+(e&&e.message)); }
+        if(wasOn) setTimeout(startBacking,120); }   // restart resyncs the scheduler to the fresh clock
+    },600); }
 }
+document.addEventListener("visibilitychange",()=>{ document.hidden?audioToBackground('vis'):audioToForeground('vis'); });
+window.addEventListener("focus",()=>audioToForeground('focus'));
+if(NPLUG && NPLUG.App){
+  NPLUG.App.addListener('appStateChange',({isActive})=>{ isActive?audioToForeground('appState'):audioToBackground('appState'); });
+  NPLUG.App.addListener('resume',()=>audioToForeground('resume'));
+  NPLUG.App.addListener('pause',()=>audioToBackground('pause'));
+}
+window.addEventListener('error',e=>alog('JS error: '+(e.message||e.type)));
+window.addEventListener('unhandledrejection',e=>alog('unhandled rejection: '+((e.reason&&e.reason.message)||e.reason||'?')));
+
+/* ---- 🐞 one-tap debug dump: share/download a text file with the full audio state + lifecycle log ---- */
+async function audioDebugText(){
+  return ['JamBrew audio debug',
+    'mode: '+M.id+' variant='+settings.variant+' backing='+settings.backing+' accOn='+accOn,
+    'bank: '+currentBank()+' lead='+(curLeadInstr||'synth')+' voices='+activeVoices.size,
+    'native: '+NATIVE,
+    'settings: '+JSON.stringify(settings), ''].join('\n') + await audioDebugReport();
+}
+window.__audioDebug=audioDebugText;                       // also callable from chrome://inspect
+const dbgBtn=document.getElementById('dbgBtn');
+if(dbgBtn) dbgBtn.addEventListener('click', async ()=>{
+  dbgBtn.disabled=true; dbgBtn.textContent='🐞 …';        // the report takes ~2s (clock probes)
+  try{
+    const txt=await audioDebugText(); try{ console.log(txt); }catch(e){}
+    const file=new File([txt],'jambrew-debug.txt',{type:'text/plain'});
+    if(navigator.canShare && navigator.canShare({files:[file]})) await navigator.share({files:[file],title:'JamBrew debug'}).catch(()=>{});
+    else{ const a=document.createElement('a'); a.href=URL.createObjectURL(file); a.download=file.name; document.body.appendChild(a); a.click(); a.remove(); }
+  }finally{ dbgBtn.disabled=false; dbgBtn.textContent='🐞 Debug'; }
+});
