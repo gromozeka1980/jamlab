@@ -59,7 +59,13 @@ pwBuy.addEventListener('click', async ()=>{
   try{
     const res=await RC.purchasePackage({ aPackage: pkgObj });
     if(applyCustomerInfo(res)){ track('purchase_done'); pwNote.textContent=t('pw.thanks'); setTimeout(hidePaywall,900); }
-  }catch(e){ if(!(e && e.userCancelled)) pwNote.textContent=t('pw.err'); }
+  }catch(e){
+    if(e && e.userCancelled) return;
+    // e.g. "product already owned" (non-consumable bought before, reinstall, other device) → recover silently via restore
+    try{ const rr=await RC.restorePurchases();
+      if(applyCustomerInfo(rr)){ track('purchase_restored'); pwNote.textContent=t('pw.thanks'); setTimeout(hidePaywall,900); return; } }catch(e2){}
+    pwNote.textContent=t('pw.err');
+  }
 });
 document.getElementById('pwRestore').addEventListener('click', async ()=>{
   if(!NATIVE || !RC || !RC_API_KEY){ pwNote.textContent = !NATIVE ? t('pw.webNote') : t('pw.soon'); return; }
