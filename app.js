@@ -1331,24 +1331,22 @@ document.addEventListener("touchend",resumeAudio,{passive:true});
 // interruptions (call, app switch, screen lock): hold the backing while hidden, revive audio on return.
 // The WebView hands the audio session to the other app; visibilitychange isn't reliably fired on native,
 // so we also listen to the Capacitor App lifecycle, and resume twice (the session isn't ready instantly).
-// v3: rebuilding the context on EVERY return leaked zombie contexts (browsers cap live AudioContexts,
-// and close() on a detached one can hang) — after enough app switches audio died for good. Now we
-// resume first, then VERIFY the audio clock actually advances, and rebuild only a provably stuck context.
-let backingHeldBg=false, lastFg=0, fgCheckTimer=null;
+// Returning to the foreground: REBUILD the context to reclaim the OS audio stream + focus.
+// Why unconditional (not "resume if clock stuck"): an Android audio-focus mute — another app or overlay
+// (the Play billing sheet, a notification) grabs focus — leaves the context state 'running' with the
+// clock advancing and the in-graph analyser still showing signal, so it's undetectable from JS. Only a
+// fresh context requests a new OS audio stream (+focus) and un-mutes us — exactly what YouTube did by
+// cycling focus. Throttled so one app-switch (vis+focus+appState fire together) = one rebuild; close()
+// on a healthy focus-muted context succeeds, so no context leak (unlike the old suspend-zombie case).
+let backingHeldBg=false, lastFg=0;
 function audioToBackground(src){ alog('background ('+src+')'); if(accOn){ backingHeldBg=true; stopBacking(); } }
 function audioToForeground(src){
-  const now=performance.now(); if(now-lastFg<250) return; lastFg=now;   // vis/focus/appState often fire together
-  alog('foreground ('+src+') state='+(actx?actx.state:'-'));
-  resumeAudio(); setTimeout(resumeAudio,350);
-  if(backingHeldBg){ backingHeldBg=false; setTimeout(startBacking,80); }
-  if(actx && !fgCheckTimer){ const t0=actx.currentTime;
-    fgCheckTimer=setTimeout(()=>{ fgCheckTimer=null; if(!actx) return;
-      const dt=actx.currentTime-t0; alog('fg clock check: +'+dt.toFixed(3)+'s');
-      if(dt<0.05){ alog('zombie context -> rebuilding');
-        const wasOn=accOn; if(wasOn) stopBacking();
-        try{ recreateAudio(); }catch(e){ alog('rebuild failed: '+(e&&e.message)); }
-        if(wasOn) setTimeout(startBacking,120); }   // restart resyncs the scheduler to the fresh clock
-    },600); }
+  const now=performance.now(); if(now-lastFg<400) return; lastFg=now;
+  const wasOn = accOn || backingHeldBg; backingHeldBg=false;
+  alog('foreground ('+src+') -> rebuild (wasOn='+wasOn+')');
+  if(actx){ if(wasOn) stopBacking(); try{ recreateAudio(); }catch(e){ alog('fg rebuild failed: '+(e&&e.message)); resumeAudio(); } }
+  else resumeAudio();                                    // audio not initialized yet → nothing to rebuild
+  if(wasOn) setTimeout(startBacking,140);                // restart the band on the fresh context/clock
 }
 document.addEventListener("visibilitychange",()=>{ document.hidden?audioToBackground('vis'):audioToForeground('vis'); });
 window.addEventListener("focus",()=>audioToForeground('focus'));
