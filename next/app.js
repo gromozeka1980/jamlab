@@ -57,8 +57,9 @@ let kbBend=0;
 let liteNote=false;                                // set around glissando noteOn: build a lightweight voice
 let curLeadInstr='';                               // '' = the mode's synth voice; else a sampled GM instrument id (any style)
 const MODE_INSTR_DEFAULT={   // default sampled lead per style (GM slug; user can override → saved). '' / absent = the mode's own synth voice
-  blues:'harmonica', light:'orchestral_harp', koto:'koto', vostok:'sitar',
-  lofi:'electric_piano_1', dream:'vibraphone', dorian:'acoustic_guitar_nylon', jazz:'alto_sax',
+  blues:'harmonica', light:'orchestral_harp', koto:'koto', vostok:'fiddle',
+  lofi:'electric_grand_piano', dream:'vibraphone', dorian:'acoustic_guitar_nylon', jazz:'soprano_sax',
+  lab:'electric_guitar_jazz',
 };
 
 function vizBeat(time,s){ if(settings.viz && actx) setTimeout(()=>viz.pulse(s), Math.max(0,(time-actx.currentTime)*1000)); }
@@ -1085,8 +1086,9 @@ percSel.addEventListener('change',()=>{ if(M.lab){ M.perc=percSel.value; try{ lo
 try{ if(localStorage.getItem('jamlab.leadInstrV')!=='3'){ localStorage.removeItem('jamlab.leadInstr'); localStorage.setItem('jamlab.leadInstrV','3'); } }catch(e){}
 let leadInstrMap={}; try{ leadInstrMap=JSON.parse(localStorage.getItem('jamlab.leadInstr')||'{}')||{}; }catch(e){}
 let leadBankMap={}; try{ leadBankMap=JSON.parse(localStorage.getItem('jamlab.leadBank')||'{}')||{}; }catch(e){}   // sound bank chosen per style
-// one-time: GU is now the default bank (bundled offline). Drop stale per-style FluidR3 defaults so everyone lands on GU.
-try{ if(localStorage.getItem('jamlab.bankDefV')!=='1'){ leadBankMap={}; localStorage.setItem('jamlab.leadBank','{}'); localStorage.setItem('jamlab.bankDefV','1'); } }catch(e){}
+// one-time: GU is the default bank (bundled offline). Drop stale per-style FluidR3 picks so everyone lands on GU.
+// v2 of this reset — clears the FluidR3 A/B picks (dream/koto) made after the first reset ran.
+try{ if(localStorage.getItem('jamlab.bankDefV2')!=='1'){ leadBankMap={}; localStorage.setItem('jamlab.leadBank','{}'); localStorage.setItem('jamlab.bankDefV2','1'); } }catch(e){}
 // two-step picker: choose a family (or Synth), then an instrument within it (128 GM instruments is too many for one list)
 const instrGroup=document.getElementById('instrGroup'), instrSel=document.getElementById('instrSel');
 function buildInstrOptions(){ if(instrGroup.options.length) return;
