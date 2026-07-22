@@ -188,6 +188,10 @@
       <li data-i18n="pw.li3"></li>
       <li data-i18n="pw.li4"></li>
     </ul>
+    <div style="background:rgba(255,255,255,.05); border:1px solid var(--line); border-radius:10px; padding:9px 11px; display:flex; flex-direction:column; gap:6px;">
+      <div data-i18n="pw.sameEngine" style="font-size:12px; line-height:1.5; color:var(--muted);"></div>
+      <div style="font-size:12px; line-height:1.5; color:var(--muted);"><span data-i18n="pw.problem"></span> <a id="pwWrite" href="#" style="color:var(--accent); font-weight:700; text-decoration:underline;" data-i18n="pw.writeUs"></a></div>
+    </div>
     <div id="pwNote" style="color:var(--muted); font-size:12px; min-height:14px;"></div>
     <button id="pwBuy" style="background:var(--accent); border-color:var(--accent); color:#15151f; font-weight:800; font-size:15px;"></button>
     <div style="display:flex; gap:8px; justify-content:space-between;">
@@ -217,6 +221,7 @@
   <div class="ctl" id="ctlViz"><label data-i18n="set.viz">Visualizer</label><select id="vizSel"><option value="on" data-i18n="opt.on">On</option><option value="off" data-i18n="opt.off">Off</option></select></div>
   <div class="ctl" id="ctlHaptics"><label data-i18n="set.haptics">Vibration</label><select id="hapticSel"><option value="off" data-i18n="opt.off">Off</option><option value="on" data-i18n="opt.on">On</option></select></div>
   <div class="ctl" id="ctlDbg"><button id="dbgBtn" class="jhelp">🐞 Debug</button></div>
+  <div class="ctl" id="ctlFeedback"><label data-i18n="set.feedback">Feedback</label><span style="display:flex; gap:8px;"><button id="fbMail" data-i18n="btn.email">Email</button><button id="fbTg" data-i18n="btn.telegram">Telegram</button></span></div>
   <div class="ctl" id="ctlJazzHelp"><button id="jazzHelpBtn" class="jhelp" data-i18n="btn.jazzHelp">About Jazz</button></div>
   <div class="ctl" id="ctlPerc"><label data-i18n="ctl.perc">Percussion</label><select id="percSel"><option value="taiko" data-i18n="perc.taiko">Taiko</option><option value="darbuka" data-i18n="perc.darbuka">Darbuka</option><option value="shaker" data-i18n="perc.shaker">Shaker</option><option value="" data-i18n="perc.none">None</option></select></div>
   <div class="ctl" id="ctlLab"><button id="labBtn" class="jhelp" data-i18n="btn.lab">⚗ Scale builder</button></div>
