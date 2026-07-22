@@ -1380,8 +1380,14 @@ if(dbgBtn) dbgBtn.addEventListener('click', async ()=>{
   dbgBtn.disabled=true; dbgBtn.textContent='🐞 …';        // the report takes ~2s (clock probes)
   try{
     const txt=await audioDebugText(); try{ console.log(txt); }catch(e){}
-    const file=new File([txt],'jambrew-debug.txt',{type:'text/plain'});
-    if(navigator.canShare && navigator.canShare({files:[file]})) await navigator.share({files:[file],title:'JamBrew debug'}).catch(()=>{});
-    else{ const a=document.createElement('a'); a.href=URL.createObjectURL(file); a.download=file.name; document.body.appendChild(a); a.click(); a.remove(); }
+    if(NPLUG && NPLUG.Filesystem && NPLUG.Share){                       // native: WebView has no Web Share / blob download
+      await NPLUG.Filesystem.writeFile({ path:'jambrew-debug.txt', data:txt, directory:'CACHE', encoding:'utf8' });
+      const { uri }=await NPLUG.Filesystem.getUri({ path:'jambrew-debug.txt', directory:'CACHE' });
+      await NPLUG.Share.share({ title:'JamBrew debug', url:uri, files:[uri] }).catch(()=>{});
+    }else{
+      const file=new File([txt],'jambrew-debug.txt',{type:'text/plain'});
+      if(navigator.canShare && navigator.canShare({files:[file]})) await navigator.share({files:[file],title:'JamBrew debug'}).catch(()=>{});
+      else{ const a=document.createElement('a'); a.href=URL.createObjectURL(file); a.download=file.name; document.body.appendChild(a); a.click(); a.remove(); }
+    }
   }finally{ dbgBtn.disabled=false; dbgBtn.textContent='🐞 Debug'; }
 });
