@@ -15,16 +15,34 @@ let tapDest=null;                                   // local fallback tap if the
 const CAP = window.Capacitor;
 const CPLUG = (CAP && CAP.isNativePlatform && CAP.isNativePlatform() && CAP.Plugins) ? CAP.Plugins : null;
 export function canNativeShare(){ return !!(CPLUG && CPLUG.Filesystem && CPLUG.Share); }
+// Web download (<a download> on a blob:) is also dead in the WebView, and this device's share sheet has no
+// "Save" — so on native we save to the gallery via @capacitor-community/media (writes into the app's
+// external media dir, which the system MediaScanner indexes → shows in Photos; no runtime permission needed).
+export function canNativeSave(){ return !!(CPLUG && CPLUG.Filesystem && CPLUG.Media); }
 function blobToB64(blob){ return new Promise((res,rej)=>{ const r=new FileReader();
   r.onerror=()=>rej(r.error);
   r.onload=()=>{ const s=String(r.result); const i=s.indexOf('base64,');   // the blob's MIME can hold a comma (codecs=avc1…,mp4a…) → never split on the first comma
     res(i>=0 ? s.slice(i+7) : s.slice(s.indexOf(',')+1)); };
   r.readAsDataURL(blob); }); }
-async function nativeShareFile(blob, filename, text, title){
+async function blobToCacheUri(blob, filename){                                     // materialize the clip to a cache file → native file uri
   const data = await blobToB64(blob);
-  await CPLUG.Filesystem.writeFile({ path:filename, data, directory:'CACHE' });   // overwrite each time — cache
+  await CPLUG.Filesystem.writeFile({ path:filename, data, directory:'CACHE' });    // overwrite each time — cache
   const { uri } = await CPLUG.Filesystem.getUri({ path:filename, directory:'CACHE' });
+  return uri;
+}
+async function nativeShareFile(blob, filename, text, title){
+  const uri = await blobToCacheUri(blob, filename);
   await CPLUG.Share.share({ title, text, url:uri, files:[uri] });
+}
+let galleryAlbum=null;                                                             // cached "JamBrew" album path
+async function nativeSaveToGallery(blob, filename){
+  const uri = await blobToCacheUri(blob, filename);
+  if(!galleryAlbum){
+    const { path } = await CPLUG.Media.getAlbumsPath();                            // the app's external media root (always exists)
+    try{ await CPLUG.Media.createAlbum({ name:'JamBrew' }); }catch(e){}            // ignore "album already exists"
+    galleryAlbum = path + '/JamBrew';
+  }
+  await CPLUG.Media.saveVideo({ path:uri, albumIdentifier:galleryAlbum, fileName:'jam_'+Date.now() });   // fileName without extension (plugin appends it)
 }
 const recBtn=document.getElementById("recBtn");
 export function isRecording(){ return !!(mediaRec && mediaRec.state==='recording'); }
@@ -112,11 +130,11 @@ function finishRecording(blob){
     + (recTracks ? ' · A'+recTracks.a+'/V'+recTracks.v : '')
     + (recTracks && !recTracks.a ? ' ⚠ no audio track' : '');   // diagnostics: track counts straight in the info line
   const sh=document.getElementById('recShare');
-  const native=canNativeShare();
-  sh.style.display = (native || (navigator.canShare && navigator.canShare({files:[lastFile]}))) ? '' : 'none';
-  // Web download (<a download> on a blob: URL) does nothing in the Android WebView → hide it on native;
-  // the native share sheet has its own "Save"/"Save to gallery".
-  document.getElementById('recSave').style.display = native ? 'none' : '';
+  sh.style.display = (canNativeShare() || (navigator.canShare && navigator.canShare({files:[lastFile]}))) ? '' : 'none';
+  // Save: web uses <a download>; native uses the gallery plugin. On native without the media plugin, blob:
+  // download is dead → hide the button. (`document.getElementById('recSave')` = the "Download" button.)
+  const nativeSave=canNativeSave(), NATIVE=canNativeShare();
+  document.getElementById('recSave').style.display = (NATIVE && !nativeSave) ? 'none' : '';
   document.getElementById('recov').classList.remove('hidden');
 }
 const SHARE_URL='https://jambrew.app';   // the domain routes viewers (landing/store) — never the Pages URL that will be closed
@@ -135,6 +153,15 @@ document.getElementById('recShare').addEventListener('click',()=>{   // strictly
       ? t('rec.shareDenied')
       : t('rec.shareErr',{name:e.name||'',msg:e.message||''}); });
 });
-document.getElementById('recSave').addEventListener('click',()=>{ if(!lastBlob) return; const a=document.createElement('a'); a.href=lastUrl; a.download=lastFile.name; document.body.appendChild(a); a.click(); a.remove(); });
+document.getElementById('recSave').addEventListener('click',()=>{ if(!lastBlob) return;
+  if(canNativeSave()){                                                // native: save to the phone's gallery
+    const info=document.getElementById('recInfo'); const btn=document.getElementById('recSave');
+    btn.disabled=true;
+    nativeSaveToGallery(lastBlob, lastFile.name).then(()=>{ info.textContent=t('rec.saved'); track('save_done'); })
+      .catch(e=>{ info.textContent=t('rec.saveErr',{msg:(e&&e.message)||''}); })
+      .finally(()=>{ btn.disabled=false; });
+    return;
+  }
+  const a=document.createElement('a'); a.href=lastUrl; a.download=lastFile.name; document.body.appendChild(a); a.click(); a.remove(); });
 document.getElementById('recClose').addEventListener('click',()=>{ const v=document.getElementById('recVid'); v.pause(); document.getElementById('recov').classList.add('hidden'); });
 recBtn.addEventListener('click',()=>{ if(isRecording()) stopRecording(); else startRecording(); });
