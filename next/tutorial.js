@@ -7,7 +7,7 @@ import { track } from './analytics.js';
 /* ============ Strings (merged into I18N; t() falls back to en) ============ */
 const X = {
   en: {
-    'tut.offer.t':'First time here?','tut.offer.d':"One minute — and you're playing. Where shall we start?",
+    'tut.offer.t':'First time here?','tut.offer.d':"One minute — and you're playing.",
     'tut.offer.skip':"I'll figure it out myself",
     'tut.s1':'Press and hold the glowing key','tut.s2':"Tap it again and again — you're climbing the scale",
     'tut.s3':'Now walk back down','tut.s4':'Same step — just three at once',
@@ -60,7 +60,7 @@ const X = {
     'pick.jazz.m':'smoky basement, upright bass',
   },
   ru: {
-    'tut.offer.t':'Впервые здесь?','tut.offer.d':'Минута — и ты играешь. С чего начнём?',
+    'tut.offer.t':'Впервые здесь?','tut.offer.d':'Минута — и ты играешь.',
     'tut.offer.skip':'Сам разберусь',
     'tut.s1':'Нажми светящуюся клавишу и подержи','tut.s2':'Жми её ещё и ещё — ты поднимаешься по гамме',
     'tut.s3':'А теперь спустись обратно','tut.s4':'Тот же шаг — просто три сразу',
