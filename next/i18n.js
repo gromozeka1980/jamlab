@@ -107,6 +107,7 @@ export const I18N = {
     'rec.shareUnsupported':'File sharing isn’t supported — tap “Download”.',
     'rec.shareDenied':'The browser blocked sharing. Open the page in regular Safari/Chrome (not an in-app messenger browser) or tap “Download”.',
     'rec.shareErr':'Share: {name} — {msg}',
+    'rec.saved':'Saved to Gallery ✓','rec.saveErr':'Save: {msg}',
   },
   ru: {
     'app.title':'JamBrew','app.tagline':'Реляционные инструменты','wm.tag':'карманный инструмент для джема',
@@ -215,6 +216,7 @@ export const I18N = {
     'rec.shareUnsupported':'Шеринг файлов не поддерживается — жми «Скачать».',
     'rec.shareDenied':'Браузер не разрешил шеринг. Открой страницу в обычном Safari/Chrome (не во встроенном браузере мессенджера) или жми «Скачать».',
     'rec.shareErr':'Шеринг: {name} — {msg}',
+    'rec.saved':'Сохранено в Галерею ✓','rec.saveErr':'Сохранение: {msg}',
   },
   es: {
     'app.title':'JamBrew','app.tagline':'Instrumentos relacionales','wm.tag':'un instrumento de bolsillo para improvisar',
@@ -313,6 +315,7 @@ export const I18N = {
     'rec.shareUnsupported':'No se pueden compartir archivos — pulsa «Descargar».',
     'rec.shareDenied':'El navegador no permitió compartir. Abre la página en Safari/Chrome normal (no en el navegador de una app de mensajería) o pulsa «Descargar».',
     'rec.shareErr':'Compartir: {name} — {msg}',
+    'rec.saved':'Guardado en la galería ✓','rec.saveErr':'Guardar: {msg}',
   },
   pt: {
     'app.title':'JamBrew','app.tagline':'Instrumentos relacionais','wm.tag':'um instrumento de bolso para improvisar',
@@ -411,6 +414,7 @@ export const I18N = {
     'rec.shareUnsupported':'Não dá para compartilhar arquivos — toque em “Baixar”.',
     'rec.shareDenied':'O navegador bloqueou o compartilhamento. Abra no Safari/Chrome normal ou toque em “Baixar”.',
     'rec.shareErr':'Compartilhar: {name} — {msg}',
+    'rec.saved':'Salvo na galeria ✓','rec.saveErr':'Salvar: {msg}',
   },
   de: {
     'app.title':'JamBrew','app.tagline':'Relationale Instrumente','wm.tag':'ein Tascheninstrument zum Jammen',
@@ -509,6 +513,7 @@ export const I18N = {
     'rec.shareUnsupported':'Datei-Teilen wird nicht unterstützt — tippe auf „Speichern“.',
     'rec.shareDenied':'Der Browser hat das Teilen blockiert. Öffne die Seite in einem normalen Safari/Chrome (nicht im In-App-Browser eines Messengers) oder tippe auf „Speichern“.',
     'rec.shareErr':'Teilen: {name} — {msg}',
+    'rec.saved':'In der Galerie gespeichert ✓','rec.saveErr':'Speichern: {msg}',
   },
   fr: {
     'app.title':'JamBrew','app.tagline':'Instruments relationnels','wm.tag':'un instrument de poche pour improviser',
@@ -607,6 +612,7 @@ export const I18N = {
     'rec.shareUnsupported':'Le partage de fichiers n’est pas pris en charge — touche « Télécharger ».',
     'rec.shareDenied':'Le navigateur a bloqué le partage. Ouvre la page dans un Safari/Chrome normal (pas dans le navigateur intégré d’une messagerie) ou touche « Télécharger ».',
     'rec.shareErr':'Partage : {name} — {msg}',
+    'rec.saved':'Enregistré dans la galerie ✓','rec.saveErr':'Enregistrement : {msg}',
   },
   ja: {
     'app.title':'JamBrew','app.tagline':'リレーショナル楽器','wm.tag':'ポケットサイズの即興楽器',
@@ -705,6 +711,7 @@ export const I18N = {
     'rec.shareUnsupported':'ファイル共有に未対応 — 「保存」をタップしてください。',
     'rec.shareDenied':'ブラウザが共有をブロックしました。通常の Safari/Chrome で開くか「保存」をタップ。',
     'rec.shareErr':'共有: {name} — {msg}',
+    'rec.saved':'ギャラリーに保存しました ✓','rec.saveErr':'保存: {msg}',
   },
   zh: {
     'app.title':'JamBrew','app.tagline':'关系型乐器','wm.tag':'口袋里的即兴乐器',
@@ -803,6 +810,7 @@ export const I18N = {
     'rec.shareUnsupported':'不支持分享文件——请点「下载」。',
     'rec.shareDenied':'浏览器阻止了分享。请在普通 Safari/Chrome 中打开，或点「下载」。',
     'rec.shareErr':'分享：{name} — {msg}',
+    'rec.saved':'已保存到相册 ✓','rec.saveErr':'保存：{msg}',
   },
 };
 
