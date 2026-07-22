@@ -23,6 +23,7 @@ const ARP_SLUG={ koto:'koto', vostok:'dulcimer', light:'orchestral_harp', lab:'a
 function liveArp(){ return arpReady(); }
 import { initTutorial } from './tutorial.js';
 import { track, trackOnce, sinceLaunch } from './analytics.js';
+import { openFeedback, openTelegram } from './feedback.js';
 
 // true inside the native Capacitor app (vs the plain web build)
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
@@ -1377,6 +1378,8 @@ async function audioDebugText(){
     'leadBankMap (persisted): '+JSON.stringify(leadBankMap), ''].join('\n') + await audioDebugReport();
 }
 window.__audioDebug=audioDebugText;                       // also callable from chrome://inspect
+const fbMail=document.getElementById('fbMail'); if(fbMail) fbMail.addEventListener('click',()=>{ track('feedback_open',{via:'settings'}); openFeedback('feedback'); });
+const fbTg=document.getElementById('fbTg'); if(fbTg) fbTg.addEventListener('click',()=>{ track('feedback_tg'); openTelegram(); });
 const dbgBtn=document.getElementById('dbgBtn');
 if(dbgBtn) dbgBtn.addEventListener('click', async ()=>{
   dbgBtn.disabled=true; dbgBtn.textContent='🐞 …';        // the report takes ~2s (clock probes)

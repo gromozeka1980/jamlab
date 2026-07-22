@@ -8,6 +8,7 @@
 // RC is the source of truth: initBilling() re-checks the entitlement on every start, localStorage only caches it.
 import { t } from './i18n.js';
 import { track } from './analytics.js';
+import { openFeedback } from './feedback.js';
 
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 const RC = (NATIVE && window.Capacitor.Plugins) ? window.Capacitor.Plugins.Purchases : null;
@@ -76,3 +77,4 @@ document.getElementById('pwRestore').addEventListener('click', async ()=>{
   }catch(e){ pwNote.textContent=t('pw.err'); }
 });
 document.getElementById('pwClose').addEventListener('click', hidePaywall);
+document.getElementById('pwWrite').addEventListener('click', e=>{ e.preventDefault(); track('feedback_open',{via:'paywall'}); openFeedback('problem'); });
