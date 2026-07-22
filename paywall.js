@@ -77,4 +77,5 @@ document.getElementById('pwRestore').addEventListener('click', async ()=>{
   }catch(e){ pwNote.textContent=t('pw.err'); }
 });
 document.getElementById('pwClose').addEventListener('click', hidePaywall);
-document.getElementById('pwWrite').addEventListener('click', e=>{ e.preventDefault(); track('feedback_open',{via:'paywall'}); openFeedback('problem'); });
+const pwWrite=document.getElementById('pwWrite');
+if(pwWrite) pwWrite.addEventListener('click', e=>{ e.preventDefault(); track('feedback_open',{via:'paywall'}); openFeedback('problem'); });
