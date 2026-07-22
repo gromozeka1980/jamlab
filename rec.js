@@ -16,7 +16,10 @@ const CAP = window.Capacitor;
 const CPLUG = (CAP && CAP.isNativePlatform && CAP.isNativePlatform() && CAP.Plugins) ? CAP.Plugins : null;
 export function canNativeShare(){ return !!(CPLUG && CPLUG.Filesystem && CPLUG.Share); }
 function blobToB64(blob){ return new Promise((res,rej)=>{ const r=new FileReader();
-  r.onerror=()=>rej(r.error); r.onload=()=>res(String(r.result).split(',')[1]||''); r.readAsDataURL(blob); }); }
+  r.onerror=()=>rej(r.error);
+  r.onload=()=>{ const s=String(r.result); const i=s.indexOf('base64,');   // the blob's MIME can hold a comma (codecs=avc1…,mp4a…) → never split on the first comma
+    res(i>=0 ? s.slice(i+7) : s.slice(s.indexOf(',')+1)); };
+  r.readAsDataURL(blob); }); }
 async function nativeShareFile(blob, filename, text, title){
   const data = await blobToB64(blob);
   await CPLUG.Filesystem.writeFile({ path:filename, data, directory:'CACHE' });   // overwrite each time — cache
