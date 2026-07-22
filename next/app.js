@@ -15,8 +15,8 @@ import { loadDrums, drumsReady, playDrum } from './drums.js';
 import { loadBass, bassReady, playBassNote } from './bass.js';
 import { loadArp, arpReady, playArpNote } from './arp.js';
 // per-style bass sound: upright for acoustic styles, synth-bass for synthwave, electric for lo-fi
-const BASS_SLUG={ blues:'acoustic_bass', jazz:'acoustic_bass', synth:'synth_bass_1', lofi:'electric_bass_finger',
-  koto:'acoustic_bass', vostok:'acoustic_bass', light:'acoustic_bass', lab:'acoustic_bass', dorian:'acoustic_bass' };
+const BASS_SLUG={ blues:'acoustic_bass', jazz:'acoustic_bass', lofi:'electric_bass_finger',
+  koto:'acoustic_bass', vostok:'acoustic_bass', light:'acoustic_bass', lab:'acoustic_bass', dorian:'acoustic_bass' };  // synth uses the osc bass, not a GU sample
 function liveBass(){ return bassReady(); }
 // per-style arp/ostinato pluck: koto strings, santur-ish dulcimer for East, harp for Bright, nylon for Lab, celesta for Dream
 const ARP_SLUG={ koto:'koto', vostok:'dulcimer', light:'orchestral_harp', lab:'acoustic_guitar_nylon', dream:'celesta' };
@@ -735,7 +735,9 @@ function gamelanScheduler(){ const beat=60/settings.bpm, pat=(curBack().id==='pa
     nextNoteTime+=beat/2; qStep++; } }
 
 // --- synthwave: pumping bass arp, four-on-the-floor, gated pads over i–VI–III–VII ---
-function synthBass(off,time){ const bm=settings.rootMidi-24+off; if(liveBass()&&playBassNote(bm,time,0.2,0.42,busBass))return;
+// synthwave keeps the analog synth-bass (saw + filter-envelope), NOT the GU sample — the sampled synth_bass_1
+// rings raw/unfiltered into the bus and sounds growly & harsh; the osc path is the on-genre retrowave sound.
+function synthBass(off,time){ const bm=settings.rootMidi-24+off;
   const fr=midiToFreq(bm);
   const o=actx.createOscillator();o.type='sawtooth';o.frequency.value=fr;
   const lp=actx.createBiquadFilter();lp.type='lowpass';lp.frequency.setValueAtTime(900,time);lp.frequency.exponentialRampToValueAtTime(300,time+0.18);
@@ -1380,8 +1382,14 @@ if(dbgBtn) dbgBtn.addEventListener('click', async ()=>{
   dbgBtn.disabled=true; dbgBtn.textContent='🐞 …';        // the report takes ~2s (clock probes)
   try{
     const txt=await audioDebugText(); try{ console.log(txt); }catch(e){}
-    const file=new File([txt],'jambrew-debug.txt',{type:'text/plain'});
-    if(navigator.canShare && navigator.canShare({files:[file]})) await navigator.share({files:[file],title:'JamBrew debug'}).catch(()=>{});
-    else{ const a=document.createElement('a'); a.href=URL.createObjectURL(file); a.download=file.name; document.body.appendChild(a); a.click(); a.remove(); }
+    if(NPLUG && NPLUG.Filesystem && NPLUG.Share){                       // native: WebView has no Web Share / blob download
+      await NPLUG.Filesystem.writeFile({ path:'jambrew-debug.txt', data:txt, directory:'CACHE', encoding:'utf8' });
+      const { uri }=await NPLUG.Filesystem.getUri({ path:'jambrew-debug.txt', directory:'CACHE' });
+      await NPLUG.Share.share({ title:'JamBrew debug', url:uri, files:[uri] }).catch(()=>{});
+    }else{
+      const file=new File([txt],'jambrew-debug.txt',{type:'text/plain'});
+      if(navigator.canShare && navigator.canShare({files:[file]})) await navigator.share({files:[file],title:'JamBrew debug'}).catch(()=>{});
+      else{ const a=document.createElement('a'); a.href=URL.createObjectURL(file); a.download=file.name; document.body.appendChild(a); a.click(); a.remove(); }
+    }
   }finally{ dbgBtn.disabled=false; dbgBtn.textContent='🐞 Debug'; }
 });

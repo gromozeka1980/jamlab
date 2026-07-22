@@ -8,6 +8,21 @@ import { track } from './analytics.js';
 const REC_MAX_MS=5*60*1000;
 let mediaRec=null, recChunks=[], recStart=0, recTimer=null, recTracks=null, recVTracks=null;
 let tapDest=null;                                   // local fallback tap if the shared recDest feed died
+
+// The Android WebView has NO Web Share API and can't download blob: URLs, so inside the native app the
+// share/download buttons are dead. On native we route through @capacitor/filesystem (write the clip to a
+// cache file) + @capacitor/share (the real Android share sheet). No-ops on the web (plugins absent → false).
+const CAP = window.Capacitor;
+const CPLUG = (CAP && CAP.isNativePlatform && CAP.isNativePlatform() && CAP.Plugins) ? CAP.Plugins : null;
+export function canNativeShare(){ return !!(CPLUG && CPLUG.Filesystem && CPLUG.Share); }
+function blobToB64(blob){ return new Promise((res,rej)=>{ const r=new FileReader();
+  r.onerror=()=>rej(r.error); r.onload=()=>res(String(r.result).split(',')[1]||''); r.readAsDataURL(blob); }); }
+async function nativeShareFile(blob, filename, text, title){
+  const data = await blobToB64(blob);
+  await CPLUG.Filesystem.writeFile({ path:filename, data, directory:'CACHE' });   // overwrite each time — cache
+  const { uri } = await CPLUG.Filesystem.getUri({ path:filename, directory:'CACHE' });
+  await CPLUG.Share.share({ title, text, url:uri, files:[uri] });
+}
 const recBtn=document.getElementById("recBtn");
 export function isRecording(){ return !!(mediaRec && mediaRec.state==='recording'); }
 export function refreshRecLabel(){ if(!isRecording()) recBtn.textContent=t('btn.rec'); }
@@ -94,7 +109,11 @@ function finishRecording(blob){
     + (recTracks ? ' · A'+recTracks.a+'/V'+recTracks.v : '')
     + (recTracks && !recTracks.a ? ' ⚠ no audio track' : '');   // diagnostics: track counts straight in the info line
   const sh=document.getElementById('recShare');
-  sh.style.display = (navigator.canShare && navigator.canShare({files:[lastFile]})) ? '' : 'none';
+  const native=canNativeShare();
+  sh.style.display = (native || (navigator.canShare && navigator.canShare({files:[lastFile]}))) ? '' : 'none';
+  // Web download (<a download> on a blob: URL) does nothing in the Android WebView → hide it on native;
+  // the native share sheet has its own "Save"/"Save to gallery".
+  document.getElementById('recSave').style.display = native ? 'none' : '';
   document.getElementById('recov').classList.remove('hidden');
 }
 const SHARE_URL='https://jambrew.app';   // the domain routes viewers (landing/store) — never the Pages URL that will be closed
@@ -102,6 +121,11 @@ const SHARE_TEXT="My jam in JamBrew — an instrument where you can't hit a wron
 document.getElementById('recShare').addEventListener('click',()=>{   // strictly synchronous call inside the gesture
   if(!lastFile) return;
   const info=document.getElementById('recInfo');
+  if(canNativeShare()){                                               // native: Capacitor Filesystem + Share (no gesture constraint)
+    nativeShareFile(lastBlob, lastFile.name, SHARE_TEXT, 'JamBrew').then(()=>track('share_done'))
+      .catch(e=>{ if(e && e.name!=='AbortError') info.textContent=t('rec.shareErr',{name:e.name||'',msg:e.message||''}); });
+    return;
+  }
   if(!(navigator.canShare && navigator.canShare({files:[lastFile]}))){ info.textContent=t('rec.shareUnsupported'); return; }
   navigator.share({files:[lastFile], title:'JamBrew', text:SHARE_TEXT}).then(()=>track('share_done')).catch(e=>{ if(e && e.name!=='AbortError')
     info.textContent = (e.name==='NotAllowedError')
