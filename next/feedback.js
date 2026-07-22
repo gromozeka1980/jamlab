@@ -9,7 +9,7 @@ const NATIVE = !!(CAP && CAP.isNativePlatform && CAP.isNativePlatform());
 const APP = (NATIVE && CAP.Plugins) ? CAP.Plugins.App : null;
 
 export const FEEDBACK_EMAIL = 'hello@jambrew.app';
-export const TELEGRAM_URL = 'https://t.me/jambrew';   // TODO: replace with the real group invite link
+export const TELEGRAM_URL = 'https://t.me/jambrew';   // the real JamBrew community group
 
 async function versionStr(){
   try{ if(APP){ const i = await APP.getInfo(); return i.version + ' (' + i.build + ')'; } }catch(e){}
