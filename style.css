@@ -212,10 +212,19 @@ body.tut #topsum{opacity:.25; transition:opacity .3s;}
 #overlay,#settings,#recov,#help,#paywall,#howit,#tutov{position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:22px; z-index:10;}
 #paywall{background:rgba(7,8,16,.88); z-index:12;}
 #paywall.hidden{display:none;}
-#overlay{background:rgba(7,8,16,.95); gap:14px; text-align:center;}
+#overlay{background:rgba(7,8,16,.95); gap:12px; text-align:center; justify-content:flex-start; overflow-y:auto;
+  padding-top:max(18px, env(safe-area-inset-top)); padding-bottom:max(24px, env(safe-area-inset-bottom));}
 #overlay h2{font-size:22px; margin:0 0 6px;}
 #overlay p{color:var(--muted); max-width:460px; line-height:1.5; margin:0; font-size:14px;}
-.pickers{display:grid; grid-template-columns:1fr 1fr; gap:8px; width:min(460px,100%); margin-top:8px; max-height:70vh; overflow-y:auto;}
+/* picker header: brand left, Help + language right (up top, away from the Android nav bar) */
+.ohead{width:min(460px,100%); display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:2px;}
+.obrand{display:flex; align-items:center; gap:8px; font-size:17px; font-weight:700; letter-spacing:.5px;}
+.ologo2{width:20px; height:34px; display:block; flex:none;}
+/* the marketing blurb (tagline + hero + prompt) shows only on the very first run — after that, straight to the grid */
+#introBlurb{display:none;}
+#overlay.firstrun #introBlurb{display:flex; flex-direction:column; align-items:center; gap:4px; width:min(460px,100%);}
+.otag{color:var(--muted); font-size:12px; letter-spacing:2.5px; text-transform:uppercase;}
+.pickers{display:grid; grid-template-columns:1fr 1fr; gap:8px; width:min(460px,100%); margin-top:4px;}
 .pick{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px 14px; text-align:left; cursor:pointer; position:relative;}
 .pick.locked{opacity:.72;}
 .pick.locked::after{content:'PRO'; position:absolute; top:8px; right:8px; font-size:9px; font-weight:800; letter-spacing:.6px;
@@ -253,8 +262,8 @@ body.teaser #recBtn, body.teaser #tastebar{display:none !important;}
 #kitchen.hidden{display:none;}
 #kitchen .pickers{grid-template-columns:1fr; width:min(400px,100%);}
 
-.obtns{display:flex; gap:8px; margin-top:12px;}
-.obtns button{padding:8px 22px;}
+.obtns{display:flex; gap:8px; align-items:center;}
+.obtns button{padding:8px 16px;}
 .jhelp{border-color:color-mix(in srgb, var(--accent) 60%, transparent); color:var(--accent); font-weight:700;}
 #settings,#recov,#help,#howit,#tutov{background:rgba(7,8,16,.82); z-index:11;}
 #recov,#help,#howit{z-index:11;}

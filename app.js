@@ -1221,6 +1221,7 @@ document.getElementById('labDelete').addEventListener('click',()=>{
 
 /* ============ Instrument picker and start ============ */
 const overlay=document.getElementById("overlay");
+try{ if(!localStorage.getItem('jamlab.tutDone')) overlay.classList.add('firstrun'); }catch(e){}   // marketing blurb only on the very first run
 function refreshLocks(){ document.querySelectorAll('.pick').forEach(p=>p.classList.toggle('locked', modeLocked(p.dataset.mode)));
   const kd=document.getElementById('kitchenDoor'); if(kd) kd.classList.toggle('locked', !isPro()); }   // the kitchen itself is the lock, not the dishes inside
 onProChange(refreshLocks);   // a purchase unlocks everything in place
