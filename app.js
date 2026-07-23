@@ -1333,7 +1333,7 @@ if(TEASER){                                   // straight into the instrument: n
 document.addEventListener("gesturestart",e=>e.preventDefault());
 document.addEventListener("dblclick",e=>e.preventDefault());   // belt-and-suspenders vs iOS double-tap zoom
 document.addEventListener("contextmenu",e=>e.preventDefault());
-document.addEventListener("touchend",resumeAudio,{passive:true});
+document.addEventListener("touchend",()=>resumeAudio(),{passive:true});   // no arg → gated (not forced) on the hot path
 // interruptions (call, app switch, screen lock): hold the backing while hidden, revive audio on return.
 // The WebView hands the audio session to the other app; visibilitychange isn't reliably fired on native,
 // so we also listen to the Capacitor App lifecycle, and resume twice (the session isn't ready instantly).
@@ -1351,7 +1351,7 @@ function doForeground(src){
   const wasOn = accOn || backingHeldBg; backingHeldBg=false;
   alog('foreground ('+src+') -> revive (wasOn='+wasOn+')');
   if(wasOn) stopBacking();
-  resumeAudio();                                         // light revive; the native side already re-requested focus + woke the WebView (a full recreate didn't cure the OS mute anyway)
+  resumeAudio(true);                                     // force the full revive here; the native side already re-requested focus + woke the WebView (a full recreate didn't cure the OS mute anyway)
   if(wasOn) setTimeout(startBacking,140);
 }
 // A single app-switch fires a BURST (vis+focus+appState+resume) and the native AUDIOFOCUS_GAIN lands a beat
