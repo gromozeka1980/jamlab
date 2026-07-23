@@ -42,10 +42,10 @@ export const viz=(()=>{
       const rw=even(cssW*RS), rh=even(cssH*RS);
       if(rec.width!==rw||rec.height!==rh){ rec.width=rw; rec.height=rh; } RW=rec.width; RH=rec.height; } }
   size(); addEventListener('resize',size);
-  const P=[]; let beat=0;                                        // particles live in CSS px; scaled per-canvas at draw time
-  function note(x,y,rgb){ if(P.length>70) return; P.push({x,y,r:8,vr:3.0,vy:-0.6,life:1,dl:0.018,rgb,ring:1}); }
-  function spark(x,y,rgb){ if(P.length>100) return; P.push({x:x+(Math.random()*16-8),y,r:2.5,vr:0.4,vy:-2.6,life:1,dl:0.03,rgb,ring:0}); }
-  function pulse(s){ if(s>beat) beat=s; }
+  const P=[]; let beat=0, running=false;                         // particles live in CSS px; scaled per-canvas at draw time
+  function note(x,y,rgb){ if(P.length>70) return; P.push({x,y,r:8,vr:3.0,vy:-0.6,life:1,dl:0.018,rgb,ring:1}); wake(); }
+  function spark(x,y,rgb){ if(P.length>100) return; P.push({x:x+(Math.random()*16-8),y,r:2.5,vr:0.4,vy:-2.6,life:1,dl:0.03,rgb,ring:0}); wake(); }
+  function pulse(s){ if(s>beat) beat=s; wake(); }
   // melody ribbon: recent notes become a glowing scrolling polyline (the logo motif)
   const MEL=[]; let lastNoteAt=-1e9;
   function melody(p01){ const now=performance.now(); lastNoteAt=now;
@@ -159,13 +159,14 @@ export const viz=(()=>{
     drawLive();
     if(recording) drawRec();
     beat*=0.88;
-    requestAnimationFrame(frame);
+    if(P.length || beat>0.02 || recording) requestAnimationFrame(frame);   // keep animating only while there's something to draw
+    else { running=false; ctx.clearRect(0,0,W,H); }                        // idle → stop the loop (wake() restarts it on the next note/spark/pulse/record)
   }
-  requestAnimationFrame(frame);
+  function wake(){ if(!running){ running=true; requestAnimationFrame(frame); } }
   return {note,spark,pulse,melody,melodyBend,liveNote,keysHeld,setKeymapProvider,keysActive,recScaleName,setStripProvider,stripCur, recCanvas:rec,
     startRec(){ keymap = keymapProvider ? keymapProvider() : null;   // snapshot the key layout while it's stable
       stripmap = stripProvider ? stripProvider() : null;
       MEL.length=0; P.length=0; activeOffs=new Set(); for(const o in tapAt) delete tapAt[o];   // start clean — no leftover ribbon/taps from before recording
-      liveTxt=null; heldKeys=[]; lastNoteAt=-1e9; beat=0; recording=true; },
+      liveTxt=null; heldKeys=[]; lastNoteAt=-1e9; beat=0; recording=true; wake(); },
     stopRec(){ recording=false; }};
 })();

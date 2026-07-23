@@ -51,7 +51,8 @@ function buildGraph(){
 }
 // one-sample buffer straight to the destination — pokes the output stream awake without rebuilding anything
 function nudgeOutput(){ try{ const s=actx.createBufferSource(); s.buffer=actx.createBuffer(1,1,22050); s.connect(actx.destination); s.start(0); }catch(e){} }
-export function resumeAudio(){ if(!actx) return;
+export function resumeAudio(force){ if(!actx) return;
+  if(!force && actx.state==='running' && silentEl && !silentEl.paused) return;   // hot path (every note): already live → skip the per-note nudge+replay churn
   try{ actx.resume(); }catch(e){}                              // resume regardless of exact state — some WebViews don't report 'suspended' after losing audio focus
   nudgeOutput();
   if(silentEl) silentEl.play().catch(()=>{});                  // replay the keep-alive element to reclaim the audio session another app took
