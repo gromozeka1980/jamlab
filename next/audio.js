@@ -19,7 +19,10 @@ export function initAudio(){ if(actx) return; openCtx(); buildGraph(); unlockAud
 // is guaranteed live again. AudioBuffers are context-agnostic, so cached samples keep working.
 export function recreateAudio(){ alog('recreateAudio: dropping old ctx');
   try{ if(actx) actx.close().then(()=>alog('old ctx closed')).catch(e=>alog('old ctx close FAILED: '+(e&&e.name))); }catch(e){ alog('close threw: '+(e&&e.name)); }
-  actx=null; openCtx(); buildGraph(); unlockAudio(); }
+  actx=null;
+  try{ if(silentEl){ silentEl.pause(); silentEl.removeAttribute('src'); silentEl.load(); silentEl.remove(); } }catch(e){}
+  silentEl=null;   // the keep-alive <audio> freezes after background (currentTime stuck at 0) → build a fresh one in unlockAudio
+  openCtx(); buildGraph(); unlockAudio(); }
 function buildGraph(){
   comp = actx.createDynamicsCompressor(); comp.threshold.value=-12; comp.ratio.value=3; comp.release.value=.25;
   master = actx.createGain(); master.gain.value=1; master.connect(comp); comp.connect(actx.destination);
