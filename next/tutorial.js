@@ -8,7 +8,7 @@ import { track } from './analytics.js';
 const X = {
   en: {
     'tut.offer.t':'First time here?','tut.offer.d':"One minute — and you're playing.",
-    'tut.offer.skip':"I'll figure it out myself",
+    'tut.offer.skip':"I'll figure it out myself",'tut.startBtn':'Start tutorial',
     'tut.s1':'Press and hold the glowing key','tut.s2':"Tap it again and again — you're climbing the scale",
     'tut.s3':'Now walk back down','tut.s4':'Same step — just three at once',
     'tut.sstrip':"Slide your finger along the ladder — it's the map of the scale",
@@ -61,7 +61,7 @@ const X = {
   },
   ru: {
     'tut.offer.t':'Впервые здесь?','tut.offer.d':'Минута — и ты играешь.',
-    'tut.offer.skip':'Сам разберусь',
+    'tut.offer.skip':'Сам разберусь','tut.startBtn':'Обучение',
     'tut.s1':'Нажми светящуюся клавишу и подержи','tut.s2':'Жми её ещё и ещё — ты поднимаешься по гамме',
     'tut.s3':'А теперь спустись обратно','tut.s4':'Тот же шаг — просто три сразу',
     'tut.sstrip':'Проведи пальцем по лесенке — это карта гаммы',
@@ -475,6 +475,9 @@ function startTutorial(){ if(active) stopTutorial();
 
 /* ============ Chooser + help entries + backing toast ============ */
 function showChooser(){ document.getElementById('tutov').classList.remove('hidden'); }
+// enter a style (no auto-backing, lock bypassed for the guided taste) and start the tutorial
+function launchTutorial(mode){ const tutov=document.getElementById('tutov'); tutov.classList.add('hidden'); markDone();
+  track('tut_start',{mode}); hooks.enterMode(mode); setTimeout(startTutorial,350); }
 let toastT=null;
 function showBackDesc(id){ const k='backdesc.'+id; if(!I18N.en[k]) return;
   let el=document.getElementById('uxtoast');
@@ -484,17 +487,12 @@ function showBackDesc(id){ const k='backdesc.'+id; if(!I18N.en[k]) return;
 }
 export function initTutorial(h){ hooks=h;
   const tutov=document.getElementById('tutov');
-  tutov.querySelectorAll('.tutpick').forEach(b=>b.addEventListener('click',()=>{
-    tutov.classList.add('hidden'); markDone();
-    track('tut_start',{mode:b.dataset.tmode});
-    hooks.enterMode(b.dataset.tmode);                 // tutorial entry: no auto-backing, lock bypassed (guided taste)
-    setTimeout(startTutorial,350);
-  }));
+  tutov.querySelectorAll('.tutpick').forEach(b=>b.addEventListener('click',()=>launchTutorial(b.dataset.tmode)));
   document.getElementById('tutSkip').addEventListener('click',()=>{ tutov.classList.add('hidden'); markDone(); });
   // dismissing the chooser any other way (Esc/backdrop) also counts as "not now" — replay lives in Help
   new MutationObserver(()=>{ if(tutov.classList.contains('hidden')) markDone(); }).observe(tutov,{attributes:true,attributeFilter:['class']});
   document.getElementById('tutReplayBtn').addEventListener('click',()=>{
-    document.getElementById('help').classList.add('hidden'); showChooser(); });
+    document.getElementById('help').classList.add('hidden'); launchTutorial('koto'); });   // manual replay → straight into Koto, skip the first-run chooser
   document.getElementById('howitBtn').addEventListener('click',()=>{
     document.getElementById('help').classList.add('hidden');
     document.getElementById('howit').classList.remove('hidden'); });
