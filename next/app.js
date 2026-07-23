@@ -1344,16 +1344,27 @@ document.addEventListener("touchend",resumeAudio,{passive:true});
 // fresh context requests a new OS audio stream (+focus) and un-mutes us — exactly what YouTube did by
 // cycling focus. Throttled so one app-switch (vis+focus+appState fire together) = one rebuild; close()
 // on a healthy focus-muted context succeeds, so no context leak (unlike the old suspend-zombie case).
-let backingHeldBg=false, lastFg=0;
-function audioToBackground(src){ alog('background ('+src+')'); if(accOn){ backingHeldBg=true; stopBacking(); } }
-function audioToForeground(src){
-  const now=performance.now(); if(now-lastFg<400) return; lastFg=now;
+let backingHeldBg=false, fgTimer=null;
+function audioToBackground(src){ alog('background ('+src+')'); if(fgTimer){ clearTimeout(fgTimer); fgTimer=null; }   // cancel a pending revive — we're leaving again
+  if(accOn){ backingHeldBg=true; stopBacking(); } }
+function doForeground(src){
   const wasOn = accOn || backingHeldBg; backingHeldBg=false;
   alog('foreground ('+src+') -> rebuild (wasOn='+wasOn+')');
   if(actx){ if(wasOn) stopBacking(); try{ recreateAudio(); }catch(e){ alog('fg rebuild failed: '+(e&&e.message)); resumeAudio(); } }
   else resumeAudio();                                    // audio not initialized yet → nothing to rebuild
   if(wasOn) setTimeout(startBacking,140);                // restart the band on the fresh context/clock
 }
+// A single app-switch fires a BURST (vis+focus+appState+resume) and the native AUDIOFOCUS_GAIN lands a beat
+// later. Debounce (trailing): rebuild ONCE, ~300ms after the last event — i.e. AFTER focus is actually
+// regranted. The old leading-throttle rebuilt on the FIRST event (before focus) and ignored the real gain →
+// the fresh context was born muted. Also collapses the 5-context churn seen in the wild.
+function audioToForeground(src){ alog('fg event ('+src+')');
+  if(fgTimer) clearTimeout(fgTimer);
+  fgTimer=setTimeout(()=>{ fgTimer=null; doForeground(src); }, 300); }
+// Native hooks (MainActivity calls these via evaluateJavascript): drive recovery off the real focus grant,
+// and log the focus-request result so the 🐞 dump finally says whether Android even gave us focus.
+window.__jamAudioGain=(src)=>audioToForeground(src||'nativeGain');
+window.__jamAudioFocus=(r)=>alog('native focus request result: '+r+' (1=granted 0=failed 2=delayed)');
 document.addEventListener("visibilitychange",()=>{ document.hidden?audioToBackground('vis'):audioToForeground('vis'); });
 window.addEventListener("focus",()=>audioToForeground('focus'));
 if(NPLUG && NPLUG.App){
