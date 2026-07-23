@@ -14,9 +14,10 @@ function openCtx(){ const AC=window.AudioContext||window.webkitAudioContext;
   ctxSeq++; const n=ctxSeq; alog('ctx#'+n+' created, state='+actx.state+' sr='+actx.sampleRate);
   try{ actx.onstatechange=()=>alog('ctx#'+n+' state -> '+(actx?actx.state:'?')); }catch(e){} }
 export function initAudio(){ if(actx) return; openCtx(); buildGraph(); unlockAudio(); }
-// Some WebViews hand the audio hardware to another app and never give it back — resume() then reports
-// 'running' but no sound flows. On return from background we rebuild the whole context + graph so audio
-// is guaranteed live again. AudioBuffers are context-agnostic, so cached samples keep working.
+// Hard reset: tear down the context + graph and build fresh. NOT used on a normal foreground return anymore —
+// a fresh context does NOT reclaim a WebView audio output the OS muted (confirmed on device: focus granted +
+// brand-new ctx = still silent). Kept as the "plan B" nuclear option (a future manual "revive sound" / reload
+// path). AudioBuffers are context-agnostic, so cached samples survive the rebuild.
 export function recreateAudio(){ alog('recreateAudio: dropping old ctx');
   try{ if(actx) actx.close().then(()=>alog('old ctx closed')).catch(e=>alog('old ctx close FAILED: '+(e&&e.name))); }catch(e){ alog('close threw: '+(e&&e.name)); }
   actx=null;
@@ -48,13 +49,13 @@ function buildGraph(){
   const len=actx.sampleRate*1; noiseBuf=actx.createBuffer(1,len,actx.sampleRate);
   const d=noiseBuf.getChannelData(0); for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
 }
+// one-sample buffer straight to the destination — pokes the output stream awake without rebuilding anything
+function nudgeOutput(){ try{ const s=actx.createBufferSource(); s.buffer=actx.createBuffer(1,1,22050); s.connect(actx.destination); s.start(0); }catch(e){} }
 export function resumeAudio(){ if(!actx) return;
-  try{ actx.resume(); }catch(e){}                                                                    // resume regardless of exact state — some WebViews don't report 'suspended' after losing audio focus
-  try{ const s=actx.createBufferSource(); s.buffer=actx.createBuffer(1,1,22050); s.connect(actx.destination); s.start(0); }catch(e){}   // nudge the output stream awake
-  if(silentEl) silentEl.play().catch(()=>{});                                                        // replay the silent element to reclaim the audio session the other app took
+  try{ actx.resume(); }catch(e){}                              // resume regardless of exact state — some WebViews don't report 'suspended' after losing audio focus
+  nudgeOutput();
+  if(silentEl) silentEl.play().catch(()=>{});                  // replay the keep-alive element to reclaim the audio session another app took
 }
-export function makeImpulse(sec,decay){ const rate=actx.sampleRate,n=rate*sec,b=actx.createBuffer(2,n,rate);
-  for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch); for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/n,decay);} return b; }
 export function makeDriveCurve(k){ const n=1024,c=new Float32Array(n); for(let i=0;i<n;i++){const x=i/(n-1)*2-1; c[i]=(1+k)*x/(1+k*Math.abs(x));} return c; }
 export const accGain=(l,bus)=>{const g=actx.createGain();g.gain.value=l;g.connect(bus||accBus);return g;};
 
@@ -65,7 +66,7 @@ function buildSilentWavUrl(){ const rate=8000,n=rate,buf=new ArrayBuffer(44+n*2)
   w(0,'RIFF');dv.setUint32(4,36+n*2,true);w(8,'WAVE');w(12,'fmt ');dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,1,true);
   dv.setUint32(24,rate,true);dv.setUint32(28,rate*2,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);w(36,'data');dv.setUint32(40,n*2,true);
   return URL.createObjectURL(new Blob([buf],{type:'audio/wav'})); }
-function unlockAudio(){ try{const b=actx.createBuffer(1,1,22050),s=actx.createBufferSource();s.buffer=b;s.connect(actx.destination);s.start(0);}catch(e){}
+function unlockAudio(){ nudgeOutput();
   if(!silentEl){ try{ silentEl=document.createElement('audio'); silentEl.src=buildSilentWavUrl(); silentEl.loop=true; silentEl.volume=0.0001;
     silentEl.setAttribute('playsinline','');silentEl.setAttribute('webkit-playsinline',''); document.body.appendChild(silentEl);
     silentEl.play().then(()=>alog('silentEl playing')).catch(e=>alog('silentEl play blocked: '+(e&&e.name))); }catch(e){ alog('silentEl create failed'); } }

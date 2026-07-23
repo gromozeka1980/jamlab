@@ -6,7 +6,7 @@ import { MODES, NOTE_NAMES, HARMONY, HARM_OPTS, HARM_LADS, RHYTHM, RHY_OPTS,
          ARP, ARP_SHAPES, DREAMARP, GMPAT, DARBUKA, RIDE, DARING, QUAL, JAZZ_PROG,
          SYNTH_PROG, LOFI_PROG, LAB_PRESETS } from './modes.js';
 import { actx, comp, leadBus, leadFilter, leadOut, accBus, busPerc, busBass, busChord, noiseBuf,
-         initAudio, resumeAudio, recreateAudio, accGain, alog, audioDebugReport } from './audio.js';
+         initAudio, resumeAudio, accGain, alog, audioDebugReport } from './audio.js';
 import { viz, cssRgb } from './viz.js';
 import { refreshRecLabel } from './rec.js';
 import { isPro, modeLocked, showPaywall, onProChange, initBilling, KITCHEN } from './paywall.js';
@@ -1349,10 +1349,10 @@ function audioToBackground(src){ alog('background ('+src+')'); if(fgTimer){ clea
   if(accOn){ backingHeldBg=true; stopBacking(); } }
 function doForeground(src){
   const wasOn = accOn || backingHeldBg; backingHeldBg=false;
-  alog('foreground ('+src+') -> rebuild (wasOn='+wasOn+')');
-  if(actx){ if(wasOn) stopBacking(); try{ recreateAudio(); }catch(e){ alog('fg rebuild failed: '+(e&&e.message)); resumeAudio(); } }
-  else resumeAudio();                                    // audio not initialized yet → nothing to rebuild
-  if(wasOn) setTimeout(startBacking,140);                // restart the band on the fresh context/clock
+  alog('foreground ('+src+') -> revive (wasOn='+wasOn+')');
+  if(wasOn) stopBacking();
+  resumeAudio();                                         // light revive; the native side already re-requested focus + woke the WebView (a full recreate didn't cure the OS mute anyway)
+  if(wasOn) setTimeout(startBacking,140);
 }
 // A single app-switch fires a BURST (vis+focus+appState+resume) and the native AUDIOFOCUS_GAIN lands a beat
 // later. Debounce (trailing): rebuild ONCE, ~300ms after the last event — i.e. AFTER focus is actually
